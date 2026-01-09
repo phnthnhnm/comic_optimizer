@@ -9,13 +9,11 @@ class ThemeManager {
   );
 
   static late SharedPreferences _prefs;
-  static bool _initialized = false;
 
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     final s = _prefs.getString(_key) ?? 'system';
     themeMode.value = _stringToMode(s);
-    _initialized = true;
   }
 
   static ThemeMode _stringToMode(String s) {
@@ -43,18 +41,6 @@ class ThemeManager {
 
   static Future<void> setThemeMode(ThemeMode mode) async {
     themeMode.value = mode;
-    try {
-      if (!_initialized) {
-        await init();
-      }
-      final ok = await _prefs.setString(_key, _modeToString(mode));
-      if (!ok) {
-        debugPrint('ThemeManager: failed to persist theme_mode=$mode');
-      } else {
-        debugPrint('ThemeManager: persisted theme_mode=${_modeToString(mode)}');
-      }
-    } catch (e) {
-      debugPrint('ThemeManager: error persisting theme mode: $e');
-    }
+    await _prefs.setString(_key, _modeToString(mode));
   }
 }

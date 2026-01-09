@@ -55,7 +55,13 @@ class ControlPanel extends StatelessWidget {
               value: selectedPreset,
               items: Preset.all
                   .map(
-                    (p) => DropdownMenuItem(value: p.name, child: Text(p.name)),
+                    (p) => DropdownMenuItem(
+                      value: p.name,
+                      child: Tooltip(
+                        message: p.args.join(' '),
+                        child: Text(p.name),
+                      ),
+                    ),
                   )
                   .toList(),
               onChanged: onPresetChanged,

@@ -54,9 +54,8 @@ class _LogsPanelState extends State<LogsPanel> {
                             ),
                             decoration: BoxDecoration(
                               color: selected
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.primary.withOpacity(0.12)
+                                  ? Theme.of(context).colorScheme.primary
+                                        .withAlpha((0.12 * 255).round())
                                   : null,
                               borderRadius: BorderRadius.circular(6.0),
                             ),

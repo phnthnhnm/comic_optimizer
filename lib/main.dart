@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'screens/home_screen.dart';
-import 'theme_manager.dart';
+import 'settings/settings_model.dart';
+import 'settings/settings_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ThemeManager.init();
-  runApp(const MyApp());
+  final repo = SettingsRepository();
+  final model = SettingsModel(repo);
+  await model.load();
+  runApp(ChangeNotifierProvider.value(value: model, child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,17 +18,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: ThemeManager.themeMode,
-      builder: (context, mode, _) {
-        return MaterialApp(
-          title: 'Comic Optimizer',
-          theme: ThemeData(primarySwatch: Colors.indigo),
-          darkTheme: ThemeData.dark(),
-          themeMode: mode,
-          home: const HomePage(),
-        );
-      },
+    final model = context.watch<SettingsModel>();
+    return MaterialApp(
+      title: 'Comic Optimizer',
+      theme: ThemeData(primarySwatch: Colors.indigo),
+      darkTheme: ThemeData.dark(),
+      themeMode: model.themeMode,
+      home: const HomePage(),
     );
   }
 }

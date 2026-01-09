@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+
+import '../../settings/settings_model.dart';
 
 class DataTab extends StatefulWidget {
   const DataTab({super.key});
@@ -13,16 +15,12 @@ class DataTab extends StatefulWidget {
 }
 
 class _DataTabState extends State<DataTab> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
   Future<void> _backupData() async {
-    final prefs = await SharedPreferences.getInstance();
+    final model = context.read<SettingsModel>();
+    final prefsMap = model.getAllPrefs();
     final Map<String, dynamic> dump = {};
-    for (var key in prefs.getKeys()) {
-      final value = prefs.get(key);
+    for (var key in prefsMap.keys) {
+      final value = prefsMap[key];
       if (value is bool) {
         dump[key] = {'type': 'bool', 'value': value};
       } else if (value is int) {
@@ -61,6 +59,7 @@ class _DataTabState extends State<DataTab> {
   }
 
   Future<void> _restoreData() async {
+    final model = context.read<SettingsModel>();
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       dialogTitle: 'Select backup JSON file',
       type: FileType.custom,
@@ -71,23 +70,22 @@ class _DataTabState extends State<DataTab> {
       final inputJson = await file.readAsString();
       try {
         final Map<String, dynamic> data = jsonDecode(inputJson);
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
+        await model.clearAllPrefs();
         for (var entry in data.entries) {
           final k = entry.key;
           final v = entry.value as Map<String, dynamic>;
           final type = v['type'] as String?;
           final val = v['value'];
           if (type == 'bool') {
-            await prefs.setBool(k, val as bool);
+            await model.setRawBool(k, val as bool);
           } else if (type == 'int') {
-            await prefs.setInt(k, val as int);
+            await model.setRawInt(k, val as int);
           } else if (type == 'double') {
-            await prefs.setDouble(k, (val as num).toDouble());
+            await model.setRawDouble(k, (val as num).toDouble());
           } else if (type == 'string') {
-            await prefs.setString(k, val as String);
+            await model.setRawString(k, val as String);
           } else if (type == 'stringList') {
-            await prefs.setStringList(k, List<String>.from(val));
+            await model.setRawStringList(k, List<String>.from(val));
           }
         }
         if (!mounted) return;
@@ -104,6 +102,7 @@ class _DataTabState extends State<DataTab> {
   }
 
   Future<void> _resetData() async {
+    final model = context.read<SettingsModel>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -125,8 +124,7 @@ class _DataTabState extends State<DataTab> {
       ),
     );
     if (confirmed == true) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await model.clearAllPrefs();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('All data and settings have been reset')),
@@ -161,6 +159,20 @@ class _DataTabState extends State<DataTab> {
             onPressed: _resetData,
             icon: const Icon(Icons.delete_forever),
             label: const Text('Reset All Data'),
+          ),
+          const SizedBox(height: 12),
+          Builder(
+            builder: (context) {
+              final model = context.watch<SettingsModel>();
+              return SwitchListTile(
+                title: const Text('Prefer permanent delete'),
+                subtitle: const Text(
+                  'When enabled, source folders are permanently deleted instead of moved to the Recycle Bin.',
+                ),
+                value: model.preferPermanentDelete,
+                onChanged: (v) => model.setPreferPermanentDelete(v),
+              );
+            },
           ),
         ],
       ),

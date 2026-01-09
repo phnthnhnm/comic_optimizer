@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../optimizer.dart';
 import '../presets.dart';
+import '../settings/settings_model.dart';
 import '../widgets/controls.dart';
 import '../widgets/layouts.dart';
 import 'settings/settings_screen.dart';
@@ -31,27 +32,27 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _rootPath = prefs.getString('lastRoot');
-      _selectedPreset = prefs.getString('lastPreset') ?? Preset.losslessName;
-      _skipPingo = prefs.getBool('skipPingo') ?? false;
-      _pingoPath = prefs.getString('pingoPath') ?? 'pingo';
-      _outputExt = prefs.getString('outputExt') ?? '.cbz';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final model = context.read<SettingsModel>();
+      setState(() {
+        _rootPath = model.lastRoot;
+        _selectedPreset = model.lastPreset.isNotEmpty
+            ? model.lastPreset
+            : Preset.losslessName;
+        _skipPingo = model.skipPingo;
+        _pingoPath = model.pingoPath;
+        _outputExt = model.outputExt;
+      });
     });
   }
 
   Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_rootPath != null) prefs.setString('lastRoot', _rootPath!);
-    prefs.setString('lastPreset', _selectedPreset);
-    prefs.setBool('skipPingo', _skipPingo);
-    prefs.setString('pingoPath', _pingoPath);
-    prefs.setString('outputExt', _outputExt);
+    final model = context.read<SettingsModel>();
+    if (_rootPath != null) await model.setLastRoot(_rootPath);
+    await model.setLastPreset(_selectedPreset);
+    await model.setSkipPingo(_skipPingo);
+    await model.setPingoPath(_pingoPath);
+    await model.setOutputExt(_outputExt);
   }
 
   void _log(String line, {String? folder}) {
@@ -81,6 +82,10 @@ class _HomePageState extends State<HomePage> {
       _log('Please choose a root folder first.');
       return;
     }
+
+    final preferPermanentDelete = context
+        .read<SettingsModel>()
+        .preferPermanentDelete;
 
     final ok = await showDialog<bool>(
       context: context,
@@ -132,6 +137,7 @@ class _HomePageState extends State<HomePage> {
         skipPingo: _skipPingo,
         pingoPath: _pingoPath,
         outputExtension: _outputExt,
+        preferPermanentDelete: preferPermanentDelete,
       );
       _log('All done.');
     } catch (e, st) {

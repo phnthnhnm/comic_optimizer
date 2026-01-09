@@ -23,6 +23,7 @@ class Optimizer {
     required bool skipPingo,
     required String pingoPath,
     required String outputExtension,
+    bool preferPermanentDelete = false,
   }) async {
     if (!await root.exists()) {
       throw Exception('Root does not exist: ${root.path}');
@@ -44,6 +45,7 @@ class Optimizer {
               skipPingo,
               pingoPath,
               outputExtension,
+              preferPermanentDelete,
             );
           }
         } else {
@@ -53,6 +55,7 @@ class Optimizer {
             skipPingo,
             pingoPath,
             outputExtension,
+            preferPermanentDelete,
           );
         }
       }
@@ -65,6 +68,7 @@ class Optimizer {
     bool skipPingo,
     String pingoPath,
     String outputExtension,
+    bool preferPermanentDelete,
   ) async {
     onFolderStart?.call(folder.path);
     var success = true;
@@ -251,8 +255,22 @@ class Optimizer {
         final arch = p.normalize(p.absolute(p.join(parent.path, archiveName)));
         final folderAbs = p.normalize(p.absolute(folder.path));
         if (!p.isWithin(folderAbs, arch)) {
-          await folder.delete(recursive: true);
-          onLog?.call('Removed source folder ${folder.path}');
+          try {
+            if (preferPermanentDelete) {
+              await folder.delete(recursive: true);
+              onLog?.call(
+                'Removed source folder ${folder.path} (permanent delete)',
+              );
+            } else {
+              await _recycleOrDelete(folder);
+              onLog?.call(
+                'Removed source folder ${folder.path} (moved to Recycle Bin on Windows)',
+              );
+            }
+          } catch (e) {
+            onLog?.call('Failed to remove source folder ${folder.path}: $e');
+            success = false;
+          }
         } else {
           onLog?.call('Archive is inside source; not deleting source folder');
         }
@@ -278,6 +296,35 @@ class Optimizer {
       (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
     );
     return files;
+  }
+
+  Future<void> _recycleOrDelete(Directory folder) async {
+    try {
+      if (Platform.isWindows) {
+        final safePath = folder.path.replaceAll("'", "''");
+        final cmd =
+            "Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('$safePath', [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs, [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin)";
+        onLog?.call('Sending ${folder.path} to Recycle Bin via PowerShell');
+        final result = await Process.run('powershell', [
+          '-NoProfile',
+          '-Command',
+          cmd,
+        ]);
+        if (result.stdout != null && result.stdout.toString().isNotEmpty) {
+          onLog?.call(result.stdout.toString());
+        }
+        if (result.stderr != null && result.stderr.toString().isNotEmpty) {
+          onLog?.call(result.stderr.toString());
+        }
+        if (result.exitCode != 0) {
+          throw Exception('PowerShell exit ${result.exitCode}');
+        }
+      } else {
+        await folder.delete(recursive: true);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   int _naturalCompare(String a, String b) {

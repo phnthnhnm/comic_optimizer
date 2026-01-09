@@ -24,7 +24,8 @@ class _HomePageState extends State<HomePage> {
   bool _skipPingo = false;
   String _pingoPath = 'pingo';
   String _outputExt = '.cbz';
-  final List<String> _logs = [];
+  dynamic _logs = {};
+  String? _currentLogFolder;
   bool _running = false;
 
   @override
@@ -53,9 +54,17 @@ class _HomePageState extends State<HomePage> {
     prefs.setString('outputExt', _outputExt);
   }
 
-  void _log(String line) {
+  void _log(String line, {String? folder}) {
     setState(() {
-      _logs.add(line);
+      if (_logs is List<String>) {
+        final existing = List<String>.from(_logs as List<String>);
+        _logs = <String, List<String>>{'General': existing};
+      }
+      if (_logs is! Map<String, List<String>>) {
+        _logs = <String, List<String>>{};
+      }
+      final key = folder ?? _currentLogFolder ?? 'General';
+      (_logs as Map<String, List<String>>).putIfAbsent(key, () => []).add(line);
     });
   }
 
@@ -97,7 +106,8 @@ class _HomePageState extends State<HomePage> {
     await _saveSettings();
 
     setState(() {
-      _logs.clear();
+      _logs = {};
+      _currentLogFolder = null;
       _running = true;
     });
 
@@ -105,8 +115,14 @@ class _HomePageState extends State<HomePage> {
 
     final optimizer = Optimizer(
       onLog: (s) => _log(s),
-      onFolderStart: (f) => _log('Start: $f'),
-      onFolderDone: (f, ok) => _log('Done: $f (${ok ? 'OK' : 'ERR'})'),
+      onFolderStart: (f) {
+        _log('Start: $f', folder: f);
+        setState(() => _currentLogFolder = f);
+      },
+      onFolderDone: (f, ok) {
+        _log('Done: $f (${ok ? 'OK' : 'ERR'})', folder: f);
+        setState(() => _currentLogFolder = null);
+      },
     );
 
     try {
@@ -128,6 +144,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Safely handle legacy hot-reload state where `_logs` might still be a
+    // `List<String>` from an older version. Access via `dynamic` and
+    // normalize to `Map<String,List<String>>` for the `LogsPanel`.
+    final dynamic rawLogs = (this as dynamic)._logs;
+    final Map<String, List<String>> logsForPanel = {};
+    if (rawLogs is Map<String, List<String>>) {
+      logsForPanel.addAll(rawLogs);
+    } else if (rawLogs is List<String>) {
+      logsForPanel['General'] = List<String>.from(rawLogs);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Comic Optimizer'),
@@ -178,7 +205,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 12),
             const Divider(),
-            LogsPanel(logs: _logs),
+            LogsPanel(logsByFolder: logsForPanel),
           ],
         ),
       ),

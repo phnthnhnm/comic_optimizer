@@ -183,9 +183,11 @@ class Optimizer {
           }
           if (result.exitCode != 0) {
             onLog?.call('pingo exit ${result.exitCode}');
+            success = false;
           }
         } catch (e) {
           onLog?.call('Failed to run pingo: $e');
+          success = false;
         }
       }
 

@@ -14,7 +14,7 @@ class Preset {
     '-process=4',
     '-no-jpeg',
   ]);
-  static const lossy = Preset(lossyName, ['-s8', '-webp', '-q', '80']);
+  static const lossy = Preset(lossyName, ['-s4', '-webp', '-process=4']);
 
   static const all = [lossless, lossy];
 

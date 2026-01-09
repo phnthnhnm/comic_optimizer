@@ -69,7 +69,7 @@ class Optimizer {
     onFolderStart?.call(folder.path);
     var success = true;
     try {
-      // 1. list images
+      // list images
       final files = await folder
           .list(recursive: false, followLinks: false)
           .where((e) => e is File)
@@ -84,7 +84,7 @@ class Optimizer {
         return;
       }
 
-      // 2. Clean non-image files: delete files that are not images
+      // Clean non-image files: delete files that are not images
       for (final f in files) {
         if (!_imgExts.contains(p.extension(f.path).toLowerCase())) {
           try {
@@ -106,7 +106,7 @@ class Optimizer {
           .where((f) => _imgExts.contains(p.extension(f.path).toLowerCase()))
           .toList();
 
-      // 3. Normalize filenames in natural order
+      // Normalize filenames in natural order
       imageFiles.sort(
         (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
       );
@@ -158,14 +158,14 @@ class Optimizer {
         idx++;
       }
 
-      // 4. Optionally run pingo
+      // Optionally run pingo
       if (!skipPingo) {
         try {
-          // Build an explicit file list so pingo receives concrete inputs
-          final toProcess = await parentForFolderFiles(folder);
-          final fileNames = toProcess.map((f) => p.basename(f.path)).toList();
-          final args = [...presetArgs, ...fileNames];
-          onLog?.call('Running pingo: $pingoPath ${args.join(' ')}');
+          // Pass the folder ('.') to pingo so it processes all files inside
+          final args = [...presetArgs, '.'];
+          onLog?.call(
+            'Running pingo: $pingoPath ${args.join(' ')} (cwd=${folder.path})',
+          );
           final result = await Process.run(
             pingoPath,
             args,
@@ -185,7 +185,7 @@ class Optimizer {
         }
       }
 
-      // 5. Remove redundant originals: if .webp exists with same base, remove non-webp
+      // Remove redundant originals: if .webp exists with same base, remove non-webp
       final afterOpt = await folder
           .list(recursive: false, followLinks: false)
           .where((e) => e is File)
@@ -215,7 +215,7 @@ class Optimizer {
         }
       }
 
-      // 6. Create archive in parent directory using store (no compression)
+      // Create archive in parent directory using store (no compression)
       final parent = Directory(folder.parent.path);
       final archiveName = '${p.basename(folder.path)}$outputExtension';
       final archivePath = p.join(parent.path, archiveName);
@@ -246,7 +246,7 @@ class Optimizer {
         success = false;
       }
 
-      // 7. Remove source folder if archive is outside
+      // Remove source folder if archive is outside
       try {
         final arch = p.normalize(p.absolute(p.join(parent.path, archiveName)));
         final folderAbs = p.normalize(p.absolute(folder.path));

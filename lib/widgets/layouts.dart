@@ -166,8 +166,9 @@ Color _colorForLine(String line, BuildContext ctx) {
 
 FontWeight _weightForLine(String line) {
   final lc = line.toLowerCase();
-  if (lc.contains('error') || lc.contains('failed') || lc.contains('err'))
+  if (lc.contains('error') || lc.contains('failed') || lc.contains('err')) {
     return FontWeight.w700;
+  }
   if (lc.startsWith('start:') || lc.startsWith('done:')) return FontWeight.w600;
   return FontWeight.normal;
 }

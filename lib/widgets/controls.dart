@@ -7,6 +7,7 @@ class ControlPanel extends StatelessWidget {
   final VoidCallback onPickRoot;
   final String selectedPreset;
   final ValueChanged<String?> onPresetChanged;
+  final List<Preset> availablePresets;
   final bool skipPingo;
   final ValueChanged<bool?> onSkipPingoChanged;
   final String pingoPath;
@@ -22,6 +23,7 @@ class ControlPanel extends StatelessWidget {
     required this.onPickRoot,
     required this.selectedPreset,
     required this.onPresetChanged,
+    required this.availablePresets,
     required this.skipPingo,
     required this.onSkipPingoChanged,
     required this.pingoPath,
@@ -94,7 +96,7 @@ class ControlPanel extends StatelessWidget {
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: selectedPreset,
-              items: Preset.all
+              items: availablePresets
                   .map(
                     (p) => DropdownMenuItem(
                       value: p.name,

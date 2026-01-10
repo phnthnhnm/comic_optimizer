@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../presets.dart';
 
 class SettingsRepository {
   static const _keyPreferPermanentDelete = 'preferPermanentDelete';
@@ -16,6 +20,8 @@ class SettingsRepository {
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
+
+  static const _keyCustomPresets = 'customPresets';
 
   // getters
   bool getPreferPermanentDelete() =>
@@ -43,6 +49,19 @@ class SettingsRepository {
 
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
   Future<void> setThemeMode(String v) => _prefs.setString(_keyThemeMode, v);
+
+  // Custom presets persistence
+  List<Preset> getCustomPresets() {
+    final list = _prefs.getStringList(_keyCustomPresets) ?? <String>[];
+    return list
+        .map((s) => Preset.fromJson(jsonDecode(s) as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<bool> setCustomPresets(List<Preset> presets) {
+    final list = presets.map((p) => jsonEncode(p.toJson())).toList();
+    return _prefs.setStringList(_keyCustomPresets, list);
+  }
 
   // Generic setters for unknown keys (used by restore)
   Future<bool> setString(String key, String value) =>

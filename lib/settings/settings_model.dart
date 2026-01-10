@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../presets.dart';
 import 'settings_repository.dart';
 
 class SettingsModel extends ChangeNotifier {
@@ -14,19 +15,6 @@ class SettingsModel extends ChangeNotifier {
   ThemeMode themeMode = ThemeMode.system;
 
   SettingsModel(this._repo);
-
-  Future<void> load() async {
-    await _repo.init();
-    preferPermanentDelete = _repo.getPreferPermanentDelete();
-    skipPingo = _repo.getSkipPingo();
-    pingoPath = _repo.getPingoPath();
-    outputExt = _repo.getOutputExt();
-    lastRoot = _repo.getLastRoot();
-    lastPreset = _repo.getLastPreset();
-    final s = _repo.getThemeMode();
-    themeMode = _stringToMode(s);
-    notifyListeners();
-  }
 
   ThemeMode _stringToMode(String s) {
     switch (s) {
@@ -92,6 +80,45 @@ class SettingsModel extends ChangeNotifier {
     themeMode = m;
     notifyListeners();
     await _repo.setThemeMode(_modeToString(m));
+  }
+
+  // Custom presets managed by the user
+  List<Preset> customPresets = [];
+
+  // load custom presets alongside other prefs
+  Future<void> load() async {
+    await _repo.init();
+    preferPermanentDelete = _repo.getPreferPermanentDelete();
+    skipPingo = _repo.getSkipPingo();
+    pingoPath = _repo.getPingoPath();
+    outputExt = _repo.getOutputExt();
+    lastRoot = _repo.getLastRoot();
+    lastPreset = _repo.getLastPreset();
+    final s = _repo.getThemeMode();
+    themeMode = _stringToMode(s);
+    // load custom presets
+    customPresets = _repo.getCustomPresets();
+    notifyListeners();
+  }
+
+  Future<void> addPreset(Preset p) async {
+    customPresets.add(p);
+    notifyListeners();
+    await _repo.setCustomPresets(customPresets);
+  }
+
+  Future<void> updatePreset(int idx, Preset p) async {
+    if (idx < 0 || idx >= customPresets.length) return;
+    customPresets[idx] = p;
+    notifyListeners();
+    await _repo.setCustomPresets(customPresets);
+  }
+
+  Future<void> removePreset(int idx) async {
+    if (idx < 0 || idx >= customPresets.length) return;
+    customPresets.removeAt(idx);
+    notifyListeners();
+    await _repo.setCustomPresets(customPresets);
   }
 
   // Generic setters exposing repository functionality for restore

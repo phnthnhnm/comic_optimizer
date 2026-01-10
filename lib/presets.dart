@@ -4,6 +4,15 @@ class Preset {
 
   const Preset(this.name, this.args);
 
+  Map<String, dynamic> toJson() => {'name': name, 'args': args};
+
+  factory Preset.fromJson(Map<String, dynamic> m) {
+    final a =
+        (m['args'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+        <String>[];
+    return Preset(m['name']?.toString() ?? '', a);
+  }
+
   static const losslessName = 'Lossless';
   static const lossyName = 'Lossy';
 

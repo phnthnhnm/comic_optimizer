@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../settings/settings_model.dart';
+import '../presets_screen.dart';
 
 class DataTab extends StatefulWidget {
   const DataTab({super.key});
@@ -173,6 +174,14 @@ class _DataTabState extends State<DataTab> {
                 onChanged: (v) => model.setPreferPermanentDelete(v),
               );
             },
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const PresetsScreen())),
+            icon: const Icon(Icons.tune),
+            label: const Text('Manage Presets'),
           ),
         ],
       ),

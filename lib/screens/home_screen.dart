@@ -150,6 +150,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final model = context.watch<SettingsModel>();
     // Safely handle legacy hot-reload state where `_logs` might still be a
     // `List<String>` from an older version. Access via `dynamic` and
     // normalize to `Map<String,List<String>>` for the `LogsPanel`.
@@ -198,6 +199,7 @@ class _HomePageState extends State<HomePage> {
               selectedPreset: _selectedPreset,
               onPresetChanged: (v) =>
                   setState(() => _selectedPreset = v ?? Preset.losslessName),
+              availablePresets: [...Preset.all, ...model.customPresets],
               skipPingo: _skipPingo,
               onSkipPingoChanged: (v) =>
                   setState(() => _skipPingo = v ?? false),

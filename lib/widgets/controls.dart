@@ -38,7 +38,48 @@ class ControlPanel extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text(rootPath ?? 'No root selected')),
+            Expanded(
+              child: rootPath == null
+                  ? const Text('No root selected')
+                  : Tooltip(
+                      message: rootPath!,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withAlpha((0.08 * 255).round()),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary
+                                .withAlpha((0.18 * 255).round()),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.folder_open,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                rootPath!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: onPickRoot,

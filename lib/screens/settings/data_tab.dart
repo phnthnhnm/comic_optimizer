@@ -162,6 +162,14 @@ class _DataTabState extends State<DataTab> {
             label: const Text('Reset All Data'),
           ),
           const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const PresetsScreen())),
+            icon: const Icon(Icons.tune),
+            label: const Text('Manage Presets'),
+          ),
+          const SizedBox(height: 12),
           Builder(
             builder: (context) {
               final model = context.watch<SettingsModel>();
@@ -174,14 +182,6 @@ class _DataTabState extends State<DataTab> {
                 onChanged: (v) => model.setPreferPermanentDelete(v),
               );
             },
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const PresetsScreen())),
-            icon: const Icon(Icons.tune),
-            label: const Text('Manage Presets'),
           ),
         ],
       ),

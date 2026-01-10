@@ -125,7 +125,7 @@ const List<ArgSpec> pingoArgSpecs = [
     id: 'exclude',
     flag: '-no-',
     type: ArgType.multiExclude,
-    label: 'Exclude formats (png,jpeg,apng,webp)',
+    label: 'Exclude this format from processing',
   ),
   ArgSpec(
     id: 'process',

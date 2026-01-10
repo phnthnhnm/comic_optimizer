@@ -359,7 +359,7 @@ Future<void> _showPresetEditor(
                       ),
                       Tooltip(
                         message: tooltipFor('grayscale'),
-                        child: const Text('grayscale'),
+                        child: const Text('Grayscale'),
                       ),
                       const SizedBox(width: 12),
                       Tooltip(
@@ -390,7 +390,7 @@ Future<void> _showPresetEditor(
                       ),
                       Tooltip(
                         message: tooltipFor('srgb'),
-                        child: const Text('srgb'),
+                        child: const Text('sRGB'),
                       ),
                       const SizedBox(width: 12),
                       Checkbox(
@@ -399,7 +399,7 @@ Future<void> _showPresetEditor(
                       ),
                       Tooltip(
                         message: tooltipFor('rotate'),
-                        child: const Text('rotate'),
+                        child: const Text('Rotate'),
                       ),
                     ],
                   ),
@@ -487,12 +487,12 @@ Future<void> _showPresetEditor(
                       ),
                       Tooltip(
                         message: tooltipFor('quiet'),
-                        child: const Text('quiet'),
+                        child: const Text('Quiet'),
                       ),
                     ],
                   ),
                   const Divider(),
-                  const Text('Exclude Formats (-no-N)'),
+                  const Text('Exclude Formats'),
                   Row(
                     children: [
                       for (final fmt in ['png', 'jpeg', 'apng', 'webp'])

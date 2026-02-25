@@ -143,9 +143,10 @@ class Optimizer {
       final tempPrefix = '._tmp_';
       for (final f in imageFiles) {
         final ext = p.extension(f.path);
+        final paddedIdx = idx.toString().padLeft(pad, '0');
         final temp = p.join(
           folder.path,
-          '$tempPrefix${DateTime.now().microsecondsSinceEpoch}_$idx$ext',
+          '$tempPrefix${DateTime.now().microsecondsSinceEpoch}_$paddedIdx$ext',
         );
         try {
           await f.rename(temp);
@@ -165,7 +166,9 @@ class Optimizer {
           .where((e) => e is File && p.basename(e.path).startsWith(tempPrefix))
           .cast<File>()
           .toList();
-      temps.sort((a, b) => a.path.compareTo(b.path));
+      temps.sort(
+        (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
+      );
       idx = 1;
       for (final f in temps) {
         final ext = p.extension(f.path);

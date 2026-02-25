@@ -29,6 +29,28 @@ class Optimizer {
       throw Exception('Root does not exist: ${root.path}');
     }
 
+    // If the selected root folder contains only image files (no subfolders),
+    // optimize the root folder itself instead of skipping.
+    final rootChildren = await root
+        .list(recursive: false, followLinks: false)
+        .toList();
+    final rootHasDirs = rootChildren.any((e) => e is Directory);
+    final rootFiles = rootChildren.whereType<File>().toList();
+    final rootHasImages = rootFiles.any(
+      (f) => _imgExts.contains(p.extension(f.path).toLowerCase()),
+    );
+    if (!rootHasDirs && rootHasImages) {
+      await _processFolder(
+        root,
+        presetArgs,
+        skipPingo,
+        pingoPath,
+        outputExtension,
+        preferPermanentDelete,
+      );
+      return;
+    }
+
     await for (final entity in root.list(
       recursive: false,
       followLinks: false,

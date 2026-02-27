@@ -155,9 +155,7 @@ class _HomePageState extends State<HomePage> {
           final model = context.read<SettingsModel>();
           final level = model.logLevel;
           if (level == LogLevel.none) return;
-          if (level == LogLevel.error && ok) return;
 
-          // Build logs map like LogsPanel expects
           final Map<String, List<String>> logsForPanel = {};
           if (_logs is Map<String, List<String>>) {
             logsForPanel.addAll(_logs as Map<String, List<String>>);
@@ -167,6 +165,21 @@ class _HomePageState extends State<HomePage> {
 
           final lines = logsForPanel[f];
           if (lines == null || lines.isEmpty) return;
+
+          // Determine if any error occurred during processing of this folder.
+          var hadError = false;
+          for (final ln in lines) {
+            final l = ln.toLowerCase();
+            if (l.contains('cjxl retry exit') || l.contains('cjxl exit')) {
+              if (!l.contains('exit 0')) hadError = true;
+            } else if (l.contains('error') ||
+                l.contains('failed') ||
+                l.contains('err')) {
+              hadError = true;
+            }
+          }
+
+          if (level == LogLevel.error && !hadError) return;
 
           final appData = Platform.environment['APPDATA'] ?? '';
           if (appData.isEmpty) return;

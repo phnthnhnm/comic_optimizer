@@ -107,22 +107,25 @@ class _LogsPanelState extends State<LogsPanel> {
     final lines = widget.logsByFolder[key];
     if (lines == null || lines.isEmpty) return null;
 
-    // Prefer the most-recent cjxl/retry status. Scan from the end so a
-    // successful retry (e.g. "cjxl retry exit 0") will override earlier
-    // error lines from the initial cjxl attempt.
-    for (final ln in lines.reversed) {
+    var hadNonZeroExit = false;
+    var hadZeroExit = false;
+    var hadErrorText = false;
+    for (final ln in lines) {
       final l = ln.toLowerCase();
-      if (l.contains('cjxl retry exit')) {
-        return l.contains('exit 0') ? Colors.green : Colors.redAccent;
-      }
-      if (l.contains('cjxl exit')) {
-        return l.contains('exit 0') ? Colors.green : Colors.redAccent;
+      if (l.contains('cjxl retry exit') || l.contains('cjxl exit')) {
+        if (l.contains('exit 0')) {
+          hadZeroExit = true;
+        } else {
+          hadNonZeroExit = true;
+        }
       }
       if (l.contains('error') || l.contains('failed') || l.contains('err')) {
-        return Colors.redAccent;
+        hadErrorText = true;
       }
     }
 
+    if (hadNonZeroExit || hadErrorText) return Colors.redAccent;
+    if (hadZeroExit) return Colors.green;
     return Colors.green;
   }
 
@@ -289,14 +292,15 @@ Color _colorForLine(String line, BuildContext ctx) {
     return Colors.redAccent;
   }
   // Storage summary lines: color by percentage saved (within parentheses):
-  // >=35% -> green, >=15% -> yellow, <15% -> red
+  // >=50% -> blue, >=30% and <50% -> green, >=0% and <30% -> yellow, <0% -> red
   if (lc.contains('saved') && lc.contains('%')) {
     final reg = RegExp(r"\(([-+]?\d+(?:\.\d+)?)%\)");
     final m = reg.firstMatch(lc);
     if (m != null) {
       final pct = double.tryParse(m.group(1)!) ?? 0.0;
-      if (pct >= 35.0) return Colors.greenAccent;
-      if (pct >= 15.0) return Colors.amberAccent.shade700;
+      if (pct >= 50.0) return Colors.blueAccent;
+      if (pct >= 30.0) return Colors.greenAccent;
+      if (pct >= 0.0) return Colors.amberAccent.shade700;
       return Colors.redAccent;
     }
   }

@@ -154,10 +154,6 @@ class Encoder {
                   if (retry.exitCode != 0) {
                     onLog?.call('cjxl retry exit ${retry.exitCode}');
                     success = false;
-                  } else {
-                    // Log explicit success so the UI can detect the retry succeeded
-                    // and avoid marking the folder as failed.
-                    onLog?.call('cjxl retry exit ${retry.exitCode}');
                   }
                 } else {
                   onLog?.call(

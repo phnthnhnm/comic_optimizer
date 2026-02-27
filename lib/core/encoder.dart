@@ -58,6 +58,7 @@ class Encoder {
               f.path,
               '-o',
               pngPath,
+              '-mt',
               '-quiet',
             ], workingDirectory: folder.path);
             if (isCancelled()) {

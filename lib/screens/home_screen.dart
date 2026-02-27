@@ -179,7 +179,16 @@ class _HomePageState extends State<HomePage> {
             }
           }
 
-          if (level == LogLevel.error && !hadError) return;
+          // Also consider storage not saved (0% or negative) as an error condition
+          var hadBadStorage = false;
+          try {
+            if (beforeBytes != null && afterBytes != null && beforeBytes > 0) {
+              final pct = ((beforeBytes - afterBytes) / beforeBytes) * 100.0;
+              if (pct <= 0.0) hadBadStorage = true;
+            }
+          } catch (_) {}
+
+          if (level == LogLevel.error && !hadError && !hadBadStorage) return;
 
           final appData = Platform.environment['APPDATA'] ?? '';
           if (appData.isEmpty) return;

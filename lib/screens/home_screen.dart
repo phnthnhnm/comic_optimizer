@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../optimizer.dart';
+import '../core/optimizer.dart';
 import '../presets.dart';
 import '../settings/settings_model.dart';
 import '../widgets/controls.dart';

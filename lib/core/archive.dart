@@ -1,0 +1,95 @@
+import 'dart:io';
+
+import 'package:archive/archive.dart';
+import 'package:path/path.dart' as p;
+
+import 'io.dart';
+
+typedef LogCallback = void Function(String);
+
+class ArchiveResult {
+  final bool success;
+  final int? bytes;
+  final String? path;
+
+  ArchiveResult(this.success, this.bytes, this.path);
+}
+
+/// Create a zip archive of [folder] in its parent directory using store
+/// (no compression). If the archive is created outside the source folder,
+/// optionally remove the source folder (either permanently or via Recycle Bin
+/// on Windows).
+Future<ArchiveResult> createArchiveAndMaybeRemoveSource(
+  Directory folder,
+  String originalPath,
+  String outputExtension,
+  bool preferPermanentDelete, {
+  LogCallback? onLog,
+}) async {
+  final parent = Directory(folder.parent.path);
+  final archiveName = '${p.basename(originalPath)}$outputExtension';
+  final archivePath = p.join(parent.path, archiveName);
+  if (p.isWithin(folder.path, archivePath)) {
+    onLog?.call(
+      'Archive path would be inside source folder; skipping delete: $archivePath',
+    );
+  }
+
+  int? archiveBytes;
+  try {
+    final archive = Archive();
+    final finalFiles = await parentForFolderFiles(folder);
+    for (final f in finalFiles) {
+      final rel = p.relative(f.path, from: folder.path);
+      final bytes = await File(f.path).readAsBytes();
+      final file = ArchiveFile(rel, bytes.length, bytes);
+      archive.addFile(file);
+    }
+    final encoder = ZipEncoder();
+    final outData = encoder.encode(archive, level: 0);
+    final out = File(archivePath);
+    await out.writeAsBytes(outData);
+    try {
+      archiveBytes = await out.length();
+    } catch (_) {
+      archiveBytes = null;
+    }
+    onLog?.call('Created archive ${p.basename(archivePath)}');
+  } catch (e) {
+    onLog?.call('Failed to create archive: $e');
+    return ArchiveResult(false, null, null);
+  }
+
+  // Remove source folder if archive is outside
+  try {
+    final arch = p.normalize(p.absolute(p.join(parent.path, archiveName)));
+    final folderAbs = p.normalize(p.absolute(folder.path));
+    if (!p.isWithin(folderAbs, arch)) {
+      try {
+        if (preferPermanentDelete) {
+          await folder.delete(recursive: true);
+          onLog?.call(
+            'Removed source folder ${p.basename(originalPath)} (permanent delete)',
+          );
+        } else {
+          await recycleOrDelete(folder, onLog: onLog);
+          onLog?.call(
+            'Removed source folder ${p.basename(originalPath)} (moved to Recycle Bin)',
+          );
+        }
+      } catch (e) {
+        onLog?.call(
+          'Failed to remove source folder ${p.basename(originalPath)}: $e',
+        );
+        return ArchiveResult(false, archiveBytes, archivePath);
+      }
+    } else {
+      onLog?.call('Archive is inside source; not deleting source folder');
+    }
+  } catch (e) {
+    onLog?.call('Failed to delete source folder: $e');
+    return ArchiveResult(false, archiveBytes, archivePath);
+  }
+
+  return ArchiveResult(true, archiveBytes, archivePath);
+}

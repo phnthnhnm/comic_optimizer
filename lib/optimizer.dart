@@ -416,7 +416,7 @@ class Optimizer {
             final args = [inputPath, outPath, ...presetArgs];
             onLog?.call('Running cjxl: cjxl ${maskArgs(args)}');
             try {
-              final result = await Process.run(
+              var result = await Process.run(
                 cjxlPath,
                 args,
                 workingDirectory: folder.path,
@@ -433,9 +433,76 @@ class Optimizer {
                   result.stderr.toString().isNotEmpty) {
                 onLog?.call(result.stderr.toString());
               }
+
+              // If cjxl failed with exit code 1, try to resave the input losslessly
+              // with ImageMagick and retry cjxl using the resaved PNG.
               if (result.exitCode != 0) {
-                onLog?.call('cjxl exit ${result.exitCode}');
-                success = false;
+                if (result.exitCode == 1) {
+                  final resavedPath = p.join(
+                    folder.path,
+                    '${base}_magick_resaved_${DateTime.now().microsecondsSinceEpoch}.png',
+                  );
+                  onLog?.call(
+                    'cjxl exit 1 for ${p.basename(inputPath)}; attempting ImageMagick resave -> ${p.basename(resavedPath)}',
+                  );
+                  try {
+                    final magick = await Process.run('magick', [
+                      inputPath,
+                      resavedPath,
+                    ], workingDirectory: folder.path);
+                    if (magick.stdout != null &&
+                        magick.stdout.toString().isNotEmpty) {
+                      onLog?.call(magick.stdout.toString());
+                    }
+                    if (magick.stderr != null &&
+                        magick.stderr.toString().isNotEmpty) {
+                      onLog?.call(magick.stderr.toString());
+                    }
+
+                    final resavedFile = File(resavedPath);
+                    if (magick.exitCode == 0 && await resavedFile.exists()) {
+                      // Retry cjxl with the resaved file
+                      final retryArgs = [resavedPath, outPath, ...presetArgs];
+                      onLog?.call('Retrying cjxl: cjxl ${maskArgs(retryArgs)}');
+                      final retry = await Process.run(
+                        cjxlPath,
+                        retryArgs,
+                        workingDirectory: folder.path,
+                      );
+                      if (retry.stdout != null &&
+                          retry.stdout.toString().isNotEmpty) {
+                        onLog?.call(retry.stdout.toString());
+                      }
+                      if (retry.stderr != null &&
+                          retry.stderr.toString().isNotEmpty) {
+                        onLog?.call(retry.stderr.toString());
+                      }
+                      if (retry.exitCode != 0) {
+                        onLog?.call('cjxl retry exit ${retry.exitCode}');
+                        success = false;
+                      }
+                    } else {
+                      onLog?.call(
+                        'ImageMagick resave failed (exit ${magick.exitCode}), not retrying cjxl',
+                      );
+                      success = false;
+                    }
+                    // Attempt to remove the resaved temp file if it exists
+                    try {
+                      if (await File(resavedPath).exists()) {
+                        await File(resavedPath).delete();
+                      }
+                    } catch (_) {}
+                  } catch (e) {
+                    onLog?.call(
+                      'Failed to run ImageMagick for ${p.basename(inputPath)}: $e',
+                    );
+                    success = false;
+                  }
+                } else {
+                  onLog?.call('cjxl exit ${result.exitCode}');
+                  success = false;
+                }
               }
             } catch (e) {
               onLog?.call(

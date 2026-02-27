@@ -206,10 +206,44 @@ class Optimizer {
           for (final f in encodeFiles) {
             final base = p.basenameWithoutExtension(f.path);
             final outPath = p.join(folder.path, '$base.jxl');
-            final args = [f.path, outPath, ...presetArgs];
-            onLog?.call(
-              'Running cjxl: cjxl ${args.join(' ')} (cwd=${folder.path})',
-            );
+
+            // If input is .webp, convert losslessly to PNG first using dwebp,
+            // then feed the PNG to cjxl (cjxl doesn't accept webp).
+            var inputPath = f.path;
+            final ext = p.extension(f.path).toLowerCase();
+            if (ext == '.webp') {
+              final pngPath = p.join(folder.path, '$base.png');
+              onLog?.call(
+                'Converting WEBP -> PNG: dwebp ${f.path} -o $pngPath',
+              );
+              try {
+                final conv = await Process.run('dwebp', [
+                  f.path,
+                  '-o',
+                  pngPath,
+                ], workingDirectory: folder.path);
+                if (conv.stdout != null && conv.stdout.toString().isNotEmpty) {
+                  onLog?.call(conv.stdout.toString());
+                }
+                if (conv.stderr != null && conv.stderr.toString().isNotEmpty) {
+                  onLog?.call(conv.stderr.toString());
+                }
+                if (conv.exitCode != 0) {
+                  onLog?.call('dwebp exit ${conv.exitCode} for ${f.path}');
+                  success = false;
+                  // skip running cjxl for this file
+                  continue;
+                }
+                inputPath = pngPath;
+              } catch (e) {
+                onLog?.call('Failed to run dwebp for ${f.path}: $e');
+                success = false;
+                continue;
+              }
+            }
+
+            final args = [inputPath, outPath, ...presetArgs];
+            onLog?.call('Running cjxl: cjxl ${args.join(' ')}');
             try {
               final result = await Process.run(
                 cjxlPath,
@@ -229,7 +263,7 @@ class Optimizer {
                 success = false;
               }
             } catch (e) {
-              onLog?.call('Failed to run cjxl for ${f.path}: $e');
+              onLog?.call('Failed to run cjxl for $inputPath: $e');
               success = false;
             }
           }
@@ -243,7 +277,7 @@ class Optimizer {
         );
       }
 
-      // Remove redundant originals: if .webp exists with same base, remove non-webp
+      // Remove redundant originals: if .jxl exists with same base, remove non-jxl
       final afterOpt = await folder
           .list(recursive: false, followLinks: false)
           .where((e) => e is File)

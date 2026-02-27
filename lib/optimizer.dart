@@ -339,17 +339,23 @@ class Optimizer {
                   f.path,
                   '-o',
                   pngPath,
+                  '-quiet',
                 ], workingDirectory: folder.path);
-                if (conv.stdout != null && conv.stdout.toString().isNotEmpty) {
-                  onLog?.call(conv.stdout.toString());
-                }
-                if (conv.stderr != null && conv.stderr.toString().isNotEmpty) {
-                  onLog?.call(conv.stderr.toString());
-                }
                 if (conv.exitCode != 0) {
-                  onLog?.call('dwebp exit ${conv.exitCode} for ${f.path}');
+                  if (conv.stderr != null &&
+                      conv.stderr.toString().isNotEmpty) {
+                    onLog?.call(conv.stderr.toString());
+                  } else {
+                    onLog?.call('dwebp exit ${conv.exitCode} for ${f.path}');
+                  }
                   success = false;
                   // skip running cjxl for this file
+                  continue;
+                }
+                final outFile = File(pngPath);
+                if (!await outFile.exists()) {
+                  onLog?.call('dwebp did not produce $pngPath for ${f.path}');
+                  success = false;
                   continue;
                 }
                 inputPath = pngPath;

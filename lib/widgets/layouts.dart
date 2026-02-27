@@ -194,28 +194,53 @@ class _LogsPanelState extends State<LogsPanel> {
                           // Use a Stack so we can overlay a resume-auto-scroll button.
                           return Stack(
                             children: [
-                              ListView.builder(
-                                controller: _scrollController,
-                                itemCount: lines.length,
-                                itemBuilder: (c, i) {
-                                  final line = lines[i];
-                                  final color = _colorForLine(line, context);
-                                  final weight = _weightForLine(line);
-                                  final bg = _bgForLine(line, context, i);
-                                  return Container(
-                                    color: bg,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: Text(
-                                        line,
-                                        style: TextStyle(
-                                          color: color,
-                                          fontWeight: weight,
-                                        ),
-                                      ),
+                              Positioned.fill(
+                                child: SingleChildScrollView(
+                                  controller: _scrollController,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6.0,
+                                      horizontal: 2.0,
                                     ),
-                                  );
-                                },
+                                    child: SelectableText.rich(
+                                      TextSpan(
+                                        children: List.generate(lines.length, (
+                                          i,
+                                        ) {
+                                          final line = lines[i];
+                                          final color = _colorForLine(
+                                            line,
+                                            context,
+                                          );
+                                          final weight = _weightForLine(line);
+                                          return TextSpan(
+                                            text:
+                                                line +
+                                                (i == lines.length - 1
+                                                    ? ''
+                                                    : '\n'),
+                                            style: TextStyle(
+                                              color: color,
+                                              fontWeight: weight,
+                                            ),
+                                          );
+                                        }),
+                                      ),
+                                      contextMenuBuilder:
+                                          (
+                                            BuildContext ctx,
+                                            selectableTextState,
+                                          ) {
+                                            return AdaptiveTextSelectionToolbar.buttonItems(
+                                              anchors: selectableTextState
+                                                  .contextMenuAnchors,
+                                              buttonItems: selectableTextState
+                                                  .contextMenuButtonItems,
+                                            );
+                                          },
+                                    ),
+                                  ),
+                                ),
                               ),
                               if (!_autoScroll)
                                 Positioned(
@@ -294,31 +319,4 @@ FontWeight _weightForLine(String line) {
   }
   if (lc.startsWith('start:') || lc.startsWith('done:')) return FontWeight.w600;
   return FontWeight.normal;
-}
-
-Color? _bgForLine(String line, BuildContext ctx, int index) {
-  final lc = line.toLowerCase();
-  // Slight zebra striping for readability
-  final base = index % 2 == 0
-      ? Theme.of(ctx).colorScheme.surface.withAlpha(8)
-      : null;
-  if (lc.contains('error') || lc.contains('failed') || lc.contains('err')) {
-    return Colors.redAccent.withAlpha(30);
-  }
-  if (lc.startsWith('done:') && lc.contains('ok')) {
-    return Colors.green.withAlpha(30);
-  }
-  if (lc.startsWith('start:')) {
-    return Theme.of(ctx).colorScheme.primary.withAlpha(16);
-  }
-  if (lc.contains('removed') ||
-      lc.contains('deleted') ||
-      lc.contains('removed duplicate')) {
-    return Colors.orange.withAlpha(20);
-  }
-  if (lc.contains('created archive')) return Colors.green.withAlpha(16);
-  if (lc.contains('running cjxl') || lc.contains('created safe copy')) {
-    return Colors.cyan.withAlpha(16);
-  }
-  return base;
 }

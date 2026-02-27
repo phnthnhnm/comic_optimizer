@@ -118,6 +118,7 @@ class _HomePageState extends State<HomePage> {
       _logs = {};
       _currentLogFolder = null;
       _running = true;
+      _folderSizes.clear();
     });
 
     final preset = Preset.byName(_selectedPreset);

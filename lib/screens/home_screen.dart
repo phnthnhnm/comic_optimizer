@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   String? _rootPath;
   String _selectedPreset = Preset.losslessName;
   bool _skipCjxl = false;
+  bool _preferPermanentDelete = false;
 
   String _outputExt = '.cbz';
   dynamic _logs = {};
@@ -41,6 +42,7 @@ class _HomePageState extends State<HomePage> {
             : Preset.losslessName;
         _outputExt = model.outputExt;
         _skipCjxl = model.skipCjxl;
+        _preferPermanentDelete = model.preferPermanentDelete;
       });
     });
   }
@@ -50,6 +52,7 @@ class _HomePageState extends State<HomePage> {
     if (_rootPath != null) await model.setLastRoot(_rootPath);
     await model.setLastPreset(_selectedPreset);
     await model.setSkipCjxl(_skipCjxl);
+    await model.setPreferPermanentDelete(_preferPermanentDelete);
     await model.setOutputExt(_outputExt);
   }
 
@@ -81,9 +84,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    final preferPermanentDelete = context
-        .read<SettingsModel>()
-        .preferPermanentDelete;
+    final preferPermanentDelete = _preferPermanentDelete;
 
     final ok = await showDialog<bool>(
       context: context,
@@ -198,6 +199,9 @@ class _HomePageState extends State<HomePage> {
                   setState(() => _selectedPreset = v ?? Preset.losslessName),
               skipCjxl: _skipCjxl,
               onSkipCjxlChanged: (v) => setState(() => _skipCjxl = v ?? false),
+              preferPermanentDelete: _preferPermanentDelete,
+              onPreferPermanentDeleteChanged: (v) =>
+                  setState(() => _preferPermanentDelete = v ?? false),
               outputExt: _outputExt,
               onOutputExtChanged: (v) =>
                   setState(() => _outputExt = v ?? '.cbz'),

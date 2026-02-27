@@ -163,19 +163,6 @@ class _DataTabState extends State<DataTab> {
           const SizedBox(height: 12),
 
           const SizedBox(height: 12),
-          Builder(
-            builder: (context) {
-              final model = context.watch<SettingsModel>();
-              return SwitchListTile(
-                title: const Text('Prefer permanent delete'),
-                subtitle: const Text(
-                  'When enabled, source folders are permanently deleted instead of moved to the Recycle Bin.',
-                ),
-                value: model.preferPermanentDelete,
-                onChanged: (v) => model.setPreferPermanentDelete(v),
-              );
-            },
-          ),
         ],
       ),
     );

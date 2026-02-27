@@ -352,7 +352,7 @@ class Optimizer {
             } else {
               await _recycleOrDelete(folder);
               onLog?.call(
-                'Removed source folder ${folder.path} (moved to Recycle Bin on Windows)',
+                'Removed source folder ${folder.path} (moved to Recycle Bin)',
               );
             }
           } catch (e) {

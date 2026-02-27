@@ -9,6 +9,8 @@ class ControlPanel extends StatelessWidget {
   final ValueChanged<String?> onPresetChanged;
   final bool skipCjxl;
   final ValueChanged<bool?> onSkipCjxlChanged;
+  final bool preferPermanentDelete;
+  final ValueChanged<bool?> onPreferPermanentDeleteChanged;
 
   final String outputExt;
   final ValueChanged<String?> onOutputExtChanged;
@@ -25,6 +27,8 @@ class ControlPanel extends StatelessWidget {
     required this.onOutputExtChanged,
     required this.skipCjxl,
     required this.onSkipCjxlChanged,
+    required this.preferPermanentDelete,
+    required this.onPreferPermanentDeleteChanged,
     required this.running,
     required this.onStart,
   });
@@ -102,6 +106,13 @@ class ControlPanel extends StatelessWidget {
             Checkbox(value: skipCjxl, onChanged: onSkipCjxlChanged),
             const SizedBox(width: 4),
             const Text('Skip cjxl'),
+            const SizedBox(width: 12),
+            Checkbox(
+              value: preferPermanentDelete,
+              onChanged: onPreferPermanentDeleteChanged,
+            ),
+            const SizedBox(width: 4),
+            const Text('Delete permanently'),
           ],
         ),
         const SizedBox(height: 8),

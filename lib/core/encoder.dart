@@ -45,9 +45,18 @@ class Encoder {
         }
         final base = p.basenameWithoutExtension(f.path);
         final outPath = p.join(folder.path, '$base.jxl');
-
         var inputPath = f.path;
         final ext = p.extension(f.path).toLowerCase();
+        // Remember original file path & size for per-file comparison.
+        final originalPath = f.path;
+        int? originalSize;
+        try {
+          originalSize = await File(originalPath).length();
+        } catch (_) {
+          originalSize = null;
+        }
+        var createdIntermediatePng = false;
+        String? intermediatePngPath;
         if (ext == '.webp') {
           final pngPath = p.join(folder.path, '$base.png');
           onLog?.call(
@@ -85,6 +94,8 @@ class Encoder {
               continue;
             }
             inputPath = pngPath;
+            createdIntermediatePng = true;
+            intermediatePngPath = pngPath;
           } catch (e) {
             onLog?.call('Failed to run dwebp for ${f.path}: $e');
             success = false;
@@ -111,6 +122,44 @@ class Encoder {
             onLog?.call(result.stderr.toString());
           }
 
+          // After cjxl run, if output exists compare sizes to original and
+          // revert (delete) the .jxl if it's larger than the original.
+          Future<void> maybeRevertIfLarger(String jxlPath) async {
+            try {
+              final jxlFile = File(jxlPath);
+              if (!await jxlFile.exists()) return;
+              final jxlSize = await jxlFile.length();
+              if (originalSize != null && jxlSize >= originalSize) {
+                try {
+                  await jxlFile.delete();
+                  onLog?.call(
+                    'Reverted larger .jxl: ${p.basename(jxlPath)} (was $jxlSize bytes > original $originalSize bytes)',
+                  );
+                } catch (e) {
+                  onLog?.call(
+                    'Failed to delete larger .jxl ${p.basename(jxlPath)}: $e',
+                  );
+                }
+                // If we created an intermediate PNG from WEBP, remove it too.
+                if (createdIntermediatePng && intermediatePngPath != null) {
+                  try {
+                    final ip = File(intermediatePngPath);
+                    if (await ip.exists()) {
+                      await ip.delete();
+                      onLog?.call(
+                        'Removed intermediate PNG ${p.basename(intermediatePngPath)}',
+                      );
+                    }
+                  } catch (e) {
+                    onLog?.call(
+                      'Failed to remove intermediate PNG ${p.basename(intermediatePngPath)}: $e',
+                    );
+                  }
+                }
+              }
+            } catch (_) {}
+          }
+
           if (result.exitCode != 0) {
             if (result.exitCode == 1) {
               final resavedPath = p.join(
@@ -133,7 +182,6 @@ class Encoder {
                     magick.stderr.toString().isNotEmpty) {
                   onLog?.call(magick.stderr.toString());
                 }
-
                 final resavedFile = File(resavedPath);
                 if (magick.exitCode == 0 && await resavedFile.exists()) {
                   final retryArgs = [resavedPath, outPath, ...presetArgs];
@@ -154,6 +202,9 @@ class Encoder {
                   if (retry.exitCode != 0) {
                     onLog?.call('cjxl retry exit ${retry.exitCode}');
                     success = false;
+                  } else {
+                    // Successful retry; check size and possibly revert
+                    await maybeRevertIfLarger(outPath);
                   }
                 } else {
                   onLog?.call(
@@ -176,6 +227,9 @@ class Encoder {
               onLog?.call('cjxl exit ${result.exitCode}');
               success = false;
             }
+          } else {
+            // Successful first cjxl run; check size and possibly revert.
+            await maybeRevertIfLarger(outPath);
           }
         } catch (e) {
           onLog?.call('Failed to run cjxl for ${p.basename(inputPath)}: $e');

@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   bool _starting = false;
   Optimizer? _currentOptimizer;
   final Map<String, Map<String, int?>> _folderSizes = {};
+  final Map<String, Map<String, Map<String, int?>>> _perFileSizes = {};
 
   @override
   void initState() {
@@ -146,8 +147,13 @@ class _HomePageState extends State<HomePage> {
           _starting = false;
         });
       },
-      onFolderDone: (f, ok, beforeBytes, afterBytes) async {
+      onFolderDone: (f, ok, beforeBytes, afterBytes, perFileSizes) async {
         _folderSizes[f] = {'before': beforeBytes, 'after': afterBytes};
+        if (perFileSizes != null) {
+          _perFileSizes[f] = perFileSizes.map(
+            (k, v) => MapEntry(k, Map<String, int?>.from(v)),
+          );
+        }
         _log('Done: $f (${ok ? 'OK' : 'ERR'})', folder: f);
         setState(() => _currentLogFolder = null);
 

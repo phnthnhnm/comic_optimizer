@@ -16,6 +16,7 @@ typedef FolderDoneCallback =
       bool success,
       int? beforeBytes,
       int? afterBytes,
+      Map<String, Map<String, int?>>? perFileSizes,
     );
 
 class Optimizer {
@@ -173,6 +174,7 @@ class Optimizer {
     var success = true;
     int? beforeTotalBytes;
     int? archiveBytes;
+    final perFileSizes = <String, Map<String, int?>>{};
     try {
       // list images
       final files = await folder
@@ -187,6 +189,16 @@ class Optimizer {
       if (images.isEmpty) {
         onLog?.call('No images in ${p.basename(originalPath)}, skipping');
         return;
+      }
+
+      // Record per-file sizes before optimization
+      for (final img in images) {
+        try {
+          final len = await img.length();
+          perFileSizes[p.basename(img.path)] = {'before': len, 'after': null};
+        } catch (_) {
+          perFileSizes[p.basename(img.path)] = {'before': null, 'after': null};
+        }
       }
 
       beforeTotalBytes = await sumFileLengths(images);
@@ -253,7 +265,49 @@ class Optimizer {
       onLog?.call('Error processing ${p.basename(originalPath)}: $e');
       success = false;
     } finally {
-      onFolderDone?.call(originalPath, success, beforeTotalBytes, archiveBytes);
+      // Compute per-file after sizes: determine for each original whether a
+      // .jxl exists for the same base; use its size if present, else original.
+      try {
+        final afterFiles = await folder
+            .list(recursive: false, followLinks: false)
+            .where((e) => e is File)
+            .cast<File>()
+            .toList();
+        final afterMap = <String, File>{};
+        for (final f in afterFiles) {
+          afterMap[p.basename(f.path)] = f;
+        }
+        perFileSizes.forEach((origName, map) {
+          final base = origName.contains('.')
+              ? origName.substring(0, origName.lastIndexOf('.'))
+              : origName;
+          final jxlName = '$base.jxl';
+          if (afterMap.containsKey(jxlName)) {
+            try {
+              map['after'] = afterMap[jxlName]!.lengthSync();
+            } catch (_) {
+              map['after'] = null;
+            }
+          } else if (afterMap.containsKey(origName)) {
+            try {
+              map['after'] = afterMap[origName]!.lengthSync();
+            } catch (_) {
+              map['after'] = null;
+            }
+          } else {
+            // File disappeared (e.g., removed), leave after as null
+            map['after'] = null;
+          }
+        });
+      } catch (_) {}
+
+      onFolderDone?.call(
+        originalPath,
+        success,
+        beforeTotalBytes,
+        archiveBytes,
+        perFileSizes,
+      );
     }
   }
 }

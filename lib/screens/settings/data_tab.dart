@@ -134,11 +134,34 @@ class _DataTabState extends State<DataTab> {
 
   @override
   Widget build(BuildContext context) {
+    final model = context.watch<SettingsModel>();
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Log setting
+          Row(
+            children: [
+              const Text('Log:'),
+              const SizedBox(width: 12),
+              DropdownButton<LogLevel>(
+                value: model.logLevel,
+                items: const [
+                  DropdownMenuItem(value: LogLevel.none, child: Text('None')),
+                  DropdownMenuItem(
+                    value: LogLevel.normal,
+                    child: Text('Normal'),
+                  ),
+                  DropdownMenuItem(value: LogLevel.error, child: Text('Error')),
+                ],
+                onChanged: (v) {
+                  if (v != null) model.setLogLevel(v);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _backupData,
             icon: const Icon(Icons.save),

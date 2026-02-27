@@ -146,10 +146,49 @@ class _HomePageState extends State<HomePage> {
           _starting = false;
         });
       },
-      onFolderDone: (f, ok, beforeBytes, afterBytes) {
+      onFolderDone: (f, ok, beforeBytes, afterBytes) async {
         _folderSizes[f] = {'before': beforeBytes, 'after': afterBytes};
         _log('Done: $f (${ok ? 'OK' : 'ERR'})', folder: f);
         setState(() => _currentLogFolder = null);
+
+        try {
+          final model = context.read<SettingsModel>();
+          final level = model.logLevel;
+          if (level == LogLevel.none) return;
+          if (level == LogLevel.error && ok) return;
+
+          // Build logs map like LogsPanel expects
+          final Map<String, List<String>> logsForPanel = {};
+          if (_logs is Map<String, List<String>>) {
+            logsForPanel.addAll(_logs as Map<String, List<String>>);
+          } else if (_logs is List<String>) {
+            logsForPanel['General'] = List<String>.from(_logs as List<String>);
+          }
+
+          final lines = logsForPanel[f];
+          if (lines == null || lines.isEmpty) return;
+
+          final appData = Platform.environment['APPDATA'] ?? '';
+          if (appData.isEmpty) return;
+          final logsDir = p.join(
+            appData,
+            'com.phanthanhnam',
+            'comic_optimizer',
+            'logs',
+          );
+          try {
+            await Directory(logsDir).create(recursive: true);
+            final iso = DateTime.now().toIso8601String().replaceAll(':', '-');
+            final filename = '${p.basename(f)}_$iso.log';
+            final file = File(p.join(logsDir, filename));
+            await file.writeAsString(lines.join('\n'));
+          } catch (e) {
+            // ignore file write errors but log them
+            _log('Failed to write log file for ${p.basename(f)}: $e');
+          }
+        } catch (e) {
+          _log('Error while attempting to write log file: $e');
+        }
       },
     );
     _currentOptimizer = optimizer;

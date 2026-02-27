@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../presets.dart';
 import 'settings_repository.dart';
 
+enum LogLevel { none, normal, error }
+
 enum PostRunAction { none, quit, sleep, hibernate, shutdown, restart }
 
 String _postRunActionToName(PostRunAction a) {
@@ -50,6 +52,8 @@ class SettingsModel extends ChangeNotifier {
   String lastPreset = Preset.losslessName;
   String? lastRoot;
   ThemeMode themeMode = ThemeMode.system;
+  // Logging settings
+  LogLevel logLevel = LogLevel.none;
 
   // post-run action settings
   PostRunAction postRunAction = PostRunAction.none;
@@ -57,6 +61,29 @@ class SettingsModel extends ChangeNotifier {
   int postRunConfirmSeconds = 60;
 
   SettingsModel(this._repo);
+
+  // Log level conversions
+  String _logLevelToName(LogLevel l) {
+    switch (l) {
+      case LogLevel.none:
+        return 'none';
+      case LogLevel.normal:
+        return 'normal';
+      case LogLevel.error:
+        return 'error';
+    }
+  }
+
+  LogLevel _logLevelFromName(String s) {
+    switch (s) {
+      case 'normal':
+        return LogLevel.normal;
+      case 'error':
+        return LogLevel.error;
+      default:
+        return LogLevel.none;
+    }
+  }
 
   ThemeMode _stringToMode(String s) {
     switch (s) {
@@ -143,6 +170,12 @@ class SettingsModel extends ChangeNotifier {
     await _repo.setThemeMode(_modeToString(m));
   }
 
+  Future<void> setLogLevel(LogLevel l) async {
+    logLevel = l;
+    notifyListeners();
+    await _repo.setLogLevel(_logLevelToName(l));
+  }
+
   // load preferences
   Future<void> load() async {
     await _repo.init();
@@ -163,6 +196,10 @@ class SettingsModel extends ChangeNotifier {
 
     final s = _repo.getThemeMode();
     themeMode = _stringToMode(s);
+
+    // load logging setting
+    final ls = _repo.getLogLevel();
+    logLevel = _logLevelFromName(ls);
 
     notifyListeners();
   }

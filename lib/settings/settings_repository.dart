@@ -13,6 +13,7 @@ class SettingsRepository {
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
   static const _keyThemeMode = 'theme_mode';
+  static const _keyLogLevel = 'log_level';
 
   late final SharedPreferences _prefs;
 
@@ -33,6 +34,7 @@ class SettingsRepository {
   String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
   bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? false;
   String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
+  String getLogLevel() => _prefs.getString(_keyLogLevel) ?? 'none';
   String getPostRunAction() => _prefs.getString(_keyPostRunAction) ?? 'none';
   bool getPostRunConfirmEnabled() =>
       _prefs.getBool(_keyPostRunConfirmEnabled) ?? true;
@@ -66,6 +68,7 @@ class SettingsRepository {
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
 
   Future<void> setThemeMode(String v) => _prefs.setString(_keyThemeMode, v);
+  Future<void> setLogLevel(String v) => _prefs.setString(_keyLogLevel, v);
 
   // Custom presets persistence
 

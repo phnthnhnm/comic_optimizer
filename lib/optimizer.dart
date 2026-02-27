@@ -160,7 +160,7 @@ class Optimizer {
     var idx = 1;
     String candidate;
     do {
-      candidate = p.join(parent.path, '$base (${idx})');
+      candidate = p.join(parent.path, '$base ($idx)');
       idx++;
     } while (await Directory(candidate).exists());
     final dest = Directory(candidate);

@@ -17,11 +17,15 @@ class Preset {
   static const lossyName = 'Lossy';
 
   static const lossless = Preset(losslessName, [
-    '-d',
-    '0',
+    '--distance=0',
     '--lossless_jpeg=1',
+    '--quiet',
   ]);
-  static const lossy = Preset(lossyName, ['-d', '3.0', '--lossless_jpeg=0']);
+  static const lossy = Preset(lossyName, [
+    '--distance=3.0',
+    '--lossless_jpeg=0',
+    '--quiet',
+  ]);
 
   static const all = [lossless, lossy];
 

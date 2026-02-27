@@ -18,8 +18,15 @@ class Optimizer {
   final LogCallback? onLog;
   final FolderCallback? onFolderStart;
   final FolderDoneCallback? onFolderDone;
+  bool _cancelRequested = false;
 
   Optimizer({this.onLog, this.onFolderStart, this.onFolderDone});
+
+  /// Request cancellation of the current operation. Optimizer will stop
+  /// between files / folders as soon as it observes the request.
+  void cancel() {
+    _cancelRequested = true;
+  }
 
   static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng', '.jxl'};
 
@@ -63,12 +70,17 @@ class Optimizer {
       recursive: false,
       followLinks: false,
     )) {
+      if (_cancelRequested) {
+        onLog?.call('Operation cancelled by user');
+        break;
+      }
       if (entity is Directory) {
         // If directory contains subdirectories, process each subdir; else process the directory itself
         final children = await entity.list(followLinks: false).toList();
         final hasDirs = children.any((e) => e is Directory);
         if (hasDirs) {
           for (final sub in children.whereType<Directory>()) {
+            if (_cancelRequested) break;
             Directory working = sub;
             var startEmitted = false;
             if (safeRun) {
@@ -306,6 +318,10 @@ class Optimizer {
       );
       idx = 1;
       for (final f in temps) {
+        if (_cancelRequested) {
+          onLog?.call('Operation cancelled by user');
+          break;
+        }
         final ext = p.extension(f.path);
         final targetName = '${idx.toString().padLeft(pad, '0')}$ext';
         final target = p.join(folder.path, targetName);
@@ -341,6 +357,10 @@ class Optimizer {
             (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
           );
           for (final f in encodeFiles) {
+            if (_cancelRequested) {
+              onLog?.call('Operation cancelled by user');
+              break;
+            }
             final base = p.basenameWithoutExtension(f.path);
             final outPath = p.join(folder.path, '$base.jxl');
 
@@ -360,6 +380,10 @@ class Optimizer {
                   pngPath,
                   '-quiet',
                 ], workingDirectory: folder.path);
+                if (_cancelRequested) {
+                  onLog?.call('Operation cancelled by user');
+                  break;
+                }
                 if (conv.exitCode != 0) {
                   if (conv.stderr != null &&
                       conv.stderr.toString().isNotEmpty) {
@@ -397,6 +421,10 @@ class Optimizer {
                 args,
                 workingDirectory: folder.path,
               );
+              if (_cancelRequested) {
+                onLog?.call('Operation cancelled by user');
+                break;
+              }
               if (result.stdout != null &&
                   result.stdout.toString().isNotEmpty) {
                 onLog?.call(result.stdout.toString());

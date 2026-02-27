@@ -25,6 +25,8 @@ class ControlPanel extends StatelessWidget {
   final ValueChanged<String?> onOutputExtChanged;
   final bool running;
   final VoidCallback onStart;
+  final VoidCallback? onCancel;
+  final bool starting;
 
   const ControlPanel({
     super.key,
@@ -48,6 +50,8 @@ class ControlPanel extends StatelessWidget {
     required this.onPostRunConfirmSecondsChanged,
     required this.running,
     required this.onStart,
+    this.onCancel,
+    this.starting = false,
   });
 
   @override
@@ -153,8 +157,13 @@ class ControlPanel extends StatelessWidget {
             const Spacer(),
             ElevatedButton(
               onPressed: running ? null : onStart,
-              child: Text(running ? 'Running...' : 'Start'),
+              child: Text(
+                running ? (starting ? 'Starting' : 'Running...') : 'Start',
+              ),
             ),
+            const SizedBox(width: 8),
+            if (running)
+              OutlinedButton(onPressed: onCancel, child: const Text('Cancel')),
           ],
         ),
         const SizedBox(height: 8),

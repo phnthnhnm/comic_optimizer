@@ -35,6 +35,8 @@ class _HomePageState extends State<HomePage> {
   dynamic _logs = {};
   String? _currentLogFolder;
   bool _running = false;
+  bool _starting = false;
+  Optimizer? _currentOptimizer;
   final Map<String, Map<String, int?>> _folderSizes = {};
 
   @override
@@ -128,6 +130,7 @@ class _HomePageState extends State<HomePage> {
       _logs = {};
       _currentLogFolder = null;
       _running = true;
+      _starting = true;
       _folderSizes.clear();
     });
 
@@ -138,7 +141,10 @@ class _HomePageState extends State<HomePage> {
       onLog: (s) => _log(s),
       onFolderStart: (f) {
         _log('Start: $f', folder: f);
-        setState(() => _currentLogFolder = f);
+        setState(() {
+          _currentLogFolder = f;
+          _starting = false;
+        });
       },
       onFolderDone: (f, ok, beforeBytes, afterBytes) {
         _folderSizes[f] = {'before': beforeBytes, 'after': afterBytes};
@@ -146,6 +152,7 @@ class _HomePageState extends State<HomePage> {
         setState(() => _currentLogFolder = null);
       },
     );
+    _currentOptimizer = optimizer;
 
     try {
       if (!mounted) return;
@@ -190,7 +197,18 @@ class _HomePageState extends State<HomePage> {
       _log('Error: $e');
       _log(st.toString());
     } finally {
-      setState(() => _running = false);
+      setState(() {
+        _running = false;
+        _starting = false;
+        _currentOptimizer = null;
+      });
+    }
+  }
+
+  void _cancel() {
+    if (_currentOptimizer != null) {
+      _currentOptimizer!.cancel();
+      _log('Cancel requested by user');
     }
   }
 
@@ -362,7 +380,9 @@ class _HomePageState extends State<HomePage> {
               onPostRunConfirmSecondsChanged: (v) =>
                   setState(() => _postRunConfirmSeconds = v ?? 60),
               running: _running,
+              starting: _starting,
               onStart: _start,
+              onCancel: _cancel,
             ),
             const SizedBox(height: 12),
             const Divider(),

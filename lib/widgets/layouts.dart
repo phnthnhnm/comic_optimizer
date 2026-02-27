@@ -11,6 +11,10 @@ class LogsPanel extends StatefulWidget {
 
 class _LogsPanelState extends State<LogsPanel> {
   int _selected = 0;
+  final ScrollController _scrollController = ScrollController();
+  bool _autoScroll = true;
+  bool _isProgrammaticScroll = false;
+  final Map<String, int> _lastCounts = {};
 
   @override
   void didUpdateWidget(covariant LogsPanel oldWidget) {
@@ -21,6 +25,68 @@ class _LogsPanelState extends State<LogsPanel> {
     } else if (_selected >= keys.length) {
       _selected = keys.length - 1;
     }
+
+    // If the logs for the currently selected key changed and auto-scroll is enabled,
+    // scroll to bottom after the frame. Use a stored count so we detect changes
+    // even when the underlying list is mutated in-place.
+    if (keys.isNotEmpty && _selected < keys.length) {
+      final sel = keys[_selected];
+      final newLen = widget.logsByFolder[sel]?.length ?? 0;
+      final prevLen = _lastCounts[sel] ?? 0;
+      if (newLen != prevLen) {
+        _lastCounts[sel] = newLen;
+        if (_autoScroll) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _scrollToBottom(),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _scrollToBottom() async {
+    if (!_scrollController.hasClients) return;
+    try {
+      _isProgrammaticScroll = true;
+      final max = _scrollController.position.maxScrollExtent;
+      await _scrollController.animateTo(
+        max,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    } catch (_) {
+      try {
+        final max = _scrollController.position.maxScrollExtent;
+        _scrollController.jumpTo(max);
+      } catch (_) {}
+    } finally {
+      _isProgrammaticScroll = false;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (_isProgrammaticScroll) return;
+      if (!_scrollController.hasClients ||
+          !_scrollController.position.hasContentDimensions)
+        return;
+      final max = _scrollController.position.maxScrollExtent;
+      final cur = _scrollController.offset;
+      // If user scrolled away from bottom by more than 20px, disable auto-scroll.
+      if (max - cur > 20) {
+        if (_autoScroll) setState(() => _autoScroll = false);
+      } else {
+        if (!_autoScroll) setState(() => _autoScroll = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Color? _statusColorForKey(String key) {
@@ -61,7 +127,12 @@ class _LogsPanelState extends State<LogsPanel> {
                         final selected = i == _selected;
                         final statusColor = _statusColorForKey(k);
                         return InkWell(
-                          onTap: () => setState(() => _selected = i),
+                          onTap: () {
+                            setState(() => _selected = i);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (_autoScroll) _scrollToBottom();
+                            });
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               vertical: 12.0,
@@ -106,23 +177,45 @@ class _LogsPanelState extends State<LogsPanel> {
                         builder: (context) {
                           final selectedKey = keys[_selected];
                           final lines = widget.logsByFolder[selectedKey] ?? [];
-                          return ListView.builder(
-                            itemCount: lines.length,
-                            itemBuilder: (c, i) {
-                              final line = lines[i];
-                              final color = _colorForLine(line, context);
-                              final weight = _weightForLine(line);
-                              return Padding(
-                                padding: const EdgeInsets.all(6.0),
-                                child: Text(
-                                  line,
-                                  style: TextStyle(
-                                    color: color,
-                                    fontWeight: weight,
+                          // Use a Stack so we can overlay a resume-auto-scroll button.
+                          return Stack(
+                            children: [
+                              ListView.builder(
+                                controller: _scrollController,
+                                itemCount: lines.length,
+                                itemBuilder: (c, i) {
+                                  final line = lines[i];
+                                  final color = _colorForLine(line, context);
+                                  final weight = _weightForLine(line);
+                                  return Padding(
+                                    padding: const EdgeInsets.all(6.0),
+                                    child: Text(
+                                      line,
+                                      style: TextStyle(
+                                        color: color,
+                                        fontWeight: weight,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              if (!_autoScroll)
+                                Positioned(
+                                  right: 8,
+                                  bottom: 8,
+                                  child: FloatingActionButton.small(
+                                    onPressed: () {
+                                      setState(() => _autoScroll = true);
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback(
+                                            (_) => _scrollToBottom(),
+                                          );
+                                    },
+                                    tooltip: 'Resume auto-scroll',
+                                    child: const Icon(Icons.arrow_downward),
                                   ),
                                 ),
-                              );
-                            },
+                            ],
                           );
                         },
                       ),

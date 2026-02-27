@@ -22,6 +22,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String? _rootPath;
   String _selectedPreset = Preset.losslessName;
+  bool _skipCjxl = false;
 
   String _outputExt = '.cbz';
   dynamic _logs = {};
@@ -39,6 +40,7 @@ class _HomePageState extends State<HomePage> {
             ? model.lastPreset
             : Preset.losslessName;
         _outputExt = model.outputExt;
+        _skipCjxl = model.skipCjxl;
       });
     });
   }
@@ -47,6 +49,7 @@ class _HomePageState extends State<HomePage> {
     final model = context.read<SettingsModel>();
     if (_rootPath != null) await model.setLastRoot(_rootPath);
     await model.setLastPreset(_selectedPreset);
+    await model.setSkipCjxl(_skipCjxl);
     await model.setOutputExt(_outputExt);
   }
 
@@ -127,11 +130,13 @@ class _HomePageState extends State<HomePage> {
     );
 
     try {
+      if (!mounted) return;
+      final model = context.read<SettingsModel>();
       await optimizer.optimizeRoot(
         Directory(_rootPath!),
         presetArgs: presetArgs,
-        skipPingo: true,
-        pingoPath: 'pingo',
+        skipCjxl: _skipCjxl,
+        cjxlPath: model.cjxlPath,
         outputExtension: _outputExt,
         preferPermanentDelete: preferPermanentDelete,
       );
@@ -191,6 +196,8 @@ class _HomePageState extends State<HomePage> {
               selectedPreset: _selectedPreset,
               onPresetChanged: (v) =>
                   setState(() => _selectedPreset = v ?? Preset.losslessName),
+              skipCjxl: _skipCjxl,
+              onSkipCjxlChanged: (v) => setState(() => _skipCjxl = v ?? false),
               outputExt: _outputExt,
               onOutputExtChanged: (v) =>
                   setState(() => _outputExt = v ?? '.cbz'),

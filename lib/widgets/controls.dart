@@ -7,6 +7,8 @@ class ControlPanel extends StatelessWidget {
   final VoidCallback onPickRoot;
   final String selectedPreset;
   final ValueChanged<String?> onPresetChanged;
+  final bool skipCjxl;
+  final ValueChanged<bool?> onSkipCjxlChanged;
 
   final String outputExt;
   final ValueChanged<String?> onOutputExtChanged;
@@ -21,6 +23,8 @@ class ControlPanel extends StatelessWidget {
     required this.onPresetChanged,
     required this.outputExt,
     required this.onOutputExtChanged,
+    required this.skipCjxl,
+    required this.onSkipCjxlChanged,
     required this.running,
     required this.onStart,
   });
@@ -94,6 +98,10 @@ class ControlPanel extends StatelessWidget {
                   .toList(),
               onChanged: onPresetChanged,
             ),
+            const SizedBox(width: 12),
+            Checkbox(value: skipCjxl, onChanged: onSkipCjxlChanged),
+            const SizedBox(width: 4),
+            const Text('Skip cjxl'),
           ],
         ),
         const SizedBox(height: 8),

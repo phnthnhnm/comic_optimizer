@@ -6,6 +6,8 @@ class SettingsRepository {
   static const _keyOutputExt = 'outputExt';
   static const _keyLastRoot = 'lastRoot';
   static const _keyLastPreset = 'lastPreset';
+  static const _keySkipCjxl = 'skipCjxl';
+  static const _keyCjxlPath = 'cjxlPath';
   static const _keyThemeMode = 'theme_mode';
 
   late final SharedPreferences _prefs;
@@ -23,6 +25,8 @@ class SettingsRepository {
   String getOutputExt() => _prefs.getString(_keyOutputExt) ?? '.cbz';
   String? getLastRoot() => _prefs.getString(_keyLastRoot);
   String getLastPreset() => _prefs.getString(_keyLastPreset) ?? '';
+  bool getSkipCjxl() => _prefs.getBool(_keySkipCjxl) ?? false;
+  String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
   String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
 
   // setters
@@ -37,6 +41,9 @@ class SettingsRepository {
       await _prefs.setString(_keyLastRoot, v);
     }
   }
+
+  Future<void> setSkipCjxl(bool v) => _prefs.setBool(_keySkipCjxl, v);
+  Future<void> setCjxlPath(String v) => _prefs.setString(_keyCjxlPath, v);
 
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
 

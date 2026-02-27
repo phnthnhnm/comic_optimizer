@@ -21,7 +21,7 @@ class Preset {
     '0',
     '--lossless_jpeg=1',
   ]);
-  static const lossy = Preset(lossyName, ['-q', '90', '-d', '1.0', '-e', '8']);
+  static const lossy = Preset(lossyName, ['-d', '1.0', '--lossless_jpeg=0']);
 
   static const all = [lossless, lossy];
 

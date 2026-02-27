@@ -20,8 +20,8 @@ class Optimizer {
   Future<void> optimizeRoot(
     Directory root, {
     required List<String> presetArgs,
-    required bool skipPingo,
-    required String pingoPath,
+    required bool skipCjxl,
+    required String cjxlPath,
     required String outputExtension,
     bool preferPermanentDelete = false,
   }) async {
@@ -43,8 +43,8 @@ class Optimizer {
       await _processFolder(
         root,
         presetArgs,
-        skipPingo,
-        pingoPath,
+        skipCjxl,
+        cjxlPath,
         outputExtension,
         preferPermanentDelete,
       );
@@ -64,8 +64,8 @@ class Optimizer {
             await _processFolder(
               sub,
               presetArgs,
-              skipPingo,
-              pingoPath,
+              skipCjxl,
+              cjxlPath,
               outputExtension,
               preferPermanentDelete,
             );
@@ -74,8 +74,8 @@ class Optimizer {
           await _processFolder(
             entity,
             presetArgs,
-            skipPingo,
-            pingoPath,
+            skipCjxl,
+            cjxlPath,
             outputExtension,
             preferPermanentDelete,
           );
@@ -87,8 +87,8 @@ class Optimizer {
   Future<void> _processFolder(
     Directory folder,
     List<String> presetArgs,
-    bool skipPingo,
-    String pingoPath,
+    bool skipCjxl,
+    String cjxlPath,
     String outputExtension,
     bool preferPermanentDelete,
   ) async {
@@ -188,51 +188,59 @@ class Optimizer {
       }
 
       // Encode each image to JPEG XL using `cjxl` and the provided preset args
-      try {
-        final toEncode = await folder
-            .list(recursive: false, followLinks: false)
-            .where((e) => e is File)
-            .cast<File>()
-            .toList();
-        // Only consider image extensions
-        final encodeFiles = toEncode.where((f) {
-          final ext = p.extension(f.path).toLowerCase();
-          return _imgExts.contains(ext) && ext != '.jxl';
-        }).toList();
-        encodeFiles.sort(
-          (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
-        );
-        for (final f in encodeFiles) {
-          final base = p.basenameWithoutExtension(f.path);
-          final outPath = p.join(folder.path, '$base.jxl');
-          final args = [f.path, outPath, ...presetArgs];
-          onLog?.call(
-            'Running cjxl: cjxl ${args.join(' ')} (cwd=${folder.path})',
+      if (!skipCjxl) {
+        try {
+          final toEncode = await folder
+              .list(recursive: false, followLinks: false)
+              .where((e) => e is File)
+              .cast<File>()
+              .toList();
+          // Only consider image extensions (but do not re-encode existing .jxl)
+          final encodeFiles = toEncode.where((f) {
+            final ext = p.extension(f.path).toLowerCase();
+            return _imgExts.contains(ext) && ext != '.jxl';
+          }).toList();
+          encodeFiles.sort(
+            (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
           );
-          try {
-            final result = await Process.run(
-              'cjxl',
-              args,
-              workingDirectory: folder.path,
+          for (final f in encodeFiles) {
+            final base = p.basenameWithoutExtension(f.path);
+            final outPath = p.join(folder.path, '$base.jxl');
+            final args = [f.path, outPath, ...presetArgs];
+            onLog?.call(
+              'Running cjxl: cjxl ${args.join(' ')} (cwd=${folder.path})',
             );
-            if (result.stdout != null && result.stdout.toString().isNotEmpty) {
-              onLog?.call(result.stdout.toString());
-            }
-            if (result.stderr != null && result.stderr.toString().isNotEmpty) {
-              onLog?.call(result.stderr.toString());
-            }
-            if (result.exitCode != 0) {
-              onLog?.call('cjxl exit ${result.exitCode}');
+            try {
+              final result = await Process.run(
+                cjxlPath,
+                args,
+                workingDirectory: folder.path,
+              );
+              if (result.stdout != null &&
+                  result.stdout.toString().isNotEmpty) {
+                onLog?.call(result.stdout.toString());
+              }
+              if (result.stderr != null &&
+                  result.stderr.toString().isNotEmpty) {
+                onLog?.call(result.stderr.toString());
+              }
+              if (result.exitCode != 0) {
+                onLog?.call('cjxl exit ${result.exitCode}');
+                success = false;
+              }
+            } catch (e) {
+              onLog?.call('Failed to run cjxl for ${f.path}: $e');
               success = false;
             }
-          } catch (e) {
-            onLog?.call('Failed to run cjxl for ${f.path}: $e');
-            success = false;
           }
+        } catch (e) {
+          onLog?.call('Failed during cjxl encoding: $e');
+          success = false;
         }
-      } catch (e) {
-        onLog?.call('Failed during cjxl encoding: $e');
-        success = false;
+      } else {
+        onLog?.call(
+          'Skipping cjxl encoding for ${folder.path} (skip flag set)',
+        );
       }
 
       // Remove redundant originals: if .webp exists with same base, remove non-webp

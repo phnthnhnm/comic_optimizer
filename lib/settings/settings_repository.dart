@@ -9,6 +9,9 @@ class SettingsRepository {
   static const _keySkipCjxl = 'skipCjxl';
   static const _keyCjxlPath = 'cjxlPath';
   static const _keySafeRun = 'safeRun';
+  static const _keyPostRunAction = 'postRunAction';
+  static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
+  static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
   static const _keyThemeMode = 'theme_mode';
 
   late final SharedPreferences _prefs;
@@ -30,6 +33,11 @@ class SettingsRepository {
   String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
   bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? false;
   String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
+  String getPostRunAction() => _prefs.getString(_keyPostRunAction) ?? 'none';
+  bool getPostRunConfirmEnabled() =>
+      _prefs.getBool(_keyPostRunConfirmEnabled) ?? true;
+  int getPostRunConfirmSeconds() =>
+      _prefs.getInt(_keyPostRunConfirmSeconds) ?? 60;
 
   // setters
   Future<void> setPreferPermanentDelete(bool v) =>
@@ -47,6 +55,13 @@ class SettingsRepository {
   Future<void> setSkipCjxl(bool v) => _prefs.setBool(_keySkipCjxl, v);
   Future<void> setCjxlPath(String v) => _prefs.setString(_keyCjxlPath, v);
   Future<void> setSafeRun(bool v) => _prefs.setBool(_keySafeRun, v);
+
+  Future<void> setPostRunAction(String v) =>
+      _prefs.setString(_keyPostRunAction, v);
+  Future<void> setPostRunConfirmEnabled(bool v) =>
+      _prefs.setBool(_keyPostRunConfirmEnabled, v);
+  Future<void> setPostRunConfirmSeconds(int v) =>
+      _prefs.setInt(_keyPostRunConfirmSeconds, v);
 
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
 

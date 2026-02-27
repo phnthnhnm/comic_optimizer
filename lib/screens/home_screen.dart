@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -28,6 +29,9 @@ class _HomePageState extends State<HomePage> {
   bool _safeRun = false;
 
   String _outputExt = '.cbz';
+  PostRunAction _postRunAction = PostRunAction.none;
+  bool _postRunConfirmEnabled = true;
+  int _postRunConfirmSeconds = 60;
   dynamic _logs = {};
   String? _currentLogFolder;
   bool _running = false;
@@ -47,6 +51,9 @@ class _HomePageState extends State<HomePage> {
         _skipCjxl = model.skipCjxl;
         _preferPermanentDelete = model.preferPermanentDelete;
         _safeRun = model.safeRun;
+        _postRunAction = model.postRunAction;
+        _postRunConfirmEnabled = model.postRunConfirmEnabled;
+        _postRunConfirmSeconds = model.postRunConfirmSeconds;
       });
     });
   }
@@ -59,6 +66,9 @@ class _HomePageState extends State<HomePage> {
     await model.setPreferPermanentDelete(_preferPermanentDelete);
     await model.setSafeRun(_safeRun);
     await model.setOutputExt(_outputExt);
+    await model.setPostRunAction(_postRunAction);
+    await model.setPostRunConfirmEnabled(_postRunConfirmEnabled);
+    await model.setPostRunConfirmSeconds(_postRunConfirmSeconds);
   }
 
   void _log(String line, {String? folder}) {
@@ -174,11 +184,114 @@ class _HomePageState extends State<HomePage> {
       } else {
         _log('All done.');
       }
+      // perform configured post-run action (may show confirm dialog)
+      await _maybePerformPostRunAction();
     } catch (e, st) {
       _log('Error: $e');
       _log(st.toString());
     } finally {
       setState(() => _running = false);
+    }
+  }
+
+  Future<void> _maybePerformPostRunAction() async {
+    final model = context.read<SettingsModel>();
+    final action = model.postRunAction;
+    if (action == PostRunAction.none) return;
+
+    Future<bool> confirmDialog(int seconds) async {
+      var remaining = seconds;
+      Timer? timer;
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) {
+          return StatefulBuilder(
+            builder: (c2, setState2) {
+              timer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+                remaining -= 1;
+                if (remaining <= 0) {
+                  timer?.cancel();
+                  Navigator.of(c2).pop(true);
+                } else {
+                  setState2(() {});
+                }
+              });
+              return AlertDialog(
+                title: const Text('Post-run action'),
+                content: Text(
+                  'The system will perform "$action" in $remaining seconds. Cancel to abort.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      timer?.cancel();
+                      Navigator.of(c2).pop(false);
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      timer?.cancel();
+                      Navigator.of(c2).pop(true);
+                    },
+                    child: const Text('Proceed Now'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+      timer?.cancel();
+      return result == true;
+    }
+
+    final confirmEnabled = model.postRunConfirmEnabled;
+    final seconds = model.postRunConfirmSeconds;
+    var ok = true;
+    if (confirmEnabled) {
+      ok = await confirmDialog(seconds);
+    }
+    if (!ok) {
+      _log('Post-run action cancelled by user.');
+      return;
+    }
+    await _performPostRunAction(action);
+  }
+
+  Future<void> _performPostRunAction(PostRunAction action) async {
+    _log('Performing post-run action: $action');
+    try {
+      switch (action) {
+        case PostRunAction.quit:
+          _log('Quitting app...');
+          await Future.delayed(const Duration(milliseconds: 200));
+          exit(0);
+        case PostRunAction.shutdown:
+          _log('Shutting down...');
+          await Process.run('shutdown', ['/s', '/t', '0']);
+          break;
+        case PostRunAction.restart:
+          _log('Restarting...');
+          await Process.run('shutdown', ['/r', '/t', '0']);
+          break;
+        case PostRunAction.hibernate:
+          _log('Hibernating...');
+          await Process.run('shutdown', ['/h']);
+          break;
+        case PostRunAction.sleep:
+          _log('Sleeping...');
+          await Process.run('rundll32.exe', [
+            'powrprof.dll,SetSuspendState',
+            '0,1,0',
+          ]);
+          break;
+        case PostRunAction.none:
+          break;
+      }
+    } catch (e) {
+      _log('Failed to perform post-run action: $e');
     }
   }
 
@@ -239,6 +352,15 @@ class _HomePageState extends State<HomePage> {
               outputExt: _outputExt,
               onOutputExtChanged: (v) =>
                   setState(() => _outputExt = v ?? '.cbz'),
+              postRunAction: _postRunAction,
+              onPostRunActionChanged: (v) =>
+                  setState(() => _postRunAction = v ?? PostRunAction.none),
+              postRunConfirmEnabled: _postRunConfirmEnabled,
+              onPostRunConfirmEnabledChanged: (v) =>
+                  setState(() => _postRunConfirmEnabled = v ?? true),
+              postRunConfirmSeconds: _postRunConfirmSeconds,
+              onPostRunConfirmSecondsChanged: (v) =>
+                  setState(() => _postRunConfirmSeconds = v ?? 60),
               running: _running,
               onStart: _start,
             ),

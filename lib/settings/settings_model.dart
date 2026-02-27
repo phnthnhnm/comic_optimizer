@@ -3,6 +3,42 @@ import 'package:flutter/material.dart';
 import '../presets.dart';
 import 'settings_repository.dart';
 
+enum PostRunAction { none, quit, sleep, hibernate, shutdown, restart }
+
+String _postRunActionToName(PostRunAction a) {
+  switch (a) {
+    case PostRunAction.quit:
+      return 'quit';
+    case PostRunAction.sleep:
+      return 'sleep';
+    case PostRunAction.hibernate:
+      return 'hibernate';
+    case PostRunAction.shutdown:
+      return 'shutdown';
+    case PostRunAction.restart:
+      return 'restart';
+    case PostRunAction.none:
+      return 'none';
+  }
+}
+
+PostRunAction _postRunActionFromName(String s) {
+  switch (s) {
+    case 'quit':
+      return PostRunAction.quit;
+    case 'sleep':
+      return PostRunAction.sleep;
+    case 'hibernate':
+      return PostRunAction.hibernate;
+    case 'shutdown':
+      return PostRunAction.shutdown;
+    case 'restart':
+      return PostRunAction.restart;
+    default:
+      return PostRunAction.none;
+  }
+}
+
 class SettingsModel extends ChangeNotifier {
   final SettingsRepository _repo;
 
@@ -14,6 +50,11 @@ class SettingsModel extends ChangeNotifier {
   String lastPreset = Preset.losslessName;
   String? lastRoot;
   ThemeMode themeMode = ThemeMode.system;
+
+  // post-run action settings
+  PostRunAction postRunAction = PostRunAction.none;
+  bool postRunConfirmEnabled = true;
+  int postRunConfirmSeconds = 60;
 
   SettingsModel(this._repo);
 
@@ -30,14 +71,9 @@ class SettingsModel extends ChangeNotifier {
   }
 
   String _modeToString(ThemeMode m) {
-    switch (m) {
-      case ThemeMode.light:
-        return 'light';
-      case ThemeMode.dark:
-        return 'dark';
-      case ThemeMode.system:
-        return 'system';
-    }
+    if (m == ThemeMode.light) return 'light';
+    if (m == ThemeMode.dark) return 'dark';
+    return 'system';
   }
 
   // setters that persist
@@ -63,6 +99,24 @@ class SettingsModel extends ChangeNotifier {
     safeRun = v;
     notifyListeners();
     await _repo.setSafeRun(v);
+  }
+
+  Future<void> setPostRunAction(PostRunAction v) async {
+    postRunAction = v;
+    notifyListeners();
+    await _repo.setPostRunAction(_postRunActionToName(v));
+  }
+
+  Future<void> setPostRunConfirmEnabled(bool v) async {
+    postRunConfirmEnabled = v;
+    notifyListeners();
+    await _repo.setPostRunConfirmEnabled(v);
+  }
+
+  Future<void> setPostRunConfirmSeconds(int v) async {
+    postRunConfirmSeconds = v;
+    notifyListeners();
+    await _repo.setPostRunConfirmSeconds(v);
   }
 
   Future<void> setCjxlPath(String v) async {
@@ -101,6 +155,11 @@ class SettingsModel extends ChangeNotifier {
     lastPreset = _repo.getLastPreset().isNotEmpty
         ? _repo.getLastPreset()
         : Preset.losslessName;
+
+    // load post-run settings
+    postRunAction = _postRunActionFromName(_repo.getPostRunAction());
+    postRunConfirmEnabled = _repo.getPostRunConfirmEnabled();
+    postRunConfirmSeconds = _repo.getPostRunConfirmSeconds();
 
     final s = _repo.getThemeMode();
     themeMode = _stringToMode(s);

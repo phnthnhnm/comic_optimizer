@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../presets.dart';
+import '../settings/settings_model.dart';
 
 class ControlPanel extends StatelessWidget {
   final String? rootPath;
@@ -13,6 +14,12 @@ class ControlPanel extends StatelessWidget {
   final ValueChanged<bool?> onPreferPermanentDeleteChanged;
   final bool safeRun;
   final ValueChanged<bool?> onSafeRunChanged;
+  final PostRunAction postRunAction;
+  final ValueChanged<PostRunAction?> onPostRunActionChanged;
+  final bool postRunConfirmEnabled;
+  final ValueChanged<bool?> onPostRunConfirmEnabledChanged;
+  final int postRunConfirmSeconds;
+  final ValueChanged<int?> onPostRunConfirmSecondsChanged;
 
   final String outputExt;
   final ValueChanged<String?> onOutputExtChanged;
@@ -33,6 +40,12 @@ class ControlPanel extends StatelessWidget {
     required this.onPreferPermanentDeleteChanged,
     required this.safeRun,
     required this.onSafeRunChanged,
+    required this.postRunAction,
+    required this.onPostRunActionChanged,
+    required this.postRunConfirmEnabled,
+    required this.onPostRunConfirmEnabledChanged,
+    required this.postRunConfirmSeconds,
+    required this.onPostRunConfirmSecondsChanged,
     required this.running,
     required this.onStart,
   });
@@ -141,6 +154,71 @@ class ControlPanel extends StatelessWidget {
             ElevatedButton(
               onPressed: running ? null : onStart,
               child: Text(running ? 'Running...' : 'Start'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Text('After finish: '),
+            const SizedBox(width: 8),
+            DropdownButton<PostRunAction>(
+              value: postRunAction,
+              items: [
+                DropdownMenuItem(
+                  value: PostRunAction.none,
+                  child: Text('None'),
+                ),
+                DropdownMenuItem(
+                  value: PostRunAction.quit,
+                  child: Text('Quit app'),
+                ),
+                DropdownMenuItem(
+                  value: PostRunAction.sleep,
+                  child: Text('Sleep'),
+                ),
+                DropdownMenuItem(
+                  value: PostRunAction.hibernate,
+                  child: Text('Hibernate'),
+                ),
+                DropdownMenuItem(
+                  value: PostRunAction.shutdown,
+                  child: Text('Shutdown'),
+                ),
+                DropdownMenuItem(
+                  value: PostRunAction.restart,
+                  child: Text('Restart'),
+                ),
+              ],
+              onChanged: onPostRunActionChanged,
+            ),
+            const SizedBox(width: 12),
+            Checkbox(
+              value: postRunConfirmEnabled,
+              onChanged: onPostRunConfirmEnabledChanged,
+            ),
+            const SizedBox(width: 4),
+            const Text('Confirm before action'),
+            const SizedBox(width: 12),
+            const Text('Timeout (s):'),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 80,
+              child: TextFormField(
+                initialValue: postRunConfirmSeconds.toString(),
+                keyboardType: TextInputType.number,
+                onChanged: (v) {
+                  final iv = int.tryParse(v) ?? 0;
+                  onPostRunConfirmSecondsChanged(iv);
+                },
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 8,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

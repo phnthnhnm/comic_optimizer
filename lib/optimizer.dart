@@ -195,6 +195,23 @@ class Optimizer {
     bool preferPermanentDelete, {
     bool emitStart = true,
   }) async {
+    // Helper to shorten paths in logs: keep full folder path only on the initial Start message;
+    // for subsequent messages, display only basenames for files and folder names.
+    String maskPath(String s) {
+      if (s.isEmpty) return s;
+      final norm = p.normalize(s);
+      final folderNorm = p.normalize(folder.path);
+      final origNorm = p.normalize(originalPath);
+      if (norm == folderNorm || norm == origNorm) return p.basename(norm);
+      if (norm.startsWith(folderNorm + p.separator) ||
+          norm.startsWith(origNorm + p.separator)) {
+        return p.basename(norm);
+      }
+      return s;
+    }
+
+    String maskArgs(List<String> args) => args.map(maskPath).join(' ');
+
     if (emitStart) onFolderStart?.call(originalPath);
     var success = true;
     int? beforeTotalBytes;
@@ -211,7 +228,7 @@ class Optimizer {
           .where((f) => _imgExts.contains(p.extension(f.path).toLowerCase()))
           .toList();
       if (images.isEmpty) {
-        onLog?.call('No images in ${folder.path}, skipping');
+        onLog?.call('No images in ${p.basename(originalPath)}, skipping');
         return;
       }
 
@@ -233,9 +250,9 @@ class Optimizer {
         if (!_imgExts.contains(p.extension(f.path).toLowerCase())) {
           try {
             await f.delete();
-            onLog?.call('Deleted non-image: ${f.path}');
+            onLog?.call('Deleted non-image: ${p.basename(f.path)}');
           } catch (e) {
-            onLog?.call('Failed to delete ${f.path}: $e');
+            onLog?.call('Failed to delete ${p.basename(f.path)}: $e');
           }
         }
       }
@@ -299,7 +316,9 @@ class Optimizer {
             await f.copy(target);
             await f.delete();
           } catch (e) {
-            onLog?.call('Failed to finalize rename ${f.path} -> $target: $e');
+            onLog?.call(
+              'Failed to finalize rename ${p.basename(f.path)} -> ${p.basename(target)}: $e',
+            );
           }
         }
         idx++;
@@ -332,7 +351,7 @@ class Optimizer {
             if (ext == '.webp') {
               final pngPath = p.join(folder.path, '$base.png');
               onLog?.call(
-                'Converting WEBP -> PNG: dwebp ${f.path} -o $pngPath',
+                'Converting WEBP -> PNG: dwebp ${p.basename(f.path)} -o ${p.basename(pngPath)}',
               );
               try {
                 final conv = await Process.run('dwebp', [
@@ -346,7 +365,9 @@ class Optimizer {
                       conv.stderr.toString().isNotEmpty) {
                     onLog?.call(conv.stderr.toString());
                   } else {
-                    onLog?.call('dwebp exit ${conv.exitCode} for ${f.path}');
+                    onLog?.call(
+                      'dwebp exit ${conv.exitCode} for ${p.basename(f.path)}',
+                    );
                   }
                   success = false;
                   // skip running cjxl for this file
@@ -354,7 +375,9 @@ class Optimizer {
                 }
                 final outFile = File(pngPath);
                 if (!await outFile.exists()) {
-                  onLog?.call('dwebp did not produce $pngPath for ${f.path}');
+                  onLog?.call(
+                    'dwebp did not produce ${p.basename(pngPath)} for ${p.basename(f.path)}',
+                  );
                   success = false;
                   continue;
                 }
@@ -367,7 +390,7 @@ class Optimizer {
             }
 
             final args = [inputPath, outPath, ...presetArgs];
-            onLog?.call('Running cjxl: cjxl ${args.join(' ')}');
+            onLog?.call('Running cjxl: cjxl ${maskArgs(args)}');
             try {
               final result = await Process.run(
                 cjxlPath,
@@ -387,7 +410,9 @@ class Optimizer {
                 success = false;
               }
             } catch (e) {
-              onLog?.call('Failed to run cjxl for $inputPath: $e');
+              onLog?.call(
+                'Failed to run cjxl for ${p.basename(inputPath)}: $e',
+              );
               success = false;
             }
           }
@@ -397,7 +422,7 @@ class Optimizer {
         }
       } else {
         onLog?.call(
-          'Skipping cjxl encoding for ${folder.path} (skip flag set)',
+          'Skipping cjxl encoding for ${p.basename(originalPath)} (skip flag set)',
         );
       }
 
@@ -422,9 +447,9 @@ class Optimizer {
             if (ext != '.jxl') {
               try {
                 await f.delete();
-                onLog?.call('Removed duplicate original ${f.path}');
+                onLog?.call('Removed duplicate original ${p.basename(f.path)}');
               } catch (e) {
-                onLog?.call('Failed to remove ${f.path}: $e');
+                onLog?.call('Failed to remove ${p.basename(f.path)}: $e');
               }
             }
           }
@@ -461,7 +486,7 @@ class Optimizer {
         } catch (_) {
           archiveBytes = null;
         }
-        onLog?.call('Created archive $archivePath');
+        onLog?.call('Created archive ${p.basename(archivePath)}');
       } catch (e) {
         onLog?.call('Failed to create archive: $e');
         success = false;
@@ -476,16 +501,18 @@ class Optimizer {
             if (preferPermanentDelete) {
               await folder.delete(recursive: true);
               onLog?.call(
-                'Removed source folder ${folder.path} (permanent delete)',
+                'Removed source folder ${p.basename(originalPath)} (permanent delete)',
               );
             } else {
               await _recycleOrDelete(folder);
               onLog?.call(
-                'Removed source folder ${folder.path} (moved to Recycle Bin on Windows)',
+                'Removed source folder ${p.basename(originalPath)} (moved to Recycle Bin on Windows)',
               );
             }
           } catch (e) {
-            onLog?.call('Failed to remove source folder ${folder.path}: $e');
+            onLog?.call(
+              'Failed to remove source folder ${p.basename(originalPath)}: $e',
+            );
             success = false;
           }
         } else {
@@ -496,7 +523,7 @@ class Optimizer {
         success = false;
       }
     } catch (e) {
-      onLog?.call('Error processing ${folder.path}: $e');
+      onLog?.call('Error processing ${p.basename(originalPath)}: $e');
       success = false;
     } finally {
       onFolderDone?.call(originalPath, success, beforeTotalBytes, archiveBytes);

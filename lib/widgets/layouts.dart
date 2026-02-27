@@ -107,9 +107,18 @@ class _LogsPanelState extends State<LogsPanel> {
     final lines = widget.logsByFolder[key];
     if (lines == null || lines.isEmpty) return null;
 
-    for (final ln in lines) {
+    // Prefer the most-recent cjxl/retry status. Scan from the end so a
+    // successful retry (e.g. "cjxl retry exit 0") will override earlier
+    // error lines from the initial cjxl attempt.
+    for (final ln in lines.reversed) {
       final l = ln.toLowerCase();
-      if (l.contains('error') || l.contains('err') || l.contains('failed')) {
+      if (l.contains('cjxl retry exit')) {
+        return l.contains('exit 0') ? Colors.green : Colors.redAccent;
+      }
+      if (l.contains('cjxl exit')) {
+        return l.contains('exit 0') ? Colors.green : Colors.redAccent;
+      }
+      if (l.contains('error') || l.contains('failed') || l.contains('err')) {
         return Colors.redAccent;
       }
     }

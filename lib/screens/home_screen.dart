@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   dynamic _logs = {};
   String? _currentLogFolder;
   bool _running = false;
+  final Map<String, Map<String, int?>> _folderSizes = {};
 
   @override
   void initState() {
@@ -124,7 +126,8 @@ class _HomePageState extends State<HomePage> {
         _log('Start: $f', folder: f);
         setState(() => _currentLogFolder = f);
       },
-      onFolderDone: (f, ok) {
+      onFolderDone: (f, ok, beforeBytes, afterBytes) {
+        _folderSizes[f] = {'before': beforeBytes, 'after': afterBytes};
         _log('Done: $f (${ok ? 'OK' : 'ERR'})', folder: f);
         setState(() => _currentLogFolder = null);
       },
@@ -141,7 +144,31 @@ class _HomePageState extends State<HomePage> {
         outputExtension: _outputExt,
         preferPermanentDelete: preferPermanentDelete,
       );
-      _log('All done.');
+      // Instead of a single 'All done.' line, log storage summary per folder
+      if (_folderSizes.isNotEmpty) {
+        _log('Storage summary:');
+        _folderSizes.forEach((folder, map) {
+          final before = map['before'];
+          final after = map['after'];
+          final name = p.basename(folder);
+          if (before == null || after == null) {
+            _log('$name: size unknown');
+            return;
+          }
+          final beforeMb = before / (1024 * 1024);
+          final afterMb = after / (1024 * 1024);
+          final saved = before - after;
+          final savedMb = saved / (1024 * 1024);
+          final pct = before > 0 ? (saved / before) * 100.0 : 0.0;
+          _log(
+            '$name: ${beforeMb.toStringAsFixed(2)} MB -> ${afterMb.toStringAsFixed(2)} MB, saved ${savedMb.toStringAsFixed(2)} MB (${pct.toStringAsFixed(2)}%)',
+          );
+        });
+        // ensure General tab is selected so user sees summary
+        setState(() => _currentLogFolder = 'General');
+      } else {
+        _log('All done.');
+      }
     } catch (e, st) {
       _log('Error: $e');
       _log(st.toString());
@@ -210,7 +237,10 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 12),
             const Divider(),
-            LogsPanel(logsByFolder: logsForPanel),
+            LogsPanel(
+              logsByFolder: logsForPanel,
+              selectedFolder: _currentLogFolder,
+            ),
           ],
         ),
       ),

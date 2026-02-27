@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class LogsPanel extends StatefulWidget {
   final Map<String, List<String>> logsByFolder;
+  final String? selectedFolder;
 
-  const LogsPanel({super.key, required this.logsByFolder});
+  const LogsPanel({super.key, required this.logsByFolder, this.selectedFolder});
 
   @override
   State<LogsPanel> createState() => _LogsPanelState();
@@ -42,6 +43,18 @@ class _LogsPanelState extends State<LogsPanel> {
         }
       }
     }
+
+    // Auto-switch selected tab if parent requested a folder selection change
+    if (widget.selectedFolder != null &&
+        widget.selectedFolder != oldWidget.selectedFolder) {
+      final idx = keys.indexOf(widget.selectedFolder!);
+      if (idx != -1 && idx != _selected) {
+        setState(() => _selected = idx);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_autoScroll) _scrollToBottom();
+        });
+      }
+    }
   }
 
   Future<void> _scrollToBottom() async {
@@ -70,8 +83,9 @@ class _LogsPanelState extends State<LogsPanel> {
     _scrollController.addListener(() {
       if (_isProgrammaticScroll) return;
       if (!_scrollController.hasClients ||
-          !_scrollController.position.hasContentDimensions)
+          !_scrollController.position.hasContentDimensions) {
         return;
+      }
       final max = _scrollController.position.maxScrollExtent;
       final cur = _scrollController.offset;
       // If user scrolled away from bottom by more than 20px, disable auto-scroll.
@@ -187,13 +201,17 @@ class _LogsPanelState extends State<LogsPanel> {
                                   final line = lines[i];
                                   final color = _colorForLine(line, context);
                                   final weight = _weightForLine(line);
-                                  return Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      line,
-                                      style: TextStyle(
-                                        color: color,
-                                        fontWeight: weight,
+                                  final bg = _bgForLine(line, context, i);
+                                  return Container(
+                                    color: bg,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Text(
+                                        line,
+                                        style: TextStyle(
+                                          color: color,
+                                          fontWeight: weight,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -236,6 +254,18 @@ Color _colorForLine(String line, BuildContext ctx) {
       (lc.contains('cjxl exit') && !lc.contains('exit 0'))) {
     return Colors.redAccent;
   }
+  // Storage summary lines: color by percentage saved (within parentheses):
+  // >=35% -> green, >=15% -> yellow, <15% -> red
+  if (lc.contains('saved') && lc.contains('%')) {
+    final reg = RegExp(r"\(([-+]?\d+(?:\.\d+)?)%\)");
+    final m = reg.firstMatch(lc);
+    if (m != null) {
+      final pct = double.tryParse(m.group(1)!) ?? 0.0;
+      if (pct >= 35.0) return Colors.greenAccent;
+      if (pct >= 15.0) return Colors.amberAccent.shade700;
+      return Colors.redAccent;
+    }
+  }
   if (lc.startsWith('done:') && lc.contains('ok')) {
     return Colors.greenAccent.shade200;
   }
@@ -264,4 +294,31 @@ FontWeight _weightForLine(String line) {
   }
   if (lc.startsWith('start:') || lc.startsWith('done:')) return FontWeight.w600;
   return FontWeight.normal;
+}
+
+Color? _bgForLine(String line, BuildContext ctx, int index) {
+  final lc = line.toLowerCase();
+  // Slight zebra striping for readability
+  final base = index % 2 == 0
+      ? Theme.of(ctx).colorScheme.surface.withAlpha(8)
+      : null;
+  if (lc.contains('error') || lc.contains('failed') || lc.contains('err')) {
+    return Colors.redAccent.withAlpha(30);
+  }
+  if (lc.startsWith('done:') && lc.contains('ok')) {
+    return Colors.green.withAlpha(30);
+  }
+  if (lc.startsWith('start:')) {
+    return Theme.of(ctx).colorScheme.primary.withAlpha(16);
+  }
+  if (lc.contains('removed') ||
+      lc.contains('deleted') ||
+      lc.contains('removed duplicate')) {
+    return Colors.orange.withAlpha(20);
+  }
+  if (lc.contains('created archive')) return Colors.green.withAlpha(16);
+  if (lc.contains('running cjxl') || lc.contains('cjxl')) {
+    return Colors.cyan.withAlpha(16);
+  }
+  return base;
 }

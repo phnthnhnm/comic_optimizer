@@ -6,7 +6,13 @@ import 'package:path/path.dart' as p;
 
 typedef LogCallback = void Function(String);
 typedef FolderCallback = void Function(String folderPath);
-typedef FolderDoneCallback = void Function(String folderPath, bool success);
+typedef FolderDoneCallback =
+    void Function(
+      String folderPath,
+      bool success,
+      int? beforeBytes,
+      int? afterBytes,
+    );
 
 class Optimizer {
   final LogCallback? onLog;
@@ -94,6 +100,8 @@ class Optimizer {
   ) async {
     onFolderStart?.call(folder.path);
     var success = true;
+    int? beforeTotalBytes;
+    int? archiveBytes;
     try {
       // list images
       final files = await folder
@@ -108,6 +116,19 @@ class Optimizer {
       if (images.isEmpty) {
         onLog?.call('No images in ${folder.path}, skipping');
         return;
+      }
+
+      // Calculate total bytes of input images before processing
+      try {
+        int b = 0;
+        for (final f in images) {
+          try {
+            b += await f.length();
+          } catch (_) {}
+        }
+        beforeTotalBytes = b;
+      } catch (_) {
+        beforeTotalBytes = null;
       }
 
       // Clean non-image files: delete files that are not images
@@ -332,6 +353,11 @@ class Optimizer {
         final outData = encoder.encode(archive, level: 0);
         final out = File(archivePath);
         await out.writeAsBytes(outData);
+        try {
+          archiveBytes = await out.length();
+        } catch (_) {
+          archiveBytes = null;
+        }
         onLog?.call('Created archive $archivePath');
       } catch (e) {
         onLog?.call('Failed to create archive: $e');
@@ -352,7 +378,7 @@ class Optimizer {
             } else {
               await _recycleOrDelete(folder);
               onLog?.call(
-                'Removed source folder ${folder.path} (moved to Recycle Bin)',
+                'Removed source folder ${folder.path} (moved to Recycle Bin on Windows)',
               );
             }
           } catch (e) {
@@ -370,7 +396,7 @@ class Optimizer {
       onLog?.call('Error processing ${folder.path}: $e');
       success = false;
     } finally {
-      onFolderDone?.call(folder.path, success);
+      onFolderDone?.call(folder.path, success, beforeTotalBytes, archiveBytes);
     }
   }
 

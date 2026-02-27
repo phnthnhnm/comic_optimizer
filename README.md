@@ -1,17 +1,16 @@
 # Comic Optimizer
 
-Comic Optimizer is a modern, user-friendly Flutter desktop app for optimizing comic book archives (CBZ) by compressing images and optionally running the `pingo` optimizer.
+Comic Optimizer is a modern, user-friendly Flutter desktop app for optimizing comic book archives (CBZ) by compressing images and encoding them to JPEG XL (`.jxl`) using the `cjxl` encoder.
 
 ## Features
 
 - Batch optimize comic folders into CBZ/CBR/ZIP files
-- Select from multiple `pingo` presets
-- See the exact `pingo` command that will be run for each preset
-- Option to skip `pingo` optimization
+  -- Encode images to JPEG XL (`.jxl`) using built-in presets
+  -- Two built-in presets: Lossless and Lossy (see below)
 
 ## Requirements
 
-- [pingo](https://css-ig.net/pingo) (recommended for image optimization compression; optional if you only want basic auto file renaming/sorting and folder archiving). Install from and put it on your `PATH` or specify the full path in the app settings.
+- `cjxl` (JPEG XL encoder) — required for producing `.jxl` output. Install `cjxl` and make it available on your `PATH`.
 - [Flutter SDK](https://docs.flutter.dev/install). The project is a Flutter desktop app — have `flutter` available in your PATH to run or build from source.
 
 ## Installation
@@ -54,14 +53,14 @@ flutter build windows --release
 
 Zip the release folder for distribution or upload the artifacts to GitHub Releases.
 
-## How to Use
+### How to Use
 
 1. Launch the app (downloaded release or run via `flutter run -d windows`).
 2. Click "Choose Root" to select the root directory containing your comic folders.
-3. Choose a `pingo` preset from the dropdown.
-   - The exact command for the selected preset is shown on hover.
-   - (Optional) Check "Skip pingo" to bypass `pingo` optimization.
-4. Click "Start" to begin processing. Live progress is shown in the app.
+3. Select a preset from the dropdown:
+   - Lossless: preserves image data (preset args: `-d 0`).
+   - Lossy: aggressively compresses for smaller size (preset args: `-q 90 -d 1.0 -e 8`).
+4. Click "Start" to begin processing. The app will encode each image to `.jxl` using `cjxl` and then archive the folder into a CBZ/CJR/ZIP as selected.
 5. Use the Settings screen to change theme or other preferences.
 
 ## User Settings Location

@@ -140,7 +140,7 @@ Color _colorForLine(String line, BuildContext ctx) {
   if (lc.contains('error') ||
       lc.contains('failed') ||
       lc.contains('err') ||
-      (lc.contains('pingo exit') && !lc.contains('exit 0'))) {
+      (lc.contains('cjxl exit') && !lc.contains('exit 0'))) {
     return Colors.redAccent;
   }
   if (lc.startsWith('done:') && lc.contains('ok')) {
@@ -157,7 +157,7 @@ Color _colorForLine(String line, BuildContext ctx) {
   if (lc.contains('created archive')) {
     return Colors.greenAccent;
   }
-  if (lc.contains('running pingo') || lc.contains('pingo')) {
+  if (lc.contains('running cjxl') || lc.contains('cjxl')) {
     return Colors.cyanAccent;
   }
   return Theme.of(ctx).textTheme.bodyMedium?.color ??

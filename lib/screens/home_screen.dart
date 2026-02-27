@@ -22,8 +22,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String? _rootPath;
   String _selectedPreset = Preset.losslessName;
-  bool _skipPingo = false;
-  String _pingoPath = 'pingo';
+
   String _outputExt = '.cbz';
   dynamic _logs = {};
   String? _currentLogFolder;
@@ -39,8 +38,6 @@ class _HomePageState extends State<HomePage> {
         _selectedPreset = model.lastPreset.isNotEmpty
             ? model.lastPreset
             : Preset.losslessName;
-        _skipPingo = model.skipPingo;
-        _pingoPath = model.pingoPath;
         _outputExt = model.outputExt;
       });
     });
@@ -50,8 +47,6 @@ class _HomePageState extends State<HomePage> {
     final model = context.read<SettingsModel>();
     if (_rootPath != null) await model.setLastRoot(_rootPath);
     await model.setLastPreset(_selectedPreset);
-    await model.setSkipPingo(_skipPingo);
-    await model.setPingoPath(_pingoPath);
     await model.setOutputExt(_outputExt);
   }
 
@@ -117,6 +112,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     final preset = Preset.byName(_selectedPreset);
+    final presetArgs = preset.args;
 
     final optimizer = Optimizer(
       onLog: (s) => _log(s),
@@ -133,9 +129,9 @@ class _HomePageState extends State<HomePage> {
     try {
       await optimizer.optimizeRoot(
         Directory(_rootPath!),
-        presetArgs: preset.args,
-        skipPingo: _skipPingo,
-        pingoPath: _pingoPath,
+        presetArgs: presetArgs,
+        skipPingo: true,
+        pingoPath: 'pingo',
         outputExtension: _outputExt,
         preferPermanentDelete: preferPermanentDelete,
       );
@@ -150,10 +146,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<SettingsModel>();
-    // Safely handle legacy hot-reload state where `_logs` might still be a
-    // `List<String>` from an older version. Access via `dynamic` and
-    // normalize to `Map<String,List<String>>` for the `LogsPanel`.
     final dynamic rawLogs = (this as dynamic)._logs;
     final Map<String, List<String>> logsForPanel = {};
     if (rawLogs is Map<String, List<String>>) {
@@ -199,12 +191,6 @@ class _HomePageState extends State<HomePage> {
               selectedPreset: _selectedPreset,
               onPresetChanged: (v) =>
                   setState(() => _selectedPreset = v ?? Preset.losslessName),
-              availablePresets: [...Preset.all, ...model.customPresets],
-              skipPingo: _skipPingo,
-              onSkipPingoChanged: (v) =>
-                  setState(() => _skipPingo = v ?? false),
-              pingoPath: _pingoPath,
-              onPingoPathChanged: (v) => _pingoPath = v,
               outputExt: _outputExt,
               onOutputExtChanged: (v) =>
                   setState(() => _outputExt = v ?? '.cbz'),

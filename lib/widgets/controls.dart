@@ -7,11 +7,7 @@ class ControlPanel extends StatelessWidget {
   final VoidCallback onPickRoot;
   final String selectedPreset;
   final ValueChanged<String?> onPresetChanged;
-  final List<Preset> availablePresets;
-  final bool skipPingo;
-  final ValueChanged<bool?> onSkipPingoChanged;
-  final String pingoPath;
-  final ValueChanged<String> onPingoPathChanged;
+
   final String outputExt;
   final ValueChanged<String?> onOutputExtChanged;
   final bool running;
@@ -23,11 +19,6 @@ class ControlPanel extends StatelessWidget {
     required this.onPickRoot,
     required this.selectedPreset,
     required this.onPresetChanged,
-    required this.availablePresets,
-    required this.skipPingo,
-    required this.onSkipPingoChanged,
-    required this.pingoPath,
-    required this.onPingoPathChanged,
     required this.outputExt,
     required this.onOutputExtChanged,
     required this.running,
@@ -96,34 +87,12 @@ class ControlPanel extends StatelessWidget {
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: selectedPreset,
-              items: availablePresets
+              items: Preset.all
                   .map(
-                    (p) => DropdownMenuItem(
-                      value: p.name,
-                      child: Tooltip(
-                        message: p.args.join(' '),
-                        child: Text(p.name),
-                      ),
-                    ),
+                    (p) => DropdownMenuItem(value: p.name, child: Text(p.name)),
                   )
                   .toList(),
               onChanged: onPresetChanged,
-            ),
-            const SizedBox(width: 16),
-            Checkbox(value: skipPingo, onChanged: onSkipPingoChanged),
-            const Text('Skip pingo'),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Text('Pingo path: '),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: TextEditingController(text: pingoPath),
-                onChanged: onPingoPathChanged,
-              ),
             ),
           ],
         ),

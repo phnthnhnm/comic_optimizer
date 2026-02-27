@@ -15,7 +15,7 @@ class Optimizer {
 
   Optimizer({this.onLog, this.onFolderStart, this.onFolderDone});
 
-  static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng'};
+  static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng', '.jxl'};
 
   Future<void> optimizeRoot(
     Directory root, {
@@ -187,33 +187,52 @@ class Optimizer {
         idx++;
       }
 
-      // Optionally run pingo
-      if (!skipPingo) {
-        try {
-          // Pass the folder ('.') to pingo so it processes all files inside
-          final args = [...presetArgs, '.'];
+      // Encode each image to JPEG XL using `cjxl` and the provided preset args
+      try {
+        final toEncode = await folder
+            .list(recursive: false, followLinks: false)
+            .where((e) => e is File)
+            .cast<File>()
+            .toList();
+        // Only consider image extensions
+        final encodeFiles = toEncode.where((f) {
+          final ext = p.extension(f.path).toLowerCase();
+          return _imgExts.contains(ext) && ext != '.jxl';
+        }).toList();
+        encodeFiles.sort(
+          (a, b) => _naturalCompare(p.basename(a.path), p.basename(b.path)),
+        );
+        for (final f in encodeFiles) {
+          final base = p.basenameWithoutExtension(f.path);
+          final outPath = p.join(folder.path, '$base.jxl');
+          final args = [f.path, outPath, ...presetArgs];
           onLog?.call(
-            'Running pingo: $pingoPath ${args.join(' ')} (cwd=${folder.path})',
+            'Running cjxl: cjxl ${args.join(' ')} (cwd=${folder.path})',
           );
-          final result = await Process.run(
-            pingoPath,
-            args,
-            workingDirectory: folder.path,
-          );
-          if (result.stdout != null && result.stdout.toString().isNotEmpty) {
-            onLog?.call(result.stdout.toString());
-          }
-          if (result.stderr != null && result.stderr.toString().isNotEmpty) {
-            onLog?.call(result.stderr.toString());
-          }
-          if (result.exitCode != 0) {
-            onLog?.call('pingo exit ${result.exitCode}');
+          try {
+            final result = await Process.run(
+              'cjxl',
+              args,
+              workingDirectory: folder.path,
+            );
+            if (result.stdout != null && result.stdout.toString().isNotEmpty) {
+              onLog?.call(result.stdout.toString());
+            }
+            if (result.stderr != null && result.stderr.toString().isNotEmpty) {
+              onLog?.call(result.stderr.toString());
+            }
+            if (result.exitCode != 0) {
+              onLog?.call('cjxl exit ${result.exitCode}');
+              success = false;
+            }
+          } catch (e) {
+            onLog?.call('Failed to run cjxl for ${f.path}: $e');
             success = false;
           }
-        } catch (e) {
-          onLog?.call('Failed to run pingo: $e');
-          success = false;
         }
+      } catch (e) {
+        onLog?.call('Failed during cjxl encoding: $e');
+        success = false;
       }
 
       // Remove redundant originals: if .webp exists with same base, remove non-webp
@@ -228,13 +247,13 @@ class Optimizer {
         grouped.putIfAbsent(base, () => []).add(f);
       }
       for (final entry in grouped.entries) {
-        final hasWebp = entry.value.any(
-          (f) => p.extension(f.path).toLowerCase() == '.webp',
+        final hasJxl = entry.value.any(
+          (f) => p.extension(f.path).toLowerCase() == '.jxl',
         );
-        if (hasWebp) {
+        if (hasJxl) {
           for (final f in entry.value) {
             final ext = p.extension(f.path).toLowerCase();
-            if (ext != '.webp') {
+            if (ext != '.jxl') {
               try {
                 await f.delete();
                 onLog?.call('Removed duplicate original ${f.path}');

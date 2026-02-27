@@ -7,11 +7,9 @@ class SettingsModel extends ChangeNotifier {
   final SettingsRepository _repo;
 
   bool preferPermanentDelete = false;
-  bool skipPingo = false;
-  String pingoPath = 'pingo';
   String outputExt = '.cbz';
+  String lastPreset = Preset.losslessName;
   String? lastRoot;
-  String lastPreset = '';
   ThemeMode themeMode = ThemeMode.system;
 
   SettingsModel(this._repo);
@@ -46,28 +44,10 @@ class SettingsModel extends ChangeNotifier {
     await _repo.setPreferPermanentDelete(v);
   }
 
-  Future<void> setSkipPingo(bool v) async {
-    skipPingo = v;
-    notifyListeners();
-    await _repo.setSkipPingo(v);
-  }
-
-  Future<void> setPingoPath(String v) async {
-    pingoPath = v;
-    notifyListeners();
-    await _repo.setPingoPath(v);
-  }
-
   Future<void> setOutputExt(String v) async {
     outputExt = v;
     notifyListeners();
     await _repo.setOutputExt(v);
-  }
-
-  Future<void> setLastRoot(String? v) async {
-    lastRoot = v;
-    notifyListeners();
-    await _repo.setLastRoot(v);
   }
 
   Future<void> setLastPreset(String v) async {
@@ -76,49 +56,32 @@ class SettingsModel extends ChangeNotifier {
     await _repo.setLastPreset(v);
   }
 
+  Future<void> setLastRoot(String? v) async {
+    lastRoot = v;
+    notifyListeners();
+    await _repo.setLastRoot(v);
+  }
+
   Future<void> setThemeMode(ThemeMode m) async {
     themeMode = m;
     notifyListeners();
     await _repo.setThemeMode(_modeToString(m));
   }
 
-  // Custom presets managed by the user
-  List<Preset> customPresets = [];
-
-  // load custom presets alongside other prefs
+  // load preferences
   Future<void> load() async {
     await _repo.init();
     preferPermanentDelete = _repo.getPreferPermanentDelete();
-    skipPingo = _repo.getSkipPingo();
-    pingoPath = _repo.getPingoPath();
     outputExt = _repo.getOutputExt();
     lastRoot = _repo.getLastRoot();
-    lastPreset = _repo.getLastPreset();
+    lastPreset = _repo.getLastPreset().isNotEmpty
+        ? _repo.getLastPreset()
+        : Preset.losslessName;
+
     final s = _repo.getThemeMode();
     themeMode = _stringToMode(s);
-    // load custom presets
-    customPresets = _repo.getCustomPresets();
-    notifyListeners();
-  }
 
-  Future<void> addPreset(Preset p) async {
-    customPresets.add(p);
     notifyListeners();
-    await _repo.setCustomPresets(customPresets);
-  }
-
-  Future<void> updatePreset(int idx, Preset p) async {
-    if (idx < 0 || idx >= customPresets.length) return;
-    customPresets[idx] = p;
-    notifyListeners();
-    await _repo.setCustomPresets(customPresets);
-  }
-
-  Future<void> removePreset(int idx) async {
-    if (idx < 0 || idx >= customPresets.length) return;
-    customPresets.removeAt(idx);
-    notifyListeners();
-    await _repo.setCustomPresets(customPresets);
   }
 
   // Generic setters exposing repository functionality for restore

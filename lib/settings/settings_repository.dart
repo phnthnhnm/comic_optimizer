@@ -1,13 +1,8 @@
-import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../presets.dart';
 
 class SettingsRepository {
   static const _keyPreferPermanentDelete = 'preferPermanentDelete';
-  static const _keySkipPingo = 'skipPingo';
-  static const _keyPingoPath = 'pingoPath';
+
   static const _keyOutputExt = 'outputExt';
   static const _keyLastRoot = 'lastRoot';
   static const _keyLastPreset = 'lastPreset';
@@ -21,13 +16,10 @@ class SettingsRepository {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  static const _keyCustomPresets = 'customPresets';
-
   // getters
   bool getPreferPermanentDelete() =>
       _prefs.getBool(_keyPreferPermanentDelete) ?? false;
-  bool getSkipPingo() => _prefs.getBool(_keySkipPingo) ?? false;
-  String getPingoPath() => _prefs.getString(_keyPingoPath) ?? 'pingo';
+
   String getOutputExt() => _prefs.getString(_keyOutputExt) ?? '.cbz';
   String? getLastRoot() => _prefs.getString(_keyLastRoot);
   String getLastPreset() => _prefs.getString(_keyLastPreset) ?? '';
@@ -36,8 +28,7 @@ class SettingsRepository {
   // setters
   Future<void> setPreferPermanentDelete(bool v) =>
       _prefs.setBool(_keyPreferPermanentDelete, v);
-  Future<void> setSkipPingo(bool v) => _prefs.setBool(_keySkipPingo, v);
-  Future<void> setPingoPath(String v) => _prefs.setString(_keyPingoPath, v);
+
   Future<void> setOutputExt(String v) => _prefs.setString(_keyOutputExt, v);
   Future<void> setLastRoot(String? v) async {
     if (v == null) {
@@ -48,20 +39,10 @@ class SettingsRepository {
   }
 
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
+
   Future<void> setThemeMode(String v) => _prefs.setString(_keyThemeMode, v);
 
   // Custom presets persistence
-  List<Preset> getCustomPresets() {
-    final list = _prefs.getStringList(_keyCustomPresets) ?? <String>[];
-    return list
-        .map((s) => Preset.fromJson(jsonDecode(s) as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<bool> setCustomPresets(List<Preset> presets) {
-    final list = presets.map((p) => jsonEncode(p.toJson())).toList();
-    return _prefs.setStringList(_keyCustomPresets, list);
-  }
 
   // Generic setters for unknown keys (used by restore)
   Future<bool> setString(String key, String value) =>

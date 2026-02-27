@@ -280,7 +280,7 @@ Color _colorForLine(String line, BuildContext ctx) {
   if (lc.contains('created archive')) {
     return Colors.greenAccent;
   }
-  if (lc.contains('running cjxl') || lc.contains('cjxl')) {
+  if (lc.contains('running cjxl') || lc.contains('created safe copy')) {
     return Colors.cyanAccent;
   }
   return Theme.of(ctx).textTheme.bodyMedium?.color ??
@@ -317,7 +317,7 @@ Color? _bgForLine(String line, BuildContext ctx, int index) {
     return Colors.orange.withAlpha(20);
   }
   if (lc.contains('created archive')) return Colors.green.withAlpha(16);
-  if (lc.contains('running cjxl') || lc.contains('cjxl')) {
+  if (lc.contains('running cjxl') || lc.contains('created safe copy')) {
     return Colors.cyan.withAlpha(16);
   }
   return base;

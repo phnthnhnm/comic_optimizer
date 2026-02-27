@@ -29,6 +29,7 @@ class Optimizer {
     required bool skipCjxl,
     required String cjxlPath,
     required String outputExtension,
+    bool safeRun = false,
     bool preferPermanentDelete = false,
   }) async {
     if (!await root.exists()) {
@@ -48,11 +49,12 @@ class Optimizer {
     if (!rootHasDirs && rootHasImages) {
       await _processFolder(
         root,
+        root.path,
         presetArgs,
         skipCjxl,
         cjxlPath,
         outputExtension,
-        preferPermanentDelete,
+        preferPermanentDelete || safeRun,
       );
       return;
     }
@@ -67,38 +69,133 @@ class Optimizer {
         final hasDirs = children.any((e) => e is Directory);
         if (hasDirs) {
           for (final sub in children.whereType<Directory>()) {
+            Directory working = sub;
+            var startEmitted = false;
+            if (safeRun) {
+              try {
+                // Emit folder start for the original folder so subsequent logs
+                // (like copy creation) are associated with that folder tab instead of General
+                onFolderStart?.call(sub.path);
+                startEmitted = true;
+                working = await _makeCopyDirectory(sub);
+                onLog?.call(
+                  'Created safe copy ${working.path} for ${sub.path}',
+                );
+              } catch (e) {
+                onLog?.call('Failed to create safe copy for ${sub.path}: $e');
+                working = sub;
+              }
+            }
             await _processFolder(
-              sub,
+              working,
+              sub.path,
               presetArgs,
               skipCjxl,
               cjxlPath,
               outputExtension,
-              preferPermanentDelete,
+              preferPermanentDelete || safeRun,
+              emitStart: !startEmitted,
             );
+            // If we created a working copy and it still exists, attempt to delete it now
+            if (safeRun && working.path != sub.path) {
+              try {
+                if (await Directory(working.path).exists()) {
+                  await Directory(working.path).delete(recursive: true);
+                  onLog?.call('Removed safe copy ${working.path}');
+                }
+              } catch (e) {
+                onLog?.call('Failed to remove safe copy ${working.path}: $e');
+              }
+            }
           }
         } else {
-          await _processFolder(
-            entity,
-            presetArgs,
-            skipCjxl,
-            cjxlPath,
-            outputExtension,
-            preferPermanentDelete,
-          );
+          {
+            Directory working = entity;
+            var startEmitted = false;
+            if (safeRun) {
+              try {
+                onFolderStart?.call(entity.path);
+                startEmitted = true;
+                working = await _makeCopyDirectory(entity);
+                onLog?.call(
+                  'Created safe copy ${working.path} for ${entity.path}',
+                );
+              } catch (e) {
+                onLog?.call(
+                  'Failed to create safe copy for ${entity.path}: $e',
+                );
+                working = entity;
+              }
+            }
+            await _processFolder(
+              working,
+              entity.path,
+              presetArgs,
+              skipCjxl,
+              cjxlPath,
+              outputExtension,
+              preferPermanentDelete || safeRun,
+              emitStart: !startEmitted,
+            );
+            if (safeRun && working.path != entity.path) {
+              try {
+                if (await Directory(working.path).exists()) {
+                  await Directory(working.path).delete(recursive: true);
+                  onLog?.call('Removed safe copy ${working.path}');
+                }
+              } catch (e) {
+                onLog?.call('Failed to remove safe copy ${working.path}: $e');
+              }
+            }
+          }
         }
       }
     }
   }
 
+  Future<Directory> _makeCopyDirectory(Directory src) async {
+    final parent = src.parent;
+    final base = p.basename(src.path);
+    // find non-colliding name like 'name (1)', 'name (2)', ...
+    var idx = 1;
+    String candidate;
+    do {
+      candidate = p.join(parent.path, '$base (${idx})');
+      idx++;
+    } while (await Directory(candidate).exists());
+    final dest = Directory(candidate);
+    await dest.create(recursive: true);
+
+    Future<void> copyRecursive(Directory from, Directory to) async {
+      await for (final ent in from.list(recursive: false, followLinks: false)) {
+        if (ent is File) {
+          final rel = p.relative(ent.path, from: from.path);
+          final target = File(p.join(to.path, rel));
+          await target.parent.create(recursive: true);
+          await ent.copy(target.path);
+        } else if (ent is Directory) {
+          final sub = Directory(p.join(to.path, p.basename(ent.path)));
+          await sub.create(recursive: true);
+          await copyRecursive(ent, sub);
+        }
+      }
+    }
+
+    await copyRecursive(src, dest);
+    return dest;
+  }
+
   Future<void> _processFolder(
     Directory folder,
+    String originalPath,
     List<String> presetArgs,
     bool skipCjxl,
     String cjxlPath,
     String outputExtension,
-    bool preferPermanentDelete,
-  ) async {
-    onFolderStart?.call(folder.path);
+    bool preferPermanentDelete, {
+    bool emitStart = true,
+  }) async {
+    if (emitStart) onFolderStart?.call(originalPath);
     var success = true;
     int? beforeTotalBytes;
     int? archiveBytes;
@@ -330,7 +427,7 @@ class Optimizer {
 
       // Create archive in parent directory using store (no compression)
       final parent = Directory(folder.parent.path);
-      final archiveName = '${p.basename(folder.path)}$outputExtension';
+      final archiveName = '${p.basename(originalPath)}$outputExtension';
       final archivePath = p.join(parent.path, archiveName);
       if (p.isWithin(folder.path, archivePath)) {
         // avoid archive inside folder
@@ -396,7 +493,7 @@ class Optimizer {
       onLog?.call('Error processing ${folder.path}: $e');
       success = false;
     } finally {
-      onFolderDone?.call(folder.path, success, beforeTotalBytes, archiveBytes);
+      onFolderDone?.call(originalPath, success, beforeTotalBytes, archiveBytes);
     }
   }
 

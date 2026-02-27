@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage> {
   String _selectedPreset = Preset.losslessName;
   bool _skipCjxl = false;
   bool _preferPermanentDelete = false;
+  bool _safeRun = false;
 
   String _outputExt = '.cbz';
   dynamic _logs = {};
@@ -45,6 +46,7 @@ class _HomePageState extends State<HomePage> {
         _outputExt = model.outputExt;
         _skipCjxl = model.skipCjxl;
         _preferPermanentDelete = model.preferPermanentDelete;
+        _safeRun = model.safeRun;
       });
     });
   }
@@ -55,6 +57,7 @@ class _HomePageState extends State<HomePage> {
     await model.setLastPreset(_selectedPreset);
     await model.setSkipCjxl(_skipCjxl);
     await model.setPreferPermanentDelete(_preferPermanentDelete);
+    await model.setSafeRun(_safeRun);
     await model.setOutputExt(_outputExt);
   }
 
@@ -141,6 +144,7 @@ class _HomePageState extends State<HomePage> {
         presetArgs: presetArgs,
         skipCjxl: _skipCjxl,
         cjxlPath: model.cjxlPath,
+        safeRun: _safeRun,
         outputExtension: _outputExt,
         preferPermanentDelete: preferPermanentDelete,
       );
@@ -229,6 +233,8 @@ class _HomePageState extends State<HomePage> {
               preferPermanentDelete: _preferPermanentDelete,
               onPreferPermanentDeleteChanged: (v) =>
                   setState(() => _preferPermanentDelete = v ?? false),
+              safeRun: _safeRun,
+              onSafeRunChanged: (v) => setState(() => _safeRun = v ?? false),
               outputExt: _outputExt,
               onOutputExtChanged: (v) =>
                   setState(() => _outputExt = v ?? '.cbz'),

@@ -9,6 +9,7 @@ class SettingsModel extends ChangeNotifier {
   bool preferPermanentDelete = false;
   String outputExt = '.cbz';
   bool skipCjxl = false;
+  bool safeRun = false;
   String cjxlPath = 'cjxl';
   String lastPreset = Preset.losslessName;
   String? lastRoot;
@@ -58,6 +59,12 @@ class SettingsModel extends ChangeNotifier {
     await _repo.setSkipCjxl(v);
   }
 
+  Future<void> setSafeRun(bool v) async {
+    safeRun = v;
+    notifyListeners();
+    await _repo.setSafeRun(v);
+  }
+
   Future<void> setCjxlPath(String v) async {
     cjxlPath = v;
     notifyListeners();
@@ -88,6 +95,7 @@ class SettingsModel extends ChangeNotifier {
     preferPermanentDelete = _repo.getPreferPermanentDelete();
     outputExt = _repo.getOutputExt();
     skipCjxl = _repo.getSkipCjxl();
+    safeRun = _repo.getSafeRun();
     cjxlPath = _repo.getCjxlPath();
     lastRoot = _repo.getLastRoot();
     lastPreset = _repo.getLastPreset().isNotEmpty

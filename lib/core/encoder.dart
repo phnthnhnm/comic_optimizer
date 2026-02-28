@@ -172,6 +172,7 @@ class Encoder {
               try {
                 final magick = await Process.run('magick', [
                   inputPath,
+                  '-strip',
                   resavedPath,
                 ], workingDirectory: folder.path);
                 if (magick.stdout != null &&

@@ -59,15 +59,36 @@ class Optimizer {
       (f) => _imgExts.contains(p.extension(f.path).toLowerCase()),
     );
     if (!rootHasDirs && rootHasImages) {
-      await _processFolder(
+      Directory working = root;
+      var startEmitted = false;
+      final safeResult = await makeSafeCopyIfRequested(
         root,
+        safeRun,
+        onLog: onLog,
+        onFolderStart: onFolderStart,
+      );
+      working = safeResult.working;
+      startEmitted = safeResult.startEmitted;
+      await _processFolder(
+        working,
         root.path,
         presetArgs,
         skipCjxl,
         cjxlPath,
         outputExtension,
         preferPermanentDelete || safeRun,
+        emitStart: !startEmitted,
       );
+      if (safeRun && working.path != root.path) {
+        try {
+          if (await Directory(working.path).exists()) {
+            await Directory(working.path).delete(recursive: true);
+            onLog?.call('Removed safe copy ${working.path}');
+          }
+        } catch (e) {
+          onLog?.call('Failed to remove safe copy ${working.path}: $e');
+        }
+      }
       return;
     }
 

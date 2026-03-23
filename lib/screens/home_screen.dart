@@ -277,7 +277,6 @@ class _HomePageState extends State<HomePage> {
   void _cancel() {
     if (_currentOptimizer != null) {
       _currentOptimizer!.cancel();
-      _log('Cancel requested by user');
       setState(() => _paused = false);
     }
   }
@@ -285,7 +284,6 @@ class _HomePageState extends State<HomePage> {
   void _pause() {
     if (_currentOptimizer != null) {
       _currentOptimizer!.pause();
-      _log('Pause requested by user');
       setState(() => _paused = true);
     }
   }
@@ -293,7 +291,6 @@ class _HomePageState extends State<HomePage> {
   void _resume() {
     if (_currentOptimizer != null) {
       _currentOptimizer!.resume();
-      _log('Resume requested by user');
       setState(() => _paused = false);
     }
   }

@@ -224,6 +224,7 @@ class ControlPanel extends StatelessWidget {
             SizedBox(
               width: 80,
               child: TextFormField(
+                key: ValueKey(postRunConfirmSeconds),
                 initialValue: postRunConfirmSeconds.toString(),
                 keyboardType: TextInputType.number,
                 onChanged: (v) {

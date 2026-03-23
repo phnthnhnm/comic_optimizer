@@ -9,8 +9,9 @@ typedef LogCallback = void Function(String);
 class Encoder {
   final LogCallback? onLog;
   final bool Function() isCancelled;
+  final Future<void> Function()? waitIfPaused;
 
-  Encoder({this.onLog, required this.isCancelled});
+  Encoder({this.onLog, required this.isCancelled, this.waitIfPaused});
 
   static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng', '.jxl'};
 
@@ -39,6 +40,7 @@ class Encoder {
       );
 
       for (final f in encodeFiles) {
+        if (waitIfPaused != null) await waitIfPaused!();
         if (isCancelled()) {
           onLog?.call('Operation cancelled by user');
           break;
@@ -111,6 +113,7 @@ class Encoder {
             args,
             workingDirectory: folder.path,
           );
+          if (waitIfPaused != null) await waitIfPaused!();
           if (isCancelled()) {
             onLog?.call('Operation cancelled by user');
             break;
@@ -187,6 +190,7 @@ class Encoder {
                 if (magick.exitCode == 0 && await resavedFile.exists()) {
                   final retryArgs = [resavedPath, outPath, ...presetArgs];
                   onLog?.call('Retrying cjxl: cjxl ${maskArgs(retryArgs)}');
+                  if (waitIfPaused != null) await waitIfPaused!();
                   final retry = await Process.run(
                     cjxlPath,
                     retryArgs,

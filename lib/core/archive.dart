@@ -25,6 +25,7 @@ Future<ArchiveResult> createArchiveAndMaybeRemoveSource(
   String outputExtension,
   bool preferPermanentDelete, {
   LogCallback? onLog,
+  Future<void> Function()? waitIfPaused,
 }) async {
   final parent = Directory(folder.parent.path);
   final archiveName = '${p.basename(originalPath)}$outputExtension';
@@ -40,6 +41,7 @@ Future<ArchiveResult> createArchiveAndMaybeRemoveSource(
     final archive = Archive();
     final finalFiles = await parentForFolderFiles(folder);
     for (final f in finalFiles) {
+      if (waitIfPaused != null) await waitIfPaused();
       final rel = p.relative(f.path, from: folder.path);
       final bytes = await File(f.path).readAsBytes();
       final file = ArchiveFile(rel, bytes.length, bytes);
@@ -67,11 +69,13 @@ Future<ArchiveResult> createArchiveAndMaybeRemoveSource(
     if (!p.isWithin(folderAbs, arch)) {
       try {
         if (preferPermanentDelete) {
+          if (waitIfPaused != null) await waitIfPaused();
           await folder.delete(recursive: true);
           onLog?.call(
             'Removed source folder ${p.basename(originalPath)} (permanent delete)',
           );
         } else {
+          if (waitIfPaused != null) await waitIfPaused();
           await recycleOrDelete(folder, onLog: onLog);
           onLog?.call(
             'Removed source folder ${p.basename(originalPath)} (moved to Recycle Bin)',

@@ -24,6 +24,8 @@ class Optimizer {
   final FolderCallback? onFolderStart;
   final FolderDoneCallback? onFolderDone;
   bool _cancelRequested = false;
+  bool _paused = false;
+  Completer<void>? _pauseCompleter;
 
   Optimizer({this.onLog, this.onFolderStart, this.onFolderDone});
 
@@ -31,6 +33,36 @@ class Optimizer {
   /// between files / folders as soon as it observes the request.
   void cancel() {
     _cancelRequested = true;
+  }
+
+  /// Pause the current operation. Running tasks will block at the next
+  /// checkpoint until `resume()` is called.
+  void pause() {
+    if (!_paused) {
+      _paused = true;
+      _pauseCompleter = Completer<void>();
+      onLog?.call('Operation paused by user');
+    }
+  }
+
+  /// Resume a paused operation.
+  void resume() {
+    if (_paused) {
+      _paused = false;
+      try {
+        _pauseCompleter?.complete();
+      } catch (_) {}
+      _pauseCompleter = null;
+      onLog?.call('Operation resumed by user');
+    }
+  }
+
+  /// Await while paused; returns immediately when not paused.
+  Future<void> waitIfPaused() async {
+    if (_paused) {
+      final c = _pauseCompleter;
+      if (c != null) await c.future;
+    }
   }
 
   static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng', '.jxl'};
@@ -96,6 +128,7 @@ class Optimizer {
       recursive: false,
       followLinks: false,
     )) {
+      await waitIfPaused();
       if (_cancelRequested) {
         onLog?.call('Operation cancelled by user');
         break;
@@ -106,6 +139,7 @@ class Optimizer {
         final hasDirs = children.any((e) => e is Directory);
         if (hasDirs) {
           for (final sub in children.whereType<Directory>()) {
+            await waitIfPaused();
             if (_cancelRequested) break;
             Directory working = sub;
             var startEmitted = false;
@@ -141,6 +175,7 @@ class Optimizer {
           }
         } else {
           {
+            await waitIfPaused();
             Directory working = entity;
             var startEmitted = false;
             final safeResult = await makeSafeCopyIfRequested(
@@ -187,6 +222,7 @@ class Optimizer {
     bool preferPermanentDelete, {
     bool emitStart = true,
   }) async {
+    await waitIfPaused();
     // Helper closures for masking paths and arguments in logs
     final maskPath = makeMaskPath(folder.path, originalPath);
     final maskArgs = makeMaskArgs(maskPath);
@@ -224,15 +260,25 @@ class Optimizer {
 
       beforeTotalBytes = await sumFileLengths(images);
 
-      await removeNonImageFiles(folder, _imgExts, onLog: onLog);
+      await removeNonImageFiles(
+        folder,
+        _imgExts,
+        onLog: onLog,
+        waitIfPaused: waitIfPaused,
+      );
 
-      final imageFiles = await listImageFiles(folder, _imgExts);
+      final imageFiles = await listImageFiles(
+        folder,
+        _imgExts,
+        waitIfPaused: waitIfPaused,
+      );
 
       await normalizeFilenamesSequential(
         folder,
         imageFiles,
         onLog: onLog,
         isCancelled: () => _cancelRequested,
+        waitIfPaused: waitIfPaused,
       );
 
       // Encode each image to JPEG XL using `cjxl` and the provided preset args
@@ -240,6 +286,7 @@ class Optimizer {
         final encoder = Encoder(
           onLog: onLog,
           isCancelled: () => _cancelRequested,
+          waitIfPaused: waitIfPaused,
         );
         try {
           final ok = await encoder.encodeFolder(
@@ -260,7 +307,11 @@ class Optimizer {
       }
 
       // Remove redundant originals: if .jxl exists with same base, remove non-jxl
-      await removeDuplicateOriginals(folder, onLog: onLog);
+      await removeDuplicateOriginals(
+        folder,
+        onLog: onLog,
+        waitIfPaused: waitIfPaused,
+      );
 
       // Create archive in parent directory using store (no compression)
       final parent = Directory(folder.parent.path);
@@ -279,6 +330,7 @@ class Optimizer {
         outputExtension,
         preferPermanentDelete,
         onLog: onLog,
+        waitIfPaused: waitIfPaused,
       );
       archiveBytes = archiveResult.bytes;
       if (!archiveResult.success) success = false;

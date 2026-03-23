@@ -40,6 +40,7 @@ Future<void> removeNonImageFiles(
   Directory folder,
   Set<String> exts, {
   LogCallback? onLog,
+  Future<void> Function()? waitIfPaused,
 }) async {
   final files = await folder
       .list(recursive: false, followLinks: false)
@@ -47,6 +48,7 @@ Future<void> removeNonImageFiles(
       .cast<File>()
       .toList();
   for (final f in files) {
+    if (waitIfPaused != null) await waitIfPaused();
     if (!exts.contains(p.extension(f.path).toLowerCase())) {
       try {
         await f.delete();
@@ -59,7 +61,12 @@ Future<void> removeNonImageFiles(
 }
 
 /// Refresh images after deletion
-Future<List<File>> listImageFiles(Directory folder, Set<String> exts) async {
+Future<List<File>> listImageFiles(
+  Directory folder,
+  Set<String> exts, {
+  Future<void> Function()? waitIfPaused,
+}) async {
+  if (waitIfPaused != null) await waitIfPaused();
   final files = await folder
       .list(recursive: false, followLinks: false)
       .where((e) => e is File)
@@ -75,6 +82,7 @@ Future<List<File>> listImageFiles(Directory folder, Set<String> exts) async {
 Future<void> removeDuplicateOriginals(
   Directory folder, {
   LogCallback? onLog,
+  Future<void> Function()? waitIfPaused,
 }) async {
   final afterOpt = await folder
       .list(recursive: false, followLinks: false)
@@ -83,15 +91,18 @@ Future<void> removeDuplicateOriginals(
       .toList();
   final grouped = <String, List<File>>{};
   for (final f in afterOpt) {
+    if (waitIfPaused != null) await waitIfPaused();
     final base = p.basenameWithoutExtension(f.path);
     grouped.putIfAbsent(base, () => []).add(f);
   }
   for (final entry in grouped.entries) {
+    if (waitIfPaused != null) await waitIfPaused();
     final hasJxl = entry.value.any(
       (f) => p.extension(f.path).toLowerCase() == '.jxl',
     );
     if (hasJxl) {
       for (final f in entry.value) {
+        if (waitIfPaused != null) await waitIfPaused();
         final ext = p.extension(f.path).toLowerCase();
         if (ext != '.jxl') {
           try {
@@ -146,6 +157,7 @@ Future<void> normalizeFilenamesSequential(
   String tempPrefix = '._tmp_',
   LogCallback? onLog,
   bool Function()? isCancelled,
+  Future<void> Function()? waitIfPaused,
 }) async {
   files.sort((a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)));
   final count = files.length;
@@ -153,6 +165,7 @@ Future<void> normalizeFilenamesSequential(
 
   var idx = 1;
   for (final f in files) {
+    if (waitIfPaused != null) await waitIfPaused();
     if (isCancelled != null && isCancelled()) {
       onLog?.call('Operation cancelled by user');
       break;
@@ -183,6 +196,7 @@ Future<void> normalizeFilenamesSequential(
   temps.sort((a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)));
   idx = 1;
   for (final f in temps) {
+    if (waitIfPaused != null) await waitIfPaused();
     if (isCancelled != null && isCancelled()) {
       onLog?.call('Operation cancelled by user');
       break;

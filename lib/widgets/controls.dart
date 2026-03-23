@@ -24,8 +24,11 @@ class ControlPanel extends StatelessWidget {
   final String outputExt;
   final ValueChanged<String?> onOutputExtChanged;
   final bool running;
+  final bool paused;
   final VoidCallback onStart;
   final VoidCallback? onCancel;
+  final VoidCallback? onPause;
+  final VoidCallback? onResume;
   final bool starting;
 
   const ControlPanel({
@@ -49,8 +52,11 @@ class ControlPanel extends StatelessWidget {
     required this.postRunConfirmSeconds,
     required this.onPostRunConfirmSecondsChanged,
     required this.running,
+    this.paused = false,
     required this.onStart,
     this.onCancel,
+    this.onPause,
+    this.onResume,
     this.starting = false,
   });
 
@@ -156,9 +162,13 @@ class ControlPanel extends StatelessWidget {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: running ? null : onStart,
+              onPressed: !running
+                  ? onStart
+                  : (starting ? null : (paused ? onResume : onPause)),
               child: Text(
-                running ? (starting ? 'Starting' : 'Running...') : 'Start',
+                !running
+                    ? 'Start'
+                    : (starting ? 'Starting' : (paused ? 'Resume' : 'Pause')),
               ),
             ),
             const SizedBox(width: 8),

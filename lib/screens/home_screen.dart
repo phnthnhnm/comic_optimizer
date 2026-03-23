@@ -36,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   String? _currentLogFolder;
   bool _running = false;
   bool _starting = false;
+  bool _paused = false;
   Optimizer? _currentOptimizer;
   final Map<String, Map<String, int?>> _folderSizes = {};
   final Map<String, Map<String, Map<String, int?>>> _perFileSizes = {};
@@ -267,6 +268,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _running = false;
         _starting = false;
+        _paused = false;
         _currentOptimizer = null;
       });
     }
@@ -276,6 +278,23 @@ class _HomePageState extends State<HomePage> {
     if (_currentOptimizer != null) {
       _currentOptimizer!.cancel();
       _log('Cancel requested by user');
+      setState(() => _paused = false);
+    }
+  }
+
+  void _pause() {
+    if (_currentOptimizer != null) {
+      _currentOptimizer!.pause();
+      _log('Pause requested by user');
+      setState(() => _paused = true);
+    }
+  }
+
+  void _resume() {
+    if (_currentOptimizer != null) {
+      _currentOptimizer!.resume();
+      _log('Resume requested by user');
+      setState(() => _paused = false);
     }
   }
 
@@ -447,9 +466,12 @@ class _HomePageState extends State<HomePage> {
               onPostRunConfirmSecondsChanged: (v) =>
                   setState(() => _postRunConfirmSeconds = v ?? 60),
               running: _running,
+              paused: _paused,
               starting: _starting,
               onStart: _start,
               onCancel: _cancel,
+              onPause: _pause,
+              onResume: _resume,
             ),
             const SizedBox(height: 12),
             const Divider(),

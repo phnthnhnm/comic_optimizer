@@ -13,9 +13,14 @@ class LogsPanel extends StatefulWidget {
 class _LogsPanelState extends State<LogsPanel> {
   int _selected = 0;
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _hScrollController = ScrollController();
   bool _autoScroll = true;
   bool _isProgrammaticScroll = false;
   final Map<String, int> _lastCounts = {};
+  // Resizable left column width
+  double _leftWidth = 220.0;
+  final double _minLeftWidth = 120.0;
+  bool _isDragging = false;
 
   @override
   void didUpdateWidget(covariant LogsPanel oldWidget) {
@@ -100,6 +105,7 @@ class _LogsPanelState extends State<LogsPanel> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _hScrollController.dispose();
     super.dispose();
   }
 
@@ -140,62 +146,136 @@ class _LogsPanelState extends State<LogsPanel> {
             ? const Center(child: Text('No logs yet.'))
             : Row(
                 children: [
-                  Container(
-                    width: 220,
-                    decoration: BoxDecoration(
-                      border: Border(right: BorderSide(color: Colors.black12)),
-                    ),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(8.0),
-                      itemCount: keys.length,
-                      itemBuilder: (c, i) {
-                        final k = keys[i];
-                        final selected = i == _selected;
-                        final statusColor = _statusColorForKey(k);
-                        return InkWell(
-                          onTap: () {
-                            setState(() => _selected = i);
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (_autoScroll) _scrollToBottom();
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12.0,
-                              horizontal: 8.0,
-                            ),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? Theme.of(context).colorScheme.primary
-                                        .withAlpha((0.12 * 255).round())
-                                  : null,
-                              borderRadius: BorderRadius.circular(6.0),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 28,
-                                  margin: const EdgeInsets.only(right: 8.0),
-                                  decoration: BoxDecoration(
-                                    color: statusColor ?? Colors.transparent,
-                                    borderRadius: BorderRadius.circular(4.0),
+                  // Left tab column with adjustable width
+                  SizedBox(
+                    width: _leftWidth,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(color: Colors.black12),
+                        ),
+                      ),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: keys.length,
+                        itemBuilder: (c, i) {
+                          final k = keys[i];
+                          final selected = i == _selected;
+                          final statusColor = _statusColorForKey(k);
+                          return InkWell(
+                            onTap: () {
+                              setState(() => _selected = i);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (_autoScroll) _scrollToBottom();
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12.0,
+                                horizontal: 8.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? Theme.of(context).colorScheme.primary
+                                          .withAlpha((0.12 * 255).round())
+                                    : null,
+                                borderRadius: BorderRadius.circular(6.0),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 28,
+                                    margin: const EdgeInsets.only(right: 8.0),
+                                    decoration: BoxDecoration(
+                                      color: statusColor ?? Colors.transparent,
+                                      borderRadius: BorderRadius.circular(4.0),
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    k.split(RegExp(r'[\\/]')).last,
-                                    overflow: TextOverflow.ellipsis,
+                                  Expanded(
+                                    child: Text(
+                                      k.split(RegExp(r'[\\/]')).last,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  const VerticalDivider(width: 1),
+                  // Draggable divider
+                  GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onHorizontalDragStart: (_) =>
+                        setState(() => _isDragging = true),
+                    onHorizontalDragUpdate: (details) {
+                      setState(() {
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        // Allow the left column to grow up to nearly the full window width;
+                        // leave a small margin so the right pane still exists and can scroll.
+                        final maxAllowed = (screenWidth - 64.0).clamp(
+                          _minLeftWidth,
+                          double.infinity,
+                        );
+                        _leftWidth = (_leftWidth + details.delta.dx).clamp(
+                          _minLeftWidth,
+                          maxAllowed,
+                        );
+                      });
+                    },
+                    onHorizontalDragEnd: (_) =>
+                        setState(() => _isDragging = false),
+                    onDoubleTap: () {
+                      // Expand to fit longest tab name (no ellipsis). Use the actual DefaultTextStyle
+                      final dir = Directionality.of(context);
+                      final TextStyle textStyle = DefaultTextStyle.of(
+                        context,
+                      ).style;
+                      double maxTextWidth = 0.0;
+                      for (final k in keys) {
+                        final name = k.split(RegExp(r'[\\/]')).last;
+                        final tp = TextPainter(
+                          text: TextSpan(text: name, style: textStyle),
+                          textDirection: dir,
+                          textScaler: MediaQuery.textScalerOf(context),
+                          maxLines: 1,
+                        )..layout(minWidth: 0, maxWidth: double.infinity);
+                        if (tp.width > maxTextWidth) maxTextWidth = tp.width;
+                      }
+
+                      const extras = 8.0 + 8.0 + 8.0 + 8.0 + 8.0 + 8.0;
+                      const safetyBuffer = 24.0;
+                      final desired = maxTextWidth + extras + safetyBuffer;
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final minLogArea = 200.0;
+                      final maxAllowed = (screenWidth - minLogArea).clamp(
+                        _minLeftWidth,
+                        screenWidth - minLogArea,
+                      );
+                      final newWidth = desired.clamp(_minLeftWidth, maxAllowed);
+                      setState(() => _leftWidth = newWidth);
+                    },
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                      child: Container(
+                        width: 8,
+                        color: Colors.transparent,
+                        child: Center(
+                          child: Container(
+                            width: _isDragging ? 2.0 : 1.0,
+                            color: _isDragging
+                                ? Theme.of(context).colorScheme.primary
+                                      .withAlpha((0.7 * 255).round())
+                                : Theme.of(context).dividerColor,
+                            height: double.infinity,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -214,42 +294,122 @@ class _LogsPanelState extends State<LogsPanel> {
                                       vertical: 6.0,
                                       horizontal: 2.0,
                                     ),
-                                    child: SelectableText.rich(
-                                      TextSpan(
-                                        children: List.generate(lines.length, (
-                                          i,
-                                        ) {
-                                          final line = lines[i];
-                                          final color = _colorForLine(
-                                            line,
-                                            context,
-                                          );
-                                          final weight = _weightForLine(line);
-                                          return TextSpan(
-                                            text:
-                                                line +
-                                                (i == lines.length - 1
-                                                    ? ''
-                                                    : '\n'),
-                                            style: TextStyle(
-                                              color: color,
-                                              fontWeight: weight,
-                                            ),
-                                          );
-                                        }),
-                                      ),
-                                      contextMenuBuilder:
-                                          (
-                                            BuildContext ctx,
-                                            selectableTextState,
-                                          ) {
-                                            return AdaptiveTextSelectionToolbar.buttonItems(
-                                              anchors: selectableTextState
-                                                  .contextMenuAnchors,
-                                              buttonItems: selectableTextState
-                                                  .contextMenuButtonItems,
+                                    child: LayoutBuilder(
+                                      builder: (ctx, constraints) {
+                                        // Measure longest log line so we can avoid wrapping
+                                        final dir = Directionality.of(ctx);
+                                        final TextStyle textStyle =
+                                            DefaultTextStyle.of(ctx).style;
+                                        double maxLineWidth = 0.0;
+                                        for (final line in lines) {
+                                          final tp =
+                                              TextPainter(
+                                                text: TextSpan(
+                                                  text: line,
+                                                  style: textStyle,
+                                                ),
+                                                textDirection: dir,
+                                                textScaler:
+                                                    MediaQuery.textScalerOf(
+                                                      ctx,
+                                                    ),
+                                                maxLines: 1,
+                                              )..layout(
+                                                minWidth: 0,
+                                                maxWidth: double.infinity,
+                                              );
+                                          if (tp.width > maxLineWidth) {
+                                            maxLineWidth = tp.width;
+                                          }
+                                        }
+
+                                        // Add padding/margins similar to left calculations
+                                        const sideExtras =
+                                            16.0; // small safety margin
+                                        final desiredWidth =
+                                            (maxLineWidth + sideExtras).clamp(
+                                              0.0,
+                                              double.infinity,
                                             );
-                                          },
+
+                                        final minWidth =
+                                            desiredWidth > constraints.maxWidth
+                                            ? desiredWidth
+                                            : constraints.maxWidth;
+
+                                        final overflow =
+                                            desiredWidth > constraints.maxWidth;
+
+                                        // If horizontal overflow will be present, add extra bottom padding
+                                        // so the horizontal scrollbar doesn't overlap the last message.
+                                        final bottomPadding = overflow
+                                            ? 24.0
+                                            : 6.0;
+
+                                        return Scrollbar(
+                                          controller: _hScrollController,
+                                          thumbVisibility: overflow,
+                                          trackVisibility: false,
+                                          child: SingleChildScrollView(
+                                            controller: _hScrollController,
+                                            scrollDirection: Axis.horizontal,
+                                            child: ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                minWidth: minWidth,
+                                              ),
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  bottom: bottomPadding,
+                                                ),
+                                                child: SelectableText.rich(
+                                                  TextSpan(
+                                                    children: List.generate(
+                                                      lines.length,
+                                                      (i) {
+                                                        final line = lines[i];
+                                                        final color =
+                                                            _colorForLine(
+                                                              line,
+                                                              ctx,
+                                                            );
+                                                        final weight =
+                                                            _weightForLine(
+                                                              line,
+                                                            );
+                                                        return TextSpan(
+                                                          text:
+                                                              line +
+                                                              (i == lines.length - 1
+                                                                  ? ''
+                                                                  : '\n'),
+                                                          style: TextStyle(
+                                                            color: color,
+                                                            fontWeight: weight,
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                  contextMenuBuilder:
+                                                      (
+                                                        BuildContext ctx2,
+                                                        selectableTextState,
+                                                      ) {
+                                                        return AdaptiveTextSelectionToolbar.buttonItems(
+                                                          anchors:
+                                                              selectableTextState
+                                                                  .contextMenuAnchors,
+                                                          buttonItems:
+                                                              selectableTextState
+                                                                  .contextMenuButtonItems,
+                                                        );
+                                                      },
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),

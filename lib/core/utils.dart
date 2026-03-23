@@ -64,3 +64,29 @@ Future<int?> sumFileLengths(List<File> files) async {
     return null;
   }
 }
+
+/// Helpers for formatting storage summary strings used in logs.
+String storageSummaryText({
+  String? folderName,
+  required int? beforeBytes,
+  required int? afterBytes,
+  bool includeFolderName = true,
+}) {
+  if (beforeBytes == null || afterBytes == null) {
+    if (includeFolderName && folderName != null) {
+      return '$folderName: size unknown';
+    }
+    return 'Storage saved: size unknown';
+  }
+
+  final beforeMb = beforeBytes / (1024 * 1024);
+  final afterMb = afterBytes / (1024 * 1024);
+  final saved = beforeBytes - afterBytes;
+  final savedMb = saved / (1024 * 1024);
+  final pct = beforeBytes > 0 ? (saved / beforeBytes) * 100.0 : 0.0;
+  final formatted =
+      '${beforeMb.toStringAsFixed(2)} MB -> ${afterMb.toStringAsFixed(2)} MB, saved ${savedMb.toStringAsFixed(2)} MB (${pct.toStringAsFixed(2)}%)';
+
+  if (includeFolderName && folderName != null) return '$folderName: $formatted';
+  return 'Storage saved: $formatted';
+}

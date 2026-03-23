@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/optimizer.dart';
+import '../core/utils.dart';
 import '../presets.dart';
 import '../settings/settings_model.dart';
 import '../widgets/controls.dart';
@@ -158,6 +159,19 @@ class _HomePageState extends State<HomePage> {
         _log('Done: $f (${ok ? 'OK' : 'ERR'})', folder: f);
         setState(() => _currentLogFolder = null);
 
+        // Also log a per-folder storage summary immediately into that folder's
+        // own log tab so users can see saved space per-folder as it completes.
+        try {
+          final name = p.basename(f);
+          final summary = storageSummaryText(
+            folderName: name,
+            beforeBytes: beforeBytes,
+            afterBytes: afterBytes,
+            includeFolderName: false,
+          );
+          _log(summary, folder: f);
+        } catch (_) {}
+
         try {
           final model = context.read<SettingsModel>();
           final level = model.logLevel;
@@ -241,18 +255,13 @@ class _HomePageState extends State<HomePage> {
           final before = map['before'];
           final after = map['after'];
           final name = p.basename(folder);
-          if (before == null || after == null) {
-            _log('$name: size unknown');
-            return;
-          }
-          final beforeMb = before / (1024 * 1024);
-          final afterMb = after / (1024 * 1024);
-          final saved = before - after;
-          final savedMb = saved / (1024 * 1024);
-          final pct = before > 0 ? (saved / before) * 100.0 : 0.0;
-          _log(
-            '$name: ${beforeMb.toStringAsFixed(2)} MB -> ${afterMb.toStringAsFixed(2)} MB, saved ${savedMb.toStringAsFixed(2)} MB (${pct.toStringAsFixed(2)}%)',
+          final summary = storageSummaryText(
+            folderName: name,
+            beforeBytes: before,
+            afterBytes: after,
+            includeFolderName: true,
           );
+          _log(summary);
         });
         // ensure General tab is selected so user sees summary
         setState(() => _currentLogFolder = 'General');

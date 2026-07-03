@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod/riverpod.dart';
 
+import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
@@ -20,7 +21,15 @@ final optimizationProvider =
     );
 
 class OptimizationNotifier extends Notifier<OptimizationState> {
-  OptimizerServiceImpl? _currentOptimizer;
+  /// Injectable factory for creating the optimizer. Tests can override this
+  /// with a mock. Defaults to a real [OptimizerServiceImpl].
+  IOptimizerService Function() createOptimizer = () => OptimizerServiceImpl();
+
+  /// Injectable confirmation callback for tests. When non-null, [start] calls
+  /// this instead of showing a dialog. Tests set it to `() async => true`.
+  Future<bool> Function()? onConfirmStart;
+
+  IOptimizerService? _currentOptimizer;
 
   @override
   OptimizationState build() {
@@ -44,9 +53,6 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
   void _log(String line, {String? folder}) {
     final current = state;
     var logs = Map<String, List<String>>.from(current.logs);
-    if (logs.isEmpty && current.logs.isEmpty) {
-      // Handle initial state
-    }
     final key = folder ?? current.currentLogFolder ?? 'General';
     logs.putIfAbsent(key, () => []).add(line);
     state = current.copyWith(logs: logs);
@@ -74,43 +80,43 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     await settings.setPostRunConfirmSeconds(s.postRunConfirmSeconds);
   }
 
-  Future<bool> confirmDialog(int seconds) async {
-    // This needs a BuildContext, so we return false by default.
-    // The actual dialog is shown in the UI layer via the provider's state.
-    return false;
-  }
-
-  Future<void> start(BuildContext context) async {
+  Future<void> start(BuildContext? context) async {
     final s = state;
     if (s.rootPath == null) {
       _log('Please choose a root folder first.');
       return;
     }
 
-    final preferPermanentDelete = s.preferPermanentDelete;
-
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Confirm'),
-        content: const Text(
-          'This tool will modify and delete files. Back up your data before proceeding. Continue?',
+    // Use injected confirmation callback if set; otherwise show dialog.
+    if (onConfirmStart != null) {
+      if (!await onConfirmStart!()) return;
+    } else {
+      if (context == null) return;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Confirm'),
+          content: const Text(
+            'This tool will modify and delete files. Back up your data before proceeding. Continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(c).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(c).pop(true),
+              child: const Text('Start'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(c).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(c).pop(true),
-            child: const Text('Start'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
+      );
+      if (ok != true) return;
+    }
 
     await _saveSettings();
+
+    final preferPermanentDelete = s.preferPermanentDelete;
 
     state = state.copyWith(
       logs: {},
@@ -123,7 +129,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     final preset = Preset.byName(state.selectedPreset);
     final presetArgs = preset.args;
 
-    final optimizer = OptimizerServiceImpl();
+    final optimizer = createOptimizer();
     _currentOptimizer = optimizer;
 
     try {

@@ -8,10 +8,14 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('Error: something failed', ctx),
-          Colors.redAccent);
-      expect(AppColors.colorForLine('failed to process', ctx),
-          Colors.redAccent);
+      expect(
+        AppColors.colorForLine('Error: something failed', ctx),
+        Colors.redAccent,
+      );
+      expect(
+        AppColors.colorForLine('failed to process', ctx),
+        Colors.redAccent,
+      );
       expect(AppColors.colorForLine('an err occurred', ctx), Colors.redAccent);
     });
 
@@ -34,21 +38,30 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('Storage saved: saved 5.00 MB (50.00%)', ctx),
-          Colors.blueAccent);
-      expect(AppColors.colorForLine('saved 10.00 MB (75.50%)', ctx),
-          Colors.blueAccent);
+      expect(
+        AppColors.colorForLine('Storage saved: saved 5.00 MB (50.00%)', ctx),
+        Colors.blueAccent,
+      );
+      expect(
+        AppColors.colorForLine('saved 10.00 MB (75.50%)', ctx),
+        Colors.blueAccent,
+      );
     });
 
-    testWidgets('storage saved >= 30% and < 50% returns greenAccent',
-        (tester) async {
+    testWidgets('storage saved >= 30% and < 50% returns greenAccent', (
+      tester,
+    ) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('saved 1.00 MB (30.00%)', ctx),
-          Colors.greenAccent);
-      expect(AppColors.colorForLine('saved 1.00 MB (49.99%)', ctx),
-          Colors.greenAccent);
+      expect(
+        AppColors.colorForLine('saved 1.00 MB (30.00%)', ctx),
+        Colors.greenAccent,
+      );
+      expect(
+        AppColors.colorForLine('saved 1.00 MB (49.99%)', ctx),
+        Colors.greenAccent,
+      );
     });
 
     testWidgets('storage saved >= 0% and < 30% returns amber', (tester) async {
@@ -56,18 +69,25 @@ void main() {
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
-          AppColors.colorForLine('saved 0.10 MB (0.00%)', ctx), isA<Color>());
+        AppColors.colorForLine('saved 0.10 MB (0.00%)', ctx),
+        isA<Color>(),
+      );
       expect(
-          AppColors.colorForLine('saved 0.10 MB (29.99%)', ctx), isA<Color>());
+        AppColors.colorForLine('saved 0.10 MB (29.99%)', ctx),
+        isA<Color>(),
+      );
     });
 
-    testWidgets('storage saved < 0% (negative) returns redAccent',
-        (tester) async {
+    testWidgets('storage saved < 0% (negative) returns redAccent', (
+      tester,
+    ) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('saved 1.00 MB (-5.00%)', ctx),
-          Colors.redAccent);
+      expect(
+        AppColors.colorForLine('saved 1.00 MB (-5.00%)', ctx),
+        Colors.redAccent,
+      );
     });
 
     testWidgets('start: lines use primary color', (tester) async {
@@ -85,38 +105,52 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('Done: myfolder (OK)', ctx),
-          Colors.greenAccent.shade200);
+      expect(
+        AppColors.colorForLine('Done: myfolder (OK)', ctx),
+        Colors.greenAccent.shade200,
+      );
     });
 
     testWidgets('removed/deleted lines return orangeAccent', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('Removed duplicate original', ctx),
-          Colors.orangeAccent);
-      expect(AppColors.colorForLine('deleted non-image', ctx),
-          Colors.orangeAccent);
-      expect(AppColors.colorForLine('removed duplicate foo.png', ctx),
-          Colors.orangeAccent);
+      expect(
+        AppColors.colorForLine('Removed duplicate original', ctx),
+        Colors.orangeAccent,
+      );
+      expect(
+        AppColors.colorForLine('deleted non-image', ctx),
+        Colors.orangeAccent,
+      );
+      expect(
+        AppColors.colorForLine('removed duplicate foo.png', ctx),
+        Colors.orangeAccent,
+      );
     });
 
     testWidgets('created archive returns greenAccent', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('Created archive mycomic.cbz', ctx),
-          Colors.greenAccent);
+      expect(
+        AppColors.colorForLine('Created archive mycomic.cbz', ctx),
+        Colors.greenAccent,
+      );
     });
 
     testWidgets('running cjxl returns cyanAccent', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('Running cjxl: cjxl file.png file.jxl', ctx),
-          Colors.cyanAccent);
-      expect(AppColors.colorForLine('Created safe copy', ctx),
-          Colors.cyanAccent);
+      expect(
+        AppColors.colorForLine('Running cjxl: cjxl file.png file.jxl', ctx),
+        Colors.cyanAccent,
+      );
+      expect(
+        AppColors.colorForLine('Created safe copy', ctx),
+        Colors.cyanAccent,
+      );
     });
 
     testWidgets('plain text falls back to default text color', (tester) async {

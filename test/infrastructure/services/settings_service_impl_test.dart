@@ -91,10 +91,9 @@ void main() {
       final service = SettingsServiceImpl();
 
       // First save some custom settings
-      await service.saveSettings(const AppSettings(
-        outputExt: '.zip',
-        postRunConfirmSeconds: 30,
-      ));
+      await service.saveSettings(
+        const AppSettings(outputExt: '.zip', postRunConfirmSeconds: 30),
+      );
 
       // Clear
       final clearResult = await service.clearAll();

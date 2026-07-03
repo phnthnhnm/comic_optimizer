@@ -34,7 +34,7 @@ class _DataTabState extends State<DataTab> {
       }
     }
 
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath(
+    String? selectedDirectory = await FilePicker.getDirectoryPath(
       dialogTitle: 'Select folder to save backup',
     );
     if (selectedDirectory != null) {
@@ -60,7 +60,7 @@ class _DataTabState extends State<DataTab> {
 
   Future<void> _restoreData() async {
     final model = context.read<SettingsModel>();
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       dialogTitle: 'Select backup JSON file',
       type: FileType.custom,
       allowedExtensions: ['json'],

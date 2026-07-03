@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _pickRoot() async {
-    final result = await FilePicker.platform.getDirectoryPath();
+    final result = await FilePicker.getDirectoryPath();
     if (result != null) {
       setState(() => _rootPath = result);
       _saveSettings();

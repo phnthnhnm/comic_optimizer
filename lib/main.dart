@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'screens/home_screen.dart';
-import 'settings/settings_model.dart';
-import 'settings/settings_repository.dart';
+import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
+import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
+import 'package:comic_optimizer/core/router.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final repo = SettingsRepository();
-  final model = SettingsModel(repo);
-  await model.load();
-  runApp(ChangeNotifierProvider.value(value: model, child: const MyApp()));
+  final prefs = await SharedPreferences.getInstance();
+  runApp(
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const ComicOptimizerApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ComicOptimizerApp extends ConsumerWidget {
+  const ComicOptimizerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final model = context.watch<SettingsModel>();
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    return MaterialApp.router(
       title: 'Comic Optimizer',
       theme: ThemeData(primarySwatch: Colors.indigo),
       darkTheme: ThemeData.dark(),
-      themeMode: model.themeMode,
-      home: const HomePage(),
+      themeMode: settings.themeMode,
+      routerConfig: router,
     );
   }
 }

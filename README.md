@@ -1,5 +1,7 @@
 # Comic Optimizer
 
+[![CI](https://github.com/phnthnhnm/comic_optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/phnthnhnm/comic_optimizer/actions/workflows/ci.yml)
+
 Comic Optimizer is a modern, user-friendly Flutter desktop app for optimizing comic book archives (CBZ) by compressing images and encoding them to JPEG XL (`.jxl`) using the `cjxl` encoder.
 
 ## Features
@@ -52,6 +54,20 @@ flutter build windows --release
 ```
 
 Zip the release folder for distribution or upload the artifacts to GitHub Releases.
+
+### Download a Nightly Build
+
+> [!WARNING]
+> These builds are **untested** and may be unstable or broken. Use at your own risk.
+
+> [!NOTE]
+> You must be signed into a GitHub account to download artifacts.
+
+1. Go to the [Actions tab](https://github.com/phnthnhnm/comic_optimizer/actions/workflows/ci.yml).
+2. Click the latest workflow run with a green checkmark (✔).
+3. Scroll to the **Artifacts** section at the bottom of the run page.
+4. Download **windows-build**.
+5. Extract the zip and run `comic_optimizer.exe`.
 
 ### How to Use
 

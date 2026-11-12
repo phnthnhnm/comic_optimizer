@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
@@ -103,29 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _performPostRunAction(PostRunAction action) async {
     _logMessage('Performing post-run action: $action');
     try {
-      switch (action) {
-        case PostRunAction.quit:
-          _logMessage('Quitting app...');
-          await Future.delayed(const Duration(milliseconds: 200));
-          if (mounted) exit(0);
-        case PostRunAction.shutdown:
-          _logMessage('Shutting down...');
-          await Process.run('shutdown', ['/s', '/t', '0']);
-        case PostRunAction.restart:
-          _logMessage('Restarting...');
-          await Process.run('shutdown', ['/r', '/t', '0']);
-        case PostRunAction.hibernate:
-          _logMessage('Hibernating...');
-          await Process.run('shutdown', ['/h']);
-        case PostRunAction.sleep:
-          _logMessage('Sleeping...');
-          await Process.run('rundll32.exe', [
-            'powrprof.dll,SetSuspendState',
-            '0,1,0',
-          ]);
-        case PostRunAction.none:
-          break;
-      }
+      await ref.read(postRunServiceProvider).perform(action);
     } catch (e) {
       _logMessage('Failed to perform post-run action: $e');
     }

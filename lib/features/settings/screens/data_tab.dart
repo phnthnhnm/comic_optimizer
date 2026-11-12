@@ -15,6 +15,33 @@ class DataTab extends ConsumerStatefulWidget {
 }
 
 class _DataTabState extends ConsumerState<DataTab> {
+  late final TextEditingController _cjxlController;
+
+  @override
+  void initState() {
+    super.initState();
+    _cjxlController = TextEditingController(
+      text: ref.read(settingsProvider).cjxlPath,
+    );
+  }
+
+  @override
+  void dispose() {
+    _cjxlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickCjxl() async {
+    final result = await FilePicker.pickFiles(
+      dialogTitle: 'Select the cjxl executable',
+      type: FileType.any,
+    );
+    final path = result?.files.single.path;
+    if (path == null) return;
+    _cjxlController.text = path;
+    await ref.read(settingsProvider.notifier).setCjxlPath(path);
+  }
+
   Future<void> _backupData() async {
     final notifier = ref.read(settingsProvider.notifier);
     final prefsMap = notifier.getAllPrefs();
@@ -135,11 +162,48 @@ class _DataTabState extends ConsumerState<DataTab> {
 
   @override
   Widget build(BuildContext context) {
+    final notifier = ref.read(settingsProvider.notifier);
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'Encoder',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _cjxlController,
+                  decoration: const InputDecoration(
+                    labelText: 'cjxl executable',
+                    hintText: 'cjxl',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  onChanged: (value) {
+                    final path = value.trim();
+                    notifier.setCjxlPath(path.isEmpty ? 'cjxl' : path);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _pickCjxl,
+                icon: const Icon(Icons.folder_open),
+                label: const Text('Browse'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Leave as "cjxl" to resolve the encoder from PATH.',
+            style: TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _backupData,
             icon: const Icon(Icons.save),

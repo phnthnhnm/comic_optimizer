@@ -49,8 +49,8 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
 - **Optional: [libwebp](https://developers.google.com/speed/webp) (`dwebp`).**
   Required only if your comics contain `.webp` pages.
 - **Flutter SDK** (stable channel) if you build from source. The project was
-  last built with Flutter 3.47 / Dart 3.13; `pubspec.yaml` requires Dart
-  `^3.10.4`.
+  last built with Flutter 3.50 / Dart 3.14; `pubspec.yaml` requires Dart
+  `^3.13.0` and Flutter 3.47 or newer.
 
 ## Installation
 

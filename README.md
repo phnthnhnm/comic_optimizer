@@ -214,6 +214,25 @@ otherwise, so install libjxl to get full coverage.
 - Commits are signed; configure a signing key if you want to reproduce the
   release history.
 
+## Releases
+
+Releases are automated from `main` with
+[release-please](https://github.com/googleapis/release-please); there is no
+manual tagging or upload step.
+
+1. Merge changes into `main` using Conventional Commit messages.
+2. The **Release Please** workflow opens or updates a pull request named
+   `chore(main): release X.Y.Z`, containing the version bump and the
+   changelog entry.
+3. Merge that pull request. Release Please creates the `vX.Y.Z` tag and
+   publishes the GitHub release.
+4. The **Release Build and Upload** workflow runs on the published release,
+   builds the tagged commit, and attaches
+   `comic_optimizer-X.Y.Z-windows-x64.zip` to it.
+
+Version bumps follow the commit types (`feat` → minor, `fix` → patch,
+breaking change → major; pre-1.0 minor bumps are enabled).
+
 ## License
 
 See [LICENSE](LICENSE) for details.

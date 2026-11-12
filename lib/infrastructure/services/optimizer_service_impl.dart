@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
+import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/infrastructure/services/archive_service_impl.dart';
 import 'package:comic_optimizer/infrastructure/services/encoder_service_impl.dart';
 import 'package:comic_optimizer/infrastructure/services/file_io_service.dart';
@@ -49,8 +50,6 @@ final class OptimizerServiceImpl implements IOptimizerService {
     }
   }
 
-  static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng', '.jxl'};
-
   @override
   Future<Result<void>> optimizeRoot(
     Directory root, {
@@ -83,9 +82,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
           .toList();
       final rootHasDirs = rootChildren.any((e) => e is Directory);
       final rootFiles = rootChildren.whereType<File>().toList();
-      final rootHasImages = rootFiles.any(
-        (f) => _imgExts.contains(p.extension(f.path).toLowerCase()),
-      );
+      final rootHasImages = rootFiles.any((f) => isSupportedImage(f.path));
       if (!rootHasDirs && rootHasImages) {
         Directory working = root;
         var startEmitted = false;
@@ -263,7 +260,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
           .toList();
 
       final images = files
-          .where((f) => _imgExts.contains(p.extension(f.path).toLowerCase()))
+          .where((f) => isSupportedImage(f.path))
           .toList();
       if (images.isEmpty) {
         onLog?.call('No images in ${p.basename(originalPath)}, skipping');
@@ -284,14 +281,12 @@ final class OptimizerServiceImpl implements IOptimizerService {
 
       await removeNonImageFiles(
         folder,
-        _imgExts,
         onLog: onLog,
         waitIfPaused: waitIfPaused,
       );
 
       final imageFiles = await listImageFiles(
         folder,
-        _imgExts,
         waitIfPaused: waitIfPaused,
       );
 

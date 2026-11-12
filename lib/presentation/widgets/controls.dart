@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
+import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 
@@ -131,11 +132,9 @@ class ControlPanel extends ConsumerWidget {
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: outputExt,
-              items: [
-                '.cbz',
-                '.cbr',
-                '.zip',
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              items: kOutputExtensions
+                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                  .toList(),
               onChanged: (v) => notifier.setOutputExt(v),
             ),
             const Spacer(),

@@ -5,12 +5,11 @@ import 'package:path/path.dart' as p;
 import 'package:comic_optimizer/core/interfaces/i_encoder_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
+import 'package:comic_optimizer/domain/models/image_formats.dart';
 
 /// Implementation of [IEncoderService] that encodes images to JPEG XL using cjxl.
 final class EncoderServiceImpl implements IEncoderService {
   const EncoderServiceImpl();
-
-  static final _imgExts = {'.png', '.jpg', '.jpeg', '.webp', '.apng', '.jxl'};
 
   @override
   Future<Result<bool>> encodeFolder(
@@ -30,10 +29,7 @@ final class EncoderServiceImpl implements IEncoderService {
           .cast<File>()
           .toList();
 
-      final encodeFiles = toEncode.where((f) {
-        final ext = p.extension(f.path).toLowerCase();
-        return _imgExts.contains(ext) && ext != '.jxl';
-      }).toList();
+      final encodeFiles = toEncode.where((f) => isEncodableImage(f.path)).toList();
       encodeFiles.sort(
         (a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)),
       );

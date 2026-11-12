@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'package:comic_optimizer/core/utils.dart';
+import 'package:comic_optimizer/domain/models/image_formats.dart';
 
 typedef LogCallback = void Function(String);
 typedef FolderCallback = void Function(String folderPath);
@@ -37,8 +38,7 @@ Future<SafeCopyResult> makeSafeCopyIfRequested(
 
 /// Clean non-image files: delete files that are not images
 Future<void> removeNonImageFiles(
-  Directory folder,
-  Set<String> exts, {
+  Directory folder, {
   LogCallback? onLog,
   Future<void> Function()? waitIfPaused,
 }) async {
@@ -49,7 +49,7 @@ Future<void> removeNonImageFiles(
       .toList();
   for (final f in files) {
     if (waitIfPaused != null) await waitIfPaused();
-    if (!exts.contains(p.extension(f.path).toLowerCase())) {
+    if (!isSupportedImage(f.path)) {
       try {
         await f.delete();
         onLog?.call('Deleted non-image: ${p.basename(f.path)}');
@@ -62,8 +62,7 @@ Future<void> removeNonImageFiles(
 
 /// Refresh images after deletion
 Future<List<File>> listImageFiles(
-  Directory folder,
-  Set<String> exts, {
+  Directory folder, {
   Future<void> Function()? waitIfPaused,
 }) async {
   if (waitIfPaused != null) await waitIfPaused();
@@ -72,9 +71,7 @@ Future<List<File>> listImageFiles(
       .where((e) => e is File)
       .cast<File>()
       .toList();
-  final imgs = files
-      .where((f) => exts.contains(p.extension(f.path).toLowerCase()))
-      .toList();
+  final imgs = files.where((f) => isSupportedImage(f.path)).toList();
   imgs.sort((a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)));
   return imgs;
 }

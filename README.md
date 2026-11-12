@@ -24,6 +24,8 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
   `.jxl` is discarded and the original is kept.
 - **Automatic fallbacks**: WebP pages are converted with `dwebp`; JPEGs that
   `cjxl` rejects are re-saved with ImageMagick and retried.
+- **Configurable encoder**: point the app at a specific `cjxl` executable in
+  Settings instead of relying on `PATH`.
 - **Safe run**: process a copy of each folder and leave the originals
   untouched.
 - **Flexible cleanup**: move processed folders to the Recycle Bin (default) or
@@ -39,7 +41,8 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
 - **[libjxl](https://github.com/libjxl/libjxl) `cjxl` on your `PATH`.** This is
   the only hard external dependency; without it the encoding step cannot run.
   The current release is tested against `cjxl` v0.13.0. `cjxl` v0.11 or newer
-  is expected to work, since the presets only use long-standing flags.
+  is expected to work, since the presets only use long-standing flags. If the
+  encoder lives somewhere else, set its full path in **Settings → Data**.
 - **Optional: [ImageMagick](https://imagemagick.org/) (`magick`).** Used only
   as a retry path when `cjxl` exits with code 1 (for example on CMYK or
   slightly malformed JPEGs).
@@ -155,9 +158,10 @@ Settings are stored with `shared_preferences` at:
 %APPDATA%\com.phanthanhnam\comic_optimizer\shared_preferences.json
 ```
 
-Deleting that file resets the app to its defaults. The **Data** tab can also
-export a timestamped JSON backup, restore one, or reset everything. The
-**Appearance** tab switches between light, dark and system themes.
+Deleting that file resets the app to its defaults. The **Data** tab also sets
+the `cjxl` executable path (leave it as `cjxl` to resolve the encoder from
+`PATH`), exports a timestamped JSON backup, restores one, or resets everything.
+The **Appearance** tab switches between light, dark and system themes.
 
 ## Project structure
 
@@ -199,7 +203,7 @@ otherwise, so install libjxl to get full coverage.
 
 | Symptom | Cause / fix |
 | --- | --- |
-| `ProcessException: The system cannot find the file specified` | `cjxl` is not on `PATH`. Install libjxl or run the app from a shell where `cjxl --version` works. |
+| `ProcessException: The system cannot find the file specified` | `cjxl` is not on `PATH`. Install libjxl, or set the full path in Settings → Data. |
 | `cjxl exit 1` followed by an ImageMagick retry | The JPEG could not be transcoded as-is. The app re-saves it as PNG and retries; install ImageMagick to enable this fallback. |
 | `Reverted larger .jxl` | Expected: the encoded file was not smaller, so the original was kept. |
 | WebP pages are skipped or fail | Install `dwebp` from libwebp. |

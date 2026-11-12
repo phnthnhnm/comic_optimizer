@@ -1,5 +1,5 @@
 name: comic_optimizer
-description: "A simple GUI to optimize comics with pingo."
+description: "A Windows desktop app that optimizes comic archives with JPEG XL."
 publish_to: "none"
 version: 0.3.0
 

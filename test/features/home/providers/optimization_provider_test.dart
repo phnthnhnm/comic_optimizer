@@ -31,7 +31,10 @@ void main() {
     late OptimizationNotifier notifier;
     late SettingsNotifier settings;
 
-    void stubOptimizer({required Result<void> result, bool runCallbacks = false}) {
+    void stubOptimizer({
+      required Result<void> result,
+      bool runCallbacks = false,
+    }) {
       when(
         () => mockOptimizer.optimizeRoot(
           any(),
@@ -48,7 +51,8 @@ void main() {
       ).thenAnswer((invocation) async {
         if (runCallbacks) {
           final onStart =
-              invocation.namedArguments[#onFolderStart] as void Function(String);
+              invocation.namedArguments[#onFolderStart]
+                  as void Function(String);
           final onDone =
               invocation.namedArguments[#onFolderDone]
                   as void Function(

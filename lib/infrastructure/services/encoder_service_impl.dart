@@ -33,7 +33,9 @@ final class EncoderServiceImpl implements IEncoderService {
           .cast<File>()
           .toList();
 
-      final encodeFiles = toEncode.where((f) => isEncodableImage(f.path)).toList();
+      final encodeFiles = toEncode
+          .where((f) => isEncodableImage(f.path))
+          .toList();
       encodeFiles.sort(
         (a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)),
       );

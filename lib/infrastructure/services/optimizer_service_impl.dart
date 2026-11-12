@@ -268,9 +268,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
           .cast<File>()
           .toList();
 
-      final images = files
-          .where((f) => isSupportedImage(f.path))
-          .toList();
+      final images = files.where((f) => isSupportedImage(f.path)).toList();
       if (images.isEmpty) {
         onLog?.call('No images in ${p.basename(originalPath)}, skipping');
         return;

@@ -73,7 +73,9 @@ void main() {
       runner.onRun = (exe, args) async {
         if (exe == 'cjxl') {
           cjxlCalls++;
-          if (cjxlCalls == 1) return ProcessResult(0, 1, '', 'transcode failed');
+          if (cjxlCalls == 1) {
+            return ProcessResult(0, 1, '', 'transcode failed');
+          }
           await File(args[1]).writeAsBytes([1, 2, 3]);
           return ProcessResult(0, 0, '', '');
         }
@@ -103,9 +105,7 @@ void main() {
     });
 
     test('reports failure for other exit codes without retrying', () async {
-      await File(
-        p.join(tmp.path, '001.png'),
-      ).writeAsBytes(_minimalPng());
+      await File(p.join(tmp.path, '001.png')).writeAsBytes(_minimalPng());
       runner.onRun = (exe, args) async => ProcessResult(0, 2, '', 'boom');
 
       final result = await encode();
@@ -149,21 +149,13 @@ void main() {
 
       expect((result as Ok<bool>).value, true);
       expect(runner.calls.first.executable, 'dwebp');
-      expect(runner.calls.first.arguments, [
-        webp,
-        '-o',
-        png,
-        '-mt',
-        '-quiet',
-      ]);
+      expect(runner.calls.first.arguments, [webp, '-o', png, '-mt', '-quiet']);
       final cjxl = runner.calls.firstWhere((call) => call.executable == 'cjxl');
       expect(cjxl.arguments[0], png);
     });
 
     test('stops before encoding when cancelled', () async {
-      await File(
-        p.join(tmp.path, '001.png'),
-      ).writeAsBytes(_minimalPng());
+      await File(p.join(tmp.path, '001.png')).writeAsBytes(_minimalPng());
       runner.onRun = (exe, args) async => ProcessResult(0, 0, '', '');
 
       final result = await encode(isCancelled: () => true);
@@ -173,9 +165,7 @@ void main() {
     });
 
     test('returns Ok(false) when the runner throws', () async {
-      await File(
-        p.join(tmp.path, '001.png'),
-      ).writeAsBytes(_minimalPng());
+      await File(p.join(tmp.path, '001.png')).writeAsBytes(_minimalPng());
       runner.onRun = (exe, args) async =>
           throw ProcessException(exe, args, 'not found');
 

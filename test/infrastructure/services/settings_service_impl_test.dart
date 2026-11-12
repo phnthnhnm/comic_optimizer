@@ -9,13 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('SettingsServiceImpl', () {
-    setUp(() {
+    late SharedPreferences prefs;
+
+    setUp(() async {
       // Use in-memory SharedPreferences for tests
       SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
     });
 
     test('loadSettings returns defaults when nothing stored', () async {
-      final service = SettingsServiceImpl();
+      final service = SettingsServiceImpl(prefs);
       final result = await service.loadSettings();
 
       expect(result, isA<Ok<AppSettings>>());
@@ -35,7 +38,7 @@ void main() {
     });
 
     test('saveSettings and loadSettings round-trip', () async {
-      final service = SettingsServiceImpl();
+      final service = SettingsServiceImpl(prefs);
 
       final original = const AppSettings(
         outputExt: '.cbr',
@@ -74,7 +77,7 @@ void main() {
     });
 
     test('lastRoot null round-trips correctly', () async {
-      final service = SettingsServiceImpl();
+      final service = SettingsServiceImpl(prefs);
 
       // Save with a value
       await service.saveSettings(const AppSettings(lastRoot: r'C:\comics'));
@@ -88,7 +91,7 @@ void main() {
     });
 
     test('clearAll resets to defaults', () async {
-      final service = SettingsServiceImpl();
+      final service = SettingsServiceImpl(prefs);
 
       // First save some custom settings
       await service.saveSettings(
@@ -107,7 +110,7 @@ void main() {
     });
 
     test('raw setters persist and appear in getAllRaw', () async {
-      final service = SettingsServiceImpl();
+      final service = SettingsServiceImpl(prefs);
 
       await service.setRawString('customKey', 'customValue');
       await service.setRawInt('count', 42);

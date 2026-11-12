@@ -7,12 +7,12 @@ import 'package:path/path.dart' as p;
 import 'package:riverpod/riverpod.dart';
 
 import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
+import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/optimization_state.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
-import 'package:comic_optimizer/infrastructure/services/optimizer_service_impl.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 
 final optimizationProvider =
@@ -21,10 +21,6 @@ final optimizationProvider =
     );
 
 class OptimizationNotifier extends Notifier<OptimizationState> {
-  /// Injectable factory for creating the optimizer. Tests can override this
-  /// with a mock. Defaults to a real [OptimizerServiceImpl].
-  IOptimizerService Function() createOptimizer = () => OptimizerServiceImpl();
-
   /// Injectable confirmation callback for tests. When non-null, [start] calls
   /// this instead of showing a dialog. Tests set it to `() async => true`.
   Future<bool> Function()? onConfirmStart;
@@ -129,7 +125,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     final preset = Preset.byName(state.selectedPreset);
     final presetArgs = preset.args;
 
-    final optimizer = createOptimizer();
+    final optimizer = ref.read(optimizerServiceProvider);
     _currentOptimizer = optimizer;
 
     try {

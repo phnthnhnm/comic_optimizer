@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
+import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
@@ -32,12 +33,14 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      container = ProviderContainer(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-      );
       mockOptimizer = MockOptimizerService();
+      container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          optimizerServiceProvider.overrideWithValue(mockOptimizer),
+        ],
+      );
       notifier = container.read(optimizationProvider.notifier);
-      notifier.createOptimizer = () => mockOptimizer;
       notifier.onConfirmStart = () async => true;
     });
 

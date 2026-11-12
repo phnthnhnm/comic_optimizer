@@ -3,17 +3,26 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'package:comic_optimizer/core/interfaces/i_archive_service.dart';
+import 'package:comic_optimizer/core/interfaces/i_encoder_service.dart';
 import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
-import 'package:comic_optimizer/infrastructure/services/archive_service_impl.dart';
-import 'package:comic_optimizer/infrastructure/services/encoder_service_impl.dart';
 import 'package:comic_optimizer/infrastructure/services/file_io_service.dart';
 
 /// Implementation of [IOptimizerService] that orchestrates comic folder
 /// optimization: cleaning, renaming, encoding, and archiving.
 final class OptimizerServiceImpl implements IOptimizerService {
+  final IArchiveService _archive;
+  final IEncoderService _encoder;
+
+  OptimizerServiceImpl({
+    required IArchiveService archive,
+    required IEncoderService encoder,
+  }) : _archive = archive,
+       _encoder = encoder;
+
   bool _cancelRequested = false;
   bool _paused = false;
   Completer<void>? _pauseCompleter;
@@ -300,7 +309,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
 
       // Encode each image to JPEG XL using `cjxl` and the provided preset args
       if (!skipCjxl) {
-        final encoder = const EncoderServiceImpl();
+        final encoder = _encoder;
         try {
           final encodeResult = await encoder.encodeFolder(
             folder,
@@ -344,7 +353,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
         );
       }
 
-      final archiveService = const ArchiveServiceImpl();
+      final archiveService = _archive;
       final archiveResult = await archiveService
           .createArchiveAndMaybeRemoveSource(
             folder,

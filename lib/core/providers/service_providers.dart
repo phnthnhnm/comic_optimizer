@@ -8,9 +8,10 @@ import '../../infrastructure/services/archive_service_impl.dart';
 import '../../infrastructure/services/encoder_service_impl.dart';
 import '../../infrastructure/services/optimizer_service_impl.dart';
 import '../../infrastructure/services/settings_service_impl.dart';
+import 'shared_preferences_provider.dart';
 
 final settingsServiceProvider = Provider<ISettingsService>(
-  (ref) => SettingsServiceImpl(),
+  (ref) => SettingsServiceImpl(ref.watch(sharedPreferencesProvider)),
 );
 
 final archiveServiceProvider = Provider<IArchiveService>(
@@ -22,5 +23,8 @@ final encoderServiceProvider = Provider<IEncoderService>(
 );
 
 final optimizerServiceProvider = Provider<IOptimizerService>(
-  (ref) => OptimizerServiceImpl(),
+  (ref) => OptimizerServiceImpl(
+    archive: ref.watch(archiveServiceProvider),
+    encoder: ref.watch(encoderServiceProvider),
+  ),
 );

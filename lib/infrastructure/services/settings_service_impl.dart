@@ -25,28 +25,15 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keyThemeMode = 'theme_mode';
   static const _keyLogLevel = 'log_level';
 
-  late final SharedPreferences _prefs;
-  bool _initialized = false;
+  final SharedPreferences _prefs;
 
-  SettingsServiceImpl();
-
-  /// Initialize the underlying SharedPreferences instance.
-  /// Kept for backward compatibility with [SettingsModel].
-  Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
-    _initialized = true;
-  }
-
-  Future<void> _ensureInit() async {
-    if (!_initialized) await init();
-  }
+  SettingsServiceImpl(this._prefs);
 
   // ── ISettingsService interface methods ──────────────────────────────────
 
   @override
   Future<Result<AppSettings>> loadSettings() async {
     try {
-      await _ensureInit();
       final settings = AppSettings(
         preferPermanentDelete: getPreferPermanentDelete(),
         outputExt: getOutputExt(),
@@ -70,7 +57,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> saveSettings(AppSettings settings) async {
     try {
-      await _ensureInit();
       await setPreferPermanentDelete(settings.preferPermanentDelete);
       await setOutputExt(settings.outputExt);
       await setSkipCjxl(settings.skipCjxl);
@@ -92,7 +78,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> clearAll() async {
     try {
-      await _ensureInit();
       await _prefs.clear();
       return const Ok<void>(null);
     } catch (e) {
@@ -112,7 +97,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> setRawString(String key, String value) async {
     try {
-      await _ensureInit();
       await _prefs.setString(key, value);
       return const Ok<void>(null);
     } catch (e) {
@@ -123,7 +107,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> setRawBool(String key, bool value) async {
     try {
-      await _ensureInit();
       await _prefs.setBool(key, value);
       return const Ok<void>(null);
     } catch (e) {
@@ -134,7 +117,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> setRawInt(String key, int value) async {
     try {
-      await _ensureInit();
       await _prefs.setInt(key, value);
       return const Ok<void>(null);
     } catch (e) {
@@ -145,7 +127,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> setRawDouble(String key, double value) async {
     try {
-      await _ensureInit();
       await _prefs.setDouble(key, value);
       return const Ok<void>(null);
     } catch (e) {
@@ -156,7 +137,6 @@ final class SettingsServiceImpl implements ISettingsService {
   @override
   Future<Result<void>> setRawStringList(String key, List<String> value) async {
     try {
-      await _ensureInit();
       await _prefs.setStringList(key, value);
       return const Ok<void>(null);
     } catch (e) {

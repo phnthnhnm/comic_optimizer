@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../enums/log_level.dart';
 import '../enums/post_run_action.dart';
 
 part 'app_settings.freezed.dart';
@@ -18,7 +17,6 @@ abstract class AppSettings with _$AppSettings {
     @Default('Lossless') String lastPreset,
     String? lastRoot,
     @Default(ThemeMode.system) ThemeMode themeMode,
-    @Default(LogLevel.none) LogLevel logLevel,
     @Default(PostRunAction.none) PostRunAction postRunAction,
     @Default(true) bool postRunConfirmEnabled,
     @Default(60) int postRunConfirmSeconds,

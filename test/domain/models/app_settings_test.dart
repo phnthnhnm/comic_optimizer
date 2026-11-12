@@ -1,4 +1,3 @@
-import 'package:comic_optimizer/domain/enums/log_level.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +15,6 @@ void main() {
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
       expect(settings.themeMode, ThemeMode.system);
-      expect(settings.logLevel, LogLevel.none);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -54,7 +52,6 @@ void main() {
         expect(restored.preferPermanentDelete, settings.preferPermanentDelete);
         expect(restored.outputExt, settings.outputExt);
         expect(restored.themeMode, settings.themeMode);
-        expect(restored.logLevel, settings.logLevel);
         expect(restored.postRunAction, settings.postRunAction);
       });
 

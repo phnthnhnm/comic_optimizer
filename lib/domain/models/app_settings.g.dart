@@ -17,8 +17,6 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   themeMode:
       $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
       ThemeMode.system,
-  logLevel:
-      $enumDecodeNullable(_$LogLevelEnumMap, json['logLevel']) ?? LogLevel.none,
   postRunAction:
       $enumDecodeNullable(_$PostRunActionEnumMap, json['postRunAction']) ??
       PostRunAction.none,
@@ -36,7 +34,6 @@ Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
       'lastPreset': instance.lastPreset,
       'lastRoot': instance.lastRoot,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
-      'logLevel': _$LogLevelEnumMap[instance.logLevel]!,
       'postRunAction': _$PostRunActionEnumMap[instance.postRunAction]!,
       'postRunConfirmEnabled': instance.postRunConfirmEnabled,
       'postRunConfirmSeconds': instance.postRunConfirmSeconds,
@@ -46,12 +43,6 @@ const _$ThemeModeEnumMap = {
   ThemeMode.system: 'system',
   ThemeMode.light: 'light',
   ThemeMode.dark: 'dark',
-};
-
-const _$LogLevelEnumMap = {
-  LogLevel.none: 'none',
-  LogLevel.normal: 'normal',
-  LogLevel.error: 'error',
 };
 
 const _$PostRunActionEnumMap = {

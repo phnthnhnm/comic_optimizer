@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:comic_optimizer/domain/enums/log_level.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 
 class DataTab extends ConsumerStatefulWidget {
@@ -136,35 +135,11 @@ class _DataTabState extends ConsumerState<DataTab> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Log setting
-          Row(
-            children: [
-              const Text('Log:'),
-              const SizedBox(width: 12),
-              DropdownButton<LogLevel>(
-                value: settings.logLevel,
-                items: const [
-                  DropdownMenuItem(value: LogLevel.none, child: Text('None')),
-                  DropdownMenuItem(
-                    value: LogLevel.normal,
-                    child: Text('Normal'),
-                  ),
-                  DropdownMenuItem(value: LogLevel.error, child: Text('Error')),
-                ],
-                onChanged: (v) {
-                  if (v != null) notifier.setLogLevel(v);
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _backupData,
             icon: const Icon(Icons.save),

@@ -4,7 +4,6 @@ import 'package:riverpod/riverpod.dart';
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
-import 'package:comic_optimizer/domain/enums/log_level.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
@@ -56,9 +55,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setLastRoot(String? v) =>
       _update((s) => s.copyWith(lastRoot: v));
-
-  Future<void> setLogLevel(LogLevel l) =>
-      _update((s) => s.copyWith(logLevel: l));
 
   Future<void> setPostRunAction(PostRunAction v) =>
       _update((s) => s.copyWith(postRunAction: v));

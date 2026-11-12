@@ -1,5 +1,4 @@
 import 'package:comic_optimizer/core/result.dart';
-import 'package:comic_optimizer/domain/enums/log_level.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/infrastructure/services/settings_service_impl.dart';
@@ -31,7 +30,6 @@ void main() {
       expect(settings.lastPreset, ''); // empty when nothing stored
       expect(settings.lastRoot, isNull);
       expect(settings.themeMode, ThemeMode.system);
-      expect(settings.logLevel, LogLevel.none);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -48,7 +46,6 @@ void main() {
         lastPreset: 'Lossy',
         lastRoot: r'C:\comics',
         themeMode: ThemeMode.dark,
-        logLevel: LogLevel.error,
         postRunAction: PostRunAction.shutdown,
         postRunConfirmEnabled: false,
         postRunConfirmSeconds: 120,
@@ -69,7 +66,6 @@ void main() {
       expect(loaded.lastPreset, original.lastPreset);
       expect(loaded.lastRoot, original.lastRoot);
       expect(loaded.themeMode, original.themeMode);
-      expect(loaded.logLevel, original.logLevel);
       expect(loaded.postRunAction, original.postRunAction);
       expect(loaded.postRunConfirmEnabled, original.postRunConfirmEnabled);
       expect(loaded.postRunConfirmSeconds, original.postRunConfirmSeconds);

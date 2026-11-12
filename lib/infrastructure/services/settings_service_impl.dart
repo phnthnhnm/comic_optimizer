@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:comic_optimizer/core/interfaces/i_settings_service.dart';
 import 'package:comic_optimizer/core/result.dart';
-import 'package:comic_optimizer/domain/enums/log_level.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 
@@ -23,7 +22,6 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
   static const _keyThemeMode = 'theme_mode';
-  static const _keyLogLevel = 'log_level';
 
   final SharedPreferences _prefs;
 
@@ -43,7 +41,6 @@ final class SettingsServiceImpl implements ISettingsService {
         lastPreset: getLastPreset(),
         lastRoot: getLastRoot(),
         themeMode: _stringToMode(getThemeMode()),
-        logLevel: LogLevelX.fromName(getLogLevel()),
         postRunAction: PostRunActionX.fromName(getPostRunAction()),
         postRunConfirmEnabled: getPostRunConfirmEnabled(),
         postRunConfirmSeconds: getPostRunConfirmSeconds(),
@@ -65,7 +62,6 @@ final class SettingsServiceImpl implements ISettingsService {
       await setLastPreset(settings.lastPreset);
       await setLastRoot(settings.lastRoot);
       await setThemeMode(_modeToString(settings.themeMode));
-      await setLogLevel(settings.logLevel.toName);
       await setPostRunAction(settings.postRunAction.toName);
       await setPostRunConfirmEnabled(settings.postRunConfirmEnabled);
       await setPostRunConfirmSeconds(settings.postRunConfirmSeconds);
@@ -156,7 +152,6 @@ final class SettingsServiceImpl implements ISettingsService {
   String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
   bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? false;
   String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
-  String getLogLevel() => _prefs.getString(_keyLogLevel) ?? 'none';
   String getPostRunAction() => _prefs.getString(_keyPostRunAction) ?? 'none';
   bool getPostRunConfirmEnabled() =>
       _prefs.getBool(_keyPostRunConfirmEnabled) ?? true;
@@ -191,7 +186,6 @@ final class SettingsServiceImpl implements ISettingsService {
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
 
   Future<void> setThemeMode(String v) => _prefs.setString(_keyThemeMode, v);
-  Future<void> setLogLevel(String v) => _prefs.setString(_keyLogLevel, v);
 
   // ── Legacy generic setters (used by restore in SettingsModel) ───────────
 

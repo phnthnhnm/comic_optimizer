@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppSettings {
 
- bool get preferPermanentDelete; String get outputExt; bool get skipCjxl; bool get safeRun; String get cjxlPath; String get lastPreset; String? get lastRoot; ThemeMode get themeMode; LogLevel get logLevel; PostRunAction get postRunAction; bool get postRunConfirmEnabled; int get postRunConfirmSeconds;
+ bool get preferPermanentDelete; String get outputExt; bool get skipCjxl; bool get safeRun; String get cjxlPath; String get lastPreset; String? get lastRoot; ThemeMode get themeMode; PostRunAction get postRunAction; bool get postRunConfirmEnabled; int get postRunConfirmSeconds;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.logLevel, logLevel) || other.logLevel == logLevel)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,logLevel,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
+int get hashCode => Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
 
 @override
 String toString() {
-  return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, logLevel: $logLevel, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
+  return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- bool preferPermanentDelete, String outputExt, bool skipCjxl, bool safeRun, String cjxlPath, String lastPreset, String? lastRoot, ThemeMode themeMode, LogLevel logLevel, PostRunAction postRunAction, bool postRunConfirmEnabled, int postRunConfirmSeconds
+ bool preferPermanentDelete, String outputExt, bool skipCjxl, bool safeRun, String cjxlPath, String lastPreset, String? lastRoot, ThemeMode themeMode, PostRunAction postRunAction, bool postRunConfirmEnabled, int postRunConfirmSeconds
 });
 
 
@@ -65,7 +65,7 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? preferPermanentDelete = null,Object? outputExt = null,Object? skipCjxl = null,Object? safeRun = null,Object? cjxlPath = null,Object? lastPreset = null,Object? lastRoot = freezed,Object? themeMode = null,Object? logLevel = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? preferPermanentDelete = null,Object? outputExt = null,Object? skipCjxl = null,Object? safeRun = null,Object? cjxlPath = null,Object? lastPreset = null,Object? lastRoot = freezed,Object? themeMode = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,}) {
   return _then(_self.copyWith(
 preferPermanentDelete: null == preferPermanentDelete ? _self.preferPermanentDelete : preferPermanentDelete // ignore: cast_nullable_to_non_nullable
 as bool,outputExt: null == outputExt ? _self.outputExt : outputExt // ignore: cast_nullable_to_non_nullable
@@ -75,8 +75,7 @@ as bool,cjxlPath: null == cjxlPath ? _self.cjxlPath : cjxlPath // ignore: cast_n
 as String,lastPreset: null == lastPreset ? _self.lastPreset : lastPreset // ignore: cast_nullable_to_non_nullable
 as String,lastRoot: freezed == lastRoot ? _self.lastRoot : lastRoot // ignore: cast_nullable_to_non_nullable
 as String?,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as ThemeMode,logLevel: null == logLevel ? _self.logLevel : logLevel // ignore: cast_nullable_to_non_nullable
-as LogLevel,postRunAction: null == postRunAction ? _self.postRunAction : postRunAction // ignore: cast_nullable_to_non_nullable
+as ThemeMode,postRunAction: null == postRunAction ? _self.postRunAction : postRunAction // ignore: cast_nullable_to_non_nullable
 as PostRunAction,postRunConfirmEnabled: null == postRunConfirmEnabled ? _self.postRunConfirmEnabled : postRunConfirmEnabled // ignore: cast_nullable_to_non_nullable
 as bool,postRunConfirmSeconds: null == postRunConfirmSeconds ? _self.postRunConfirmSeconds : postRunConfirmSeconds // ignore: cast_nullable_to_non_nullable
 as int,
@@ -164,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool preferPermanentDelete,  String outputExt,  bool skipCjxl,  bool safeRun,  String cjxlPath,  String lastPreset,  String? lastRoot,  ThemeMode themeMode,  LogLevel logLevel,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool preferPermanentDelete,  String outputExt,  bool skipCjxl,  bool safeRun,  String cjxlPath,  String lastPreset,  String? lastRoot,  ThemeMode themeMode,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that.safeRun,_that.cjxlPath,_that.lastPreset,_that.lastRoot,_that.themeMode,_that.logLevel,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds);case _:
+return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that.safeRun,_that.cjxlPath,_that.lastPreset,_that.lastRoot,_that.themeMode,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds);case _:
   return orElse();
 
 }
@@ -185,10 +184,10 @@ return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool preferPermanentDelete,  String outputExt,  bool skipCjxl,  bool safeRun,  String cjxlPath,  String lastPreset,  String? lastRoot,  ThemeMode themeMode,  LogLevel logLevel,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool preferPermanentDelete,  String outputExt,  bool skipCjxl,  bool safeRun,  String cjxlPath,  String lastPreset,  String? lastRoot,  ThemeMode themeMode,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that.safeRun,_that.cjxlPath,_that.lastPreset,_that.lastRoot,_that.themeMode,_that.logLevel,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds);case _:
+return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that.safeRun,_that.cjxlPath,_that.lastPreset,_that.lastRoot,_that.themeMode,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +204,10 @@ return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool preferPermanentDelete,  String outputExt,  bool skipCjxl,  bool safeRun,  String cjxlPath,  String lastPreset,  String? lastRoot,  ThemeMode themeMode,  LogLevel logLevel,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool preferPermanentDelete,  String outputExt,  bool skipCjxl,  bool safeRun,  String cjxlPath,  String lastPreset,  String? lastRoot,  ThemeMode themeMode,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that.safeRun,_that.cjxlPath,_that.lastPreset,_that.lastRoot,_that.themeMode,_that.logLevel,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds);case _:
+return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that.safeRun,_that.cjxlPath,_that.lastPreset,_that.lastRoot,_that.themeMode,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds);case _:
   return null;
 
 }
@@ -220,7 +219,7 @@ return $default(_that.preferPermanentDelete,_that.outputExt,_that.skipCjxl,_that
 @JsonSerializable()
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({this.preferPermanentDelete = false, this.outputExt = '.cbz', this.skipCjxl = false, this.safeRun = false, this.cjxlPath = 'cjxl', this.lastPreset = 'Lossless', this.lastRoot, this.themeMode = ThemeMode.system, this.logLevel = LogLevel.none, this.postRunAction = PostRunAction.none, this.postRunConfirmEnabled = true, this.postRunConfirmSeconds = 60});
+  const _AppSettings({this.preferPermanentDelete = false, this.outputExt = '.cbz', this.skipCjxl = false, this.safeRun = false, this.cjxlPath = 'cjxl', this.lastPreset = 'Lossless', this.lastRoot, this.themeMode = ThemeMode.system, this.postRunAction = PostRunAction.none, this.postRunConfirmEnabled = true, this.postRunConfirmSeconds = 60});
   factory _AppSettings.fromJson(Map<String, dynamic> json) => _$AppSettingsFromJson(json);
 
 @override@JsonKey() final  bool preferPermanentDelete;
@@ -231,7 +230,6 @@ class _AppSettings implements AppSettings {
 @override@JsonKey() final  String lastPreset;
 @override final  String? lastRoot;
 @override@JsonKey() final  ThemeMode themeMode;
-@override@JsonKey() final  LogLevel logLevel;
 @override@JsonKey() final  PostRunAction postRunAction;
 @override@JsonKey() final  bool postRunConfirmEnabled;
 @override@JsonKey() final  int postRunConfirmSeconds;
@@ -249,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.logLevel, logLevel) || other.logLevel == logLevel)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,logLevel,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
+int get hashCode => Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
 
 @override
 String toString() {
-  return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, logLevel: $logLevel, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
+  return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
 }
 
 
@@ -269,7 +267,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- bool preferPermanentDelete, String outputExt, bool skipCjxl, bool safeRun, String cjxlPath, String lastPreset, String? lastRoot, ThemeMode themeMode, LogLevel logLevel, PostRunAction postRunAction, bool postRunConfirmEnabled, int postRunConfirmSeconds
+ bool preferPermanentDelete, String outputExt, bool skipCjxl, bool safeRun, String cjxlPath, String lastPreset, String? lastRoot, ThemeMode themeMode, PostRunAction postRunAction, bool postRunConfirmEnabled, int postRunConfirmSeconds
 });
 
 
@@ -286,7 +284,7 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? preferPermanentDelete = null,Object? outputExt = null,Object? skipCjxl = null,Object? safeRun = null,Object? cjxlPath = null,Object? lastPreset = null,Object? lastRoot = freezed,Object? themeMode = null,Object? logLevel = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? preferPermanentDelete = null,Object? outputExt = null,Object? skipCjxl = null,Object? safeRun = null,Object? cjxlPath = null,Object? lastPreset = null,Object? lastRoot = freezed,Object? themeMode = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,}) {
   return _then(_AppSettings(
 preferPermanentDelete: null == preferPermanentDelete ? _self.preferPermanentDelete : preferPermanentDelete // ignore: cast_nullable_to_non_nullable
 as bool,outputExt: null == outputExt ? _self.outputExt : outputExt // ignore: cast_nullable_to_non_nullable
@@ -296,8 +294,7 @@ as bool,cjxlPath: null == cjxlPath ? _self.cjxlPath : cjxlPath // ignore: cast_n
 as String,lastPreset: null == lastPreset ? _self.lastPreset : lastPreset // ignore: cast_nullable_to_non_nullable
 as String,lastRoot: freezed == lastRoot ? _self.lastRoot : lastRoot // ignore: cast_nullable_to_non_nullable
 as String?,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
-as ThemeMode,logLevel: null == logLevel ? _self.logLevel : logLevel // ignore: cast_nullable_to_non_nullable
-as LogLevel,postRunAction: null == postRunAction ? _self.postRunAction : postRunAction // ignore: cast_nullable_to_non_nullable
+as ThemeMode,postRunAction: null == postRunAction ? _self.postRunAction : postRunAction // ignore: cast_nullable_to_non_nullable
 as PostRunAction,postRunConfirmEnabled: null == postRunConfirmEnabled ? _self.postRunConfirmEnabled : postRunConfirmEnabled // ignore: cast_nullable_to_non_nullable
 as bool,postRunConfirmSeconds: null == postRunConfirmSeconds ? _self.postRunConfirmSeconds : postRunConfirmSeconds // ignore: cast_nullable_to_non_nullable
 as int,

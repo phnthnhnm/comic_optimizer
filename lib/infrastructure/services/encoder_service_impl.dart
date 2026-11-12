@@ -144,17 +144,19 @@ final class EncoderServiceImpl implements IEncoderService {
                 }
                 // If we created an intermediate PNG from WEBP, remove it too.
                 if (createdIntermediatePng && intermediatePngPath != null) {
+                  // Capture the promoted value: `await` invalidates promotion.
+                  final intermediatePath = intermediatePngPath;
                   try {
-                    final ip = File(intermediatePngPath);
+                    final ip = File(intermediatePath);
                     if (await ip.exists()) {
                       await ip.delete();
                       onLog?.call(
-                        'Removed intermediate PNG ${p.basename(intermediatePngPath)}',
+                        'Removed intermediate PNG ${p.basename(intermediatePath)}',
                       );
                     }
                   } catch (e) {
                     onLog?.call(
-                      'Failed to remove intermediate PNG ${p.basename(intermediatePngPath)}: $e',
+                      'Failed to remove intermediate PNG ${p.basename(intermediatePath)}: $e',
                     );
                   }
                 }

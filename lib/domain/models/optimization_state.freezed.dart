@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OptimizationState {
 
- String? get rootPath; String get selectedPreset; bool get skipCjxl; bool get preferPermanentDelete; bool get safeRun; String get outputExt; PostRunAction get postRunAction; bool get postRunConfirmEnabled; int get postRunConfirmSeconds; bool get running; bool get starting; bool get paused; Map<String, List<String>> get logs; String? get currentLogFolder; Map<String, Map<String, int?>> get folderSizes; Map<String, Map<String, Map<String, int?>>> get perFileSizes;
+ bool get running; bool get starting; bool get paused; Map<String, List<String>> get logs; String? get currentLogFolder;
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $OptimizationStateCopyWith<OptimizationState> get copyWith => _$OptimizationStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OptimizationState&&(identical(other.rootPath, rootPath) || other.rootPath == rootPath)&&(identical(other.selectedPreset, selectedPreset) || other.selectedPreset == selectedPreset)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds)&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other.logs, logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder)&&const DeepCollectionEquality().equals(other.folderSizes, folderSizes)&&const DeepCollectionEquality().equals(other.perFileSizes, perFileSizes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other.logs, logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,rootPath,selectedPreset,skipCjxl,preferPermanentDelete,safeRun,outputExt,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds,running,starting,paused,const DeepCollectionEquality().hash(logs),currentLogFolder,const DeepCollectionEquality().hash(folderSizes),const DeepCollectionEquality().hash(perFileSizes));
+int get hashCode => Object.hash(runtimeType,running,starting,paused,const DeepCollectionEquality().hash(logs),currentLogFolder);
 
 @override
 String toString() {
-  return 'OptimizationState(rootPath: $rootPath, selectedPreset: $selectedPreset, skipCjxl: $skipCjxl, preferPermanentDelete: $preferPermanentDelete, safeRun: $safeRun, outputExt: $outputExt, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds, running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder, folderSizes: $folderSizes, perFileSizes: $perFileSizes)';
+  return 'OptimizationState(running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $OptimizationStateCopyWith<$Res>  {
   factory $OptimizationStateCopyWith(OptimizationState value, $Res Function(OptimizationState) _then) = _$OptimizationStateCopyWithImpl;
 @useResult
 $Res call({
- String? rootPath, String selectedPreset, bool skipCjxl, bool preferPermanentDelete, bool safeRun, String outputExt, PostRunAction postRunAction, bool postRunConfirmEnabled, int postRunConfirmSeconds, bool running, bool starting, bool paused, Map<String, List<String>> logs, String? currentLogFolder, Map<String, Map<String, int?>> folderSizes, Map<String, Map<String, Map<String, int?>>> perFileSizes
+ bool running, bool starting, bool paused, Map<String, List<String>> logs, String? currentLogFolder
 });
 
 
@@ -62,25 +62,14 @@ class _$OptimizationStateCopyWithImpl<$Res>
 
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? rootPath = freezed,Object? selectedPreset = null,Object? skipCjxl = null,Object? preferPermanentDelete = null,Object? safeRun = null,Object? outputExt = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,Object? running = null,Object? starting = null,Object? paused = null,Object? logs = null,Object? currentLogFolder = freezed,Object? folderSizes = null,Object? perFileSizes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? logs = null,Object? currentLogFolder = freezed,}) {
   return _then(_self.copyWith(
-rootPath: freezed == rootPath ? _self.rootPath : rootPath // ignore: cast_nullable_to_non_nullable
-as String?,selectedPreset: null == selectedPreset ? _self.selectedPreset : selectedPreset // ignore: cast_nullable_to_non_nullable
-as String,skipCjxl: null == skipCjxl ? _self.skipCjxl : skipCjxl // ignore: cast_nullable_to_non_nullable
-as bool,preferPermanentDelete: null == preferPermanentDelete ? _self.preferPermanentDelete : preferPermanentDelete // ignore: cast_nullable_to_non_nullable
-as bool,safeRun: null == safeRun ? _self.safeRun : safeRun // ignore: cast_nullable_to_non_nullable
-as bool,outputExt: null == outputExt ? _self.outputExt : outputExt // ignore: cast_nullable_to_non_nullable
-as String,postRunAction: null == postRunAction ? _self.postRunAction : postRunAction // ignore: cast_nullable_to_non_nullable
-as PostRunAction,postRunConfirmEnabled: null == postRunConfirmEnabled ? _self.postRunConfirmEnabled : postRunConfirmEnabled // ignore: cast_nullable_to_non_nullable
-as bool,postRunConfirmSeconds: null == postRunConfirmSeconds ? _self.postRunConfirmSeconds : postRunConfirmSeconds // ignore: cast_nullable_to_non_nullable
-as int,running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
+running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
 as bool,starting: null == starting ? _self.starting : starting // ignore: cast_nullable_to_non_nullable
 as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_to_non_nullable
 as bool,logs: null == logs ? _self.logs : logs // ignore: cast_nullable_to_non_nullable
 as Map<String, List<String>>,currentLogFolder: freezed == currentLogFolder ? _self.currentLogFolder : currentLogFolder // ignore: cast_nullable_to_non_nullable
-as String?,folderSizes: null == folderSizes ? _self.folderSizes : folderSizes // ignore: cast_nullable_to_non_nullable
-as Map<String, Map<String, int?>>,perFileSizes: null == perFileSizes ? _self.perFileSizes : perFileSizes // ignore: cast_nullable_to_non_nullable
-as Map<String, Map<String, Map<String, int?>>>,
+as String?,
   ));
 }
 
@@ -165,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? rootPath,  String selectedPreset,  bool skipCjxl,  bool preferPermanentDelete,  bool safeRun,  String outputExt,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds,  bool running,  bool starting,  bool paused,  Map<String, List<String>> logs,  String? currentLogFolder,  Map<String, Map<String, int?>> folderSizes,  Map<String, Map<String, Map<String, int?>>> perFileSizes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool running,  bool starting,  bool paused,  Map<String, List<String>> logs,  String? currentLogFolder)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OptimizationState() when $default != null:
-return $default(_that.rootPath,_that.selectedPreset,_that.skipCjxl,_that.preferPermanentDelete,_that.safeRun,_that.outputExt,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds,_that.running,_that.starting,_that.paused,_that.logs,_that.currentLogFolder,_that.folderSizes,_that.perFileSizes);case _:
+return $default(_that.running,_that.starting,_that.paused,_that.logs,_that.currentLogFolder);case _:
   return orElse();
 
 }
@@ -186,10 +175,10 @@ return $default(_that.rootPath,_that.selectedPreset,_that.skipCjxl,_that.preferP
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? rootPath,  String selectedPreset,  bool skipCjxl,  bool preferPermanentDelete,  bool safeRun,  String outputExt,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds,  bool running,  bool starting,  bool paused,  Map<String, List<String>> logs,  String? currentLogFolder,  Map<String, Map<String, int?>> folderSizes,  Map<String, Map<String, Map<String, int?>>> perFileSizes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool running,  bool starting,  bool paused,  Map<String, List<String>> logs,  String? currentLogFolder)  $default,) {final _that = this;
 switch (_that) {
 case _OptimizationState():
-return $default(_that.rootPath,_that.selectedPreset,_that.skipCjxl,_that.preferPermanentDelete,_that.safeRun,_that.outputExt,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds,_that.running,_that.starting,_that.paused,_that.logs,_that.currentLogFolder,_that.folderSizes,_that.perFileSizes);case _:
+return $default(_that.running,_that.starting,_that.paused,_that.logs,_that.currentLogFolder);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +195,10 @@ return $default(_that.rootPath,_that.selectedPreset,_that.skipCjxl,_that.preferP
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? rootPath,  String selectedPreset,  bool skipCjxl,  bool preferPermanentDelete,  bool safeRun,  String outputExt,  PostRunAction postRunAction,  bool postRunConfirmEnabled,  int postRunConfirmSeconds,  bool running,  bool starting,  bool paused,  Map<String, List<String>> logs,  String? currentLogFolder,  Map<String, Map<String, int?>> folderSizes,  Map<String, Map<String, Map<String, int?>>> perFileSizes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool running,  bool starting,  bool paused,  Map<String, List<String>> logs,  String? currentLogFolder)?  $default,) {final _that = this;
 switch (_that) {
 case _OptimizationState() when $default != null:
-return $default(_that.rootPath,_that.selectedPreset,_that.skipCjxl,_that.preferPermanentDelete,_that.safeRun,_that.outputExt,_that.postRunAction,_that.postRunConfirmEnabled,_that.postRunConfirmSeconds,_that.running,_that.starting,_that.paused,_that.logs,_that.currentLogFolder,_that.folderSizes,_that.perFileSizes);case _:
+return $default(_that.running,_that.starting,_that.paused,_that.logs,_that.currentLogFolder);case _:
   return null;
 
 }
@@ -221,18 +210,9 @@ return $default(_that.rootPath,_that.selectedPreset,_that.skipCjxl,_that.preferP
 
 
 class _OptimizationState extends OptimizationState {
-  const _OptimizationState({this.rootPath, this.selectedPreset = 'Lossless', this.skipCjxl = false, this.preferPermanentDelete = false, this.safeRun = false, this.outputExt = '.cbz', this.postRunAction = PostRunAction.none, this.postRunConfirmEnabled = true, this.postRunConfirmSeconds = 60, this.running = false, this.starting = false, this.paused = false, final  Map<String, List<String>> logs = const <String, List<String>>{}, this.currentLogFolder, final  Map<String, Map<String, int?>> folderSizes = const <String, Map<String, int?>>{}, final  Map<String, Map<String, Map<String, int?>>> perFileSizes = const <String, Map<String, Map<String, int?>>>{}}): _logs = logs,_folderSizes = folderSizes,_perFileSizes = perFileSizes,super._();
+  const _OptimizationState({this.running = false, this.starting = false, this.paused = false, final  Map<String, List<String>> logs = const <String, List<String>>{}, this.currentLogFolder}): _logs = logs,super._();
   
 
-@override final  String? rootPath;
-@override@JsonKey() final  String selectedPreset;
-@override@JsonKey() final  bool skipCjxl;
-@override@JsonKey() final  bool preferPermanentDelete;
-@override@JsonKey() final  bool safeRun;
-@override@JsonKey() final  String outputExt;
-@override@JsonKey() final  PostRunAction postRunAction;
-@override@JsonKey() final  bool postRunConfirmEnabled;
-@override@JsonKey() final  int postRunConfirmSeconds;
 @override@JsonKey() final  bool running;
 @override@JsonKey() final  bool starting;
 @override@JsonKey() final  bool paused;
@@ -244,20 +224,6 @@ class _OptimizationState extends OptimizationState {
 }
 
 @override final  String? currentLogFolder;
- final  Map<String, Map<String, int?>> _folderSizes;
-@override@JsonKey() Map<String, Map<String, int?>> get folderSizes {
-  if (_folderSizes is EqualUnmodifiableMapView) return _folderSizes;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_folderSizes);
-}
-
- final  Map<String, Map<String, Map<String, int?>>> _perFileSizes;
-@override@JsonKey() Map<String, Map<String, Map<String, int?>>> get perFileSizes {
-  if (_perFileSizes is EqualUnmodifiableMapView) return _perFileSizes;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_perFileSizes);
-}
-
 
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
@@ -269,16 +235,16 @@ _$OptimizationStateCopyWith<_OptimizationState> get copyWith => __$OptimizationS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OptimizationState&&(identical(other.rootPath, rootPath) || other.rootPath == rootPath)&&(identical(other.selectedPreset, selectedPreset) || other.selectedPreset == selectedPreset)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds)&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other._logs, _logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder)&&const DeepCollectionEquality().equals(other._folderSizes, _folderSizes)&&const DeepCollectionEquality().equals(other._perFileSizes, _perFileSizes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other._logs, _logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,rootPath,selectedPreset,skipCjxl,preferPermanentDelete,safeRun,outputExt,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds,running,starting,paused,const DeepCollectionEquality().hash(_logs),currentLogFolder,const DeepCollectionEquality().hash(_folderSizes),const DeepCollectionEquality().hash(_perFileSizes));
+int get hashCode => Object.hash(runtimeType,running,starting,paused,const DeepCollectionEquality().hash(_logs),currentLogFolder);
 
 @override
 String toString() {
-  return 'OptimizationState(rootPath: $rootPath, selectedPreset: $selectedPreset, skipCjxl: $skipCjxl, preferPermanentDelete: $preferPermanentDelete, safeRun: $safeRun, outputExt: $outputExt, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds, running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder, folderSizes: $folderSizes, perFileSizes: $perFileSizes)';
+  return 'OptimizationState(running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder)';
 }
 
 
@@ -289,7 +255,7 @@ abstract mixin class _$OptimizationStateCopyWith<$Res> implements $OptimizationS
   factory _$OptimizationStateCopyWith(_OptimizationState value, $Res Function(_OptimizationState) _then) = __$OptimizationStateCopyWithImpl;
 @override @useResult
 $Res call({
- String? rootPath, String selectedPreset, bool skipCjxl, bool preferPermanentDelete, bool safeRun, String outputExt, PostRunAction postRunAction, bool postRunConfirmEnabled, int postRunConfirmSeconds, bool running, bool starting, bool paused, Map<String, List<String>> logs, String? currentLogFolder, Map<String, Map<String, int?>> folderSizes, Map<String, Map<String, Map<String, int?>>> perFileSizes
+ bool running, bool starting, bool paused, Map<String, List<String>> logs, String? currentLogFolder
 });
 
 
@@ -306,25 +272,14 @@ class __$OptimizationStateCopyWithImpl<$Res>
 
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? rootPath = freezed,Object? selectedPreset = null,Object? skipCjxl = null,Object? preferPermanentDelete = null,Object? safeRun = null,Object? outputExt = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,Object? running = null,Object? starting = null,Object? paused = null,Object? logs = null,Object? currentLogFolder = freezed,Object? folderSizes = null,Object? perFileSizes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? logs = null,Object? currentLogFolder = freezed,}) {
   return _then(_OptimizationState(
-rootPath: freezed == rootPath ? _self.rootPath : rootPath // ignore: cast_nullable_to_non_nullable
-as String?,selectedPreset: null == selectedPreset ? _self.selectedPreset : selectedPreset // ignore: cast_nullable_to_non_nullable
-as String,skipCjxl: null == skipCjxl ? _self.skipCjxl : skipCjxl // ignore: cast_nullable_to_non_nullable
-as bool,preferPermanentDelete: null == preferPermanentDelete ? _self.preferPermanentDelete : preferPermanentDelete // ignore: cast_nullable_to_non_nullable
-as bool,safeRun: null == safeRun ? _self.safeRun : safeRun // ignore: cast_nullable_to_non_nullable
-as bool,outputExt: null == outputExt ? _self.outputExt : outputExt // ignore: cast_nullable_to_non_nullable
-as String,postRunAction: null == postRunAction ? _self.postRunAction : postRunAction // ignore: cast_nullable_to_non_nullable
-as PostRunAction,postRunConfirmEnabled: null == postRunConfirmEnabled ? _self.postRunConfirmEnabled : postRunConfirmEnabled // ignore: cast_nullable_to_non_nullable
-as bool,postRunConfirmSeconds: null == postRunConfirmSeconds ? _self.postRunConfirmSeconds : postRunConfirmSeconds // ignore: cast_nullable_to_non_nullable
-as int,running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
+running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
 as bool,starting: null == starting ? _self.starting : starting // ignore: cast_nullable_to_non_nullable
 as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_to_non_nullable
 as bool,logs: null == logs ? _self._logs : logs // ignore: cast_nullable_to_non_nullable
 as Map<String, List<String>>,currentLogFolder: freezed == currentLogFolder ? _self.currentLogFolder : currentLogFolder // ignore: cast_nullable_to_non_nullable
-as String?,folderSizes: null == folderSizes ? _self._folderSizes : folderSizes // ignore: cast_nullable_to_non_nullable
-as Map<String, Map<String, int?>>,perFileSizes: null == perFileSizes ? _self._perFileSizes : perFileSizes // ignore: cast_nullable_to_non_nullable
-as Map<String, Map<String, Map<String, int?>>>,
+as String?,
   ));
 }
 

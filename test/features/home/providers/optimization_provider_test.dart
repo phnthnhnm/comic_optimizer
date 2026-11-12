@@ -4,9 +4,9 @@ import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
 import 'package:comic_optimizer/core/result.dart';
-import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
+import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:riverpod/riverpod.dart';
@@ -29,6 +29,41 @@ void main() {
     late ProviderContainer container;
     late MockOptimizerService mockOptimizer;
     late OptimizationNotifier notifier;
+    late SettingsNotifier settings;
+
+    void stubOptimizer({required Result<void> result, bool runCallbacks = false}) {
+      when(
+        () => mockOptimizer.optimizeRoot(
+          any(),
+          presetArgs: any(named: 'presetArgs'),
+          skipCjxl: any(named: 'skipCjxl'),
+          cjxlPath: any(named: 'cjxlPath'),
+          safeRun: any(named: 'safeRun'),
+          outputExtension: any(named: 'outputExtension'),
+          preferPermanentDelete: any(named: 'preferPermanentDelete'),
+          onLog: any(named: 'onLog'),
+          onFolderStart: any(named: 'onFolderStart'),
+          onFolderDone: any(named: 'onFolderDone'),
+        ),
+      ).thenAnswer((invocation) async {
+        if (runCallbacks) {
+          final onStart =
+              invocation.namedArguments[#onFolderStart] as void Function(String);
+          final onDone =
+              invocation.namedArguments[#onFolderDone]
+                  as void Function(
+                    String,
+                    bool,
+                    int?,
+                    int?,
+                    Map<String, Map<String, int?>>?,
+                  );
+          onStart('/tmp/comics/Comic A');
+          onDone('/tmp/comics/Comic A', true, 1000, 400, null);
+        }
+        return result;
+      });
+    }
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
@@ -41,7 +76,7 @@ void main() {
         ],
       );
       notifier = container.read(optimizationProvider.notifier);
-      notifier.onConfirmStart = () async => true;
+      settings = container.read(settingsProvider.notifier);
     });
 
     tearDown(() {
@@ -49,191 +84,118 @@ void main() {
     });
 
     group('initial state', () {
-      test('running is false, paused is false', () {
+      test('is idle with no logs', () {
+        expect(notifier.state.running, false);
+        expect(notifier.state.starting, false);
+        expect(notifier.state.paused, false);
+        expect(notifier.state.logs, isEmpty);
+        expect(notifier.state.currentLogFolder, isNull);
+      });
+    });
+
+    group('start', () {
+      test('without a root logs a hint and does not run', () async {
+        await notifier.start();
+
+        expect(notifier.state.running, false);
+        expect(
+          notifier.state.logs['General']!.any(
+            (line) => line.contains('root folder'),
+          ),
+          true,
+        );
+      });
+
+      test('forwards the persisted settings to the optimizer', () async {
+        await settings.setLastRoot('/tmp/comics');
+        await settings.setLastPreset(Preset.lossyName);
+        await settings.setSkipCjxl(true);
+        await settings.setOutputExt('.zip');
+        await settings.setSafeRun(true);
+        await settings.setPreferPermanentDelete(true);
+        stubOptimizer(result: const Ok<void>(null));
+
+        await notifier.start();
+
+        verify(
+          () => mockOptimizer.optimizeRoot(
+            any(),
+            presetArgs: Preset.lossy.args,
+            skipCjxl: true,
+            cjxlPath: 'cjxl',
+            safeRun: true,
+            outputExtension: '.zip',
+            preferPermanentDelete: true,
+            onLog: any(named: 'onLog'),
+            onFolderStart: any(named: 'onFolderStart'),
+            onFolderDone: any(named: 'onFolderDone'),
+          ),
+        ).called(1);
         expect(notifier.state.running, false);
         expect(notifier.state.paused, false);
-        expect(notifier.state.starting, false);
       });
 
-      test('selectedPreset defaults to Lossless', () {
-        expect(notifier.state.selectedPreset, Preset.losslessName);
+      test('folder callbacks populate per-folder logs', () async {
+        await settings.setLastRoot('/tmp/comics');
+        stubOptimizer(result: const Ok<void>(null), runCallbacks: true);
+
+        await notifier.start();
+
+        final logs = notifier.state.logs['/tmp/comics/Comic A']!;
+        expect(logs, contains('Start: /tmp/comics/Comic A'));
+        expect(logs.any((line) => line.startsWith('Done:')), true);
+        expect(logs.any((line) => line.contains('saved')), true);
+        expect(notifier.state.currentLogFolder, 'General');
       });
 
-      test('outputExt defaults to .cbz', () {
-        expect(notifier.state.outputExt, '.cbz');
-      });
+      test('logs errors returned by the optimizer', () async {
+        await settings.setLastRoot('/tmp/comics');
+        stubOptimizer(result: const Err<void>('boom'));
 
-      test('postRunAction defaults to none', () {
-        expect(notifier.state.postRunAction, PostRunAction.none);
-      });
-    });
+        await notifier.start();
 
-    group('setters', () {
-      test('setSelectedPreset updates state', () {
-        notifier.setSelectedPreset('Lossy');
-        expect(notifier.state.selectedPreset, 'Lossy');
-      });
-
-      test('setSelectedPreset with null defaults to Lossless', () {
-        notifier.setSelectedPreset(null);
-        expect(notifier.state.selectedPreset, Preset.losslessName);
-      });
-
-      test('setSkipCjxl toggles', () {
-        notifier.setSkipCjxl(true);
-        expect(notifier.state.skipCjxl, true);
-        notifier.setSkipCjxl(false);
-        expect(notifier.state.skipCjxl, false);
-      });
-
-      test('setSkipCjxl with null defaults to false', () {
-        notifier.setSkipCjxl(null);
-        expect(notifier.state.skipCjxl, false);
-      });
-
-      test('setPreferPermanentDelete toggles', () {
-        notifier.setPreferPermanentDelete(true);
-        expect(notifier.state.preferPermanentDelete, true);
-      });
-
-      test('setSafeRun toggles', () {
-        notifier.setSafeRun(true);
-        expect(notifier.state.safeRun, true);
-      });
-
-      test('setOutputExt updates', () {
-        notifier.setOutputExt('.zip');
-        expect(notifier.state.outputExt, '.zip');
-        notifier.setOutputExt(null);
-        expect(notifier.state.outputExt, '.cbz');
-      });
-
-      test('setPostRunAction updates', () {
-        notifier.setPostRunAction(PostRunAction.shutdown);
-        expect(notifier.state.postRunAction, PostRunAction.shutdown);
-      });
-
-      test('setPostRunAction with null defaults to none', () {
-        notifier.setPostRunAction(PostRunAction.quit);
-        notifier.setPostRunAction(null);
-        expect(notifier.state.postRunAction, PostRunAction.none);
-      });
-
-      test('setPostRunConfirmEnabled toggles', () {
-        notifier.setPostRunConfirmEnabled(false);
-        expect(notifier.state.postRunConfirmEnabled, false);
-      });
-
-      test('setPostRunConfirmSeconds updates', () {
-        notifier.setPostRunConfirmSeconds(120);
-        expect(notifier.state.postRunConfirmSeconds, 120);
-        notifier.setPostRunConfirmSeconds(null);
-        expect(notifier.state.postRunConfirmSeconds, 60);
+        expect(
+          notifier.state.logs['General']!.any(
+            (line) => line.contains('Error: boom'),
+          ),
+          true,
+        );
+        expect(notifier.state.running, false);
       });
     });
 
-    group('state transitions', () {
-      test('cancel sets paused to false', () {
+    group('run controls', () {
+      test('pause and resume toggle the paused flag', () {
+        notifier.pause();
+        expect(notifier.state.paused, true);
+
+        notifier.resume();
+        expect(notifier.state.paused, false);
+      });
+
+      test('cancel clears the paused flag', () {
+        notifier.pause();
         notifier.cancel();
         expect(notifier.state.paused, false);
       });
 
-      test('pause sets paused to true', () {
-        notifier.pause();
-        expect(notifier.state.paused, true);
-      });
-
-      test('resume sets paused to false', () {
-        notifier.pause();
-        expect(notifier.state.paused, true);
-        notifier.resume();
-        expect(notifier.state.paused, false);
+      test('controls do not throw without an active optimizer', () {
+        expect(() => notifier.cancel(), returnsNormally);
+        expect(() => notifier.pause(), returnsNormally);
+        expect(() => notifier.resume(), returnsNormally);
       });
     });
 
     group('addLog', () {
-      test('adds a log line under General when no folder selected', () {
+      test('adds a line under General when no folder is active', () {
         notifier.addLog('test message');
         expect(notifier.state.logs['General'], contains('test message'));
       });
 
-      test('accumulates multiple log lines', () {
+      test('accumulates multiple lines', () {
         notifier.addLog('first');
         notifier.addLog('second');
-        expect(notifier.state.logs['General']!.length, greaterThan(1));
-      });
-    });
-
-    group('start confirmation behaviour', () {
-      test(
-        'start with onConfirmStart returning false does not set running',
-        () async {
-          notifier.onConfirmStart = () async => false;
-          notifier.state = notifier.state.copyWith(rootPath: '/tmp');
-
-          await notifier.start(null);
-
-          expect(notifier.state.running, false);
-        },
-      );
-
-      test(
-        'start with onConfirmStart returning true invokes optimizer',
-        () async {
-          when(
-            () => mockOptimizer.optimizeRoot(
-              any(),
-              presetArgs: any(named: 'presetArgs'),
-              skipCjxl: any(named: 'skipCjxl'),
-              cjxlPath: any(named: 'cjxlPath'),
-              safeRun: any(named: 'safeRun'),
-              outputExtension: any(named: 'outputExtension'),
-              preferPermanentDelete: any(named: 'preferPermanentDelete'),
-              onLog: any(named: 'onLog'),
-              onFolderStart: any(named: 'onFolderStart'),
-              onFolderDone: any(named: 'onFolderDone'),
-            ),
-          ).thenAnswer((_) async => const Ok<void>(null));
-
-          notifier.state = notifier.state.copyWith(rootPath: '/tmp');
-
-          await notifier.start(null);
-
-          // State cleaned up by finally block
-          expect(notifier.state.running, false);
-          expect(notifier.state.paused, false);
-          expect(notifier.state.starting, false);
-        },
-      );
-
-      test(
-        'start with null rootPath logs and returns without running',
-        () async {
-          await notifier.start(null);
-
-          expect(notifier.state.running, false);
-          expect(
-            notifier.state.logs['General']!.any(
-              (l) => l.contains('root folder'),
-            ),
-            true,
-          );
-        },
-      );
-
-      test('cancel does not throw when no optimizer is active', () {
-        expect(() => notifier.cancel(), returnsNormally);
-      });
-
-      test('pause does not throw when no optimizer is active', () {
-        expect(() => notifier.pause(), returnsNormally);
-        expect(notifier.state.paused, true);
-      });
-
-      test('resume does not throw when no optimizer is active', () {
-        notifier.pause();
-        expect(() => notifier.resume(), returnsNormally);
-        expect(notifier.state.paused, false);
+        expect(notifier.state.logs['General']!.length, 2);
       });
     });
   });

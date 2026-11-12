@@ -5,6 +5,7 @@ import 'package:comic_optimizer/core/interfaces/i_settings_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
+import 'package:comic_optimizer/domain/models/preset.dart';
 
 /// Implementation of [ISettingsService] backed by SharedPreferences.
 ///
@@ -147,7 +148,8 @@ final class SettingsServiceImpl implements ISettingsService {
 
   String getOutputExt() => _prefs.getString(_keyOutputExt) ?? '.cbz';
   String? getLastRoot() => _prefs.getString(_keyLastRoot);
-  String getLastPreset() => _prefs.getString(_keyLastPreset) ?? '';
+  String getLastPreset() =>
+      _prefs.getString(_keyLastPreset) ?? Preset.losslessName;
   bool getSkipCjxl() => _prefs.getBool(_keySkipCjxl) ?? false;
   String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
   bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? false;

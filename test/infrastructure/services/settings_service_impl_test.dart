@@ -27,7 +27,7 @@ void main() {
       expect(settings.skipCjxl, false);
       expect(settings.safeRun, false);
       expect(settings.cjxlPath, 'cjxl');
-      expect(settings.lastPreset, ''); // empty when nothing stored
+      expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
       expect(settings.themeMode, ThemeMode.system);
       expect(settings.postRunAction, PostRunAction.none);

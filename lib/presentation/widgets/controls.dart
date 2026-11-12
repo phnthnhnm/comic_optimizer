@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +6,7 @@ import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
+import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 
 class ControlPanel extends ConsumerWidget {
   final VoidCallback onStart;
@@ -22,18 +24,19 @@ class ControlPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final settingsNotifier = ref.read(settingsProvider.notifier);
     final state = ref.watch(optimizationProvider);
-    final notifier = ref.read(optimizationProvider.notifier);
 
-    final rootPath = state.rootPath;
-    final selectedPreset = state.selectedPreset;
-    final skipCjxl = state.skipCjxl;
-    final preferPermanentDelete = state.preferPermanentDelete;
-    final safeRun = state.safeRun;
-    final outputExt = state.outputExt;
-    final postRunAction = state.postRunAction;
-    final postRunConfirmEnabled = state.postRunConfirmEnabled;
-    final postRunConfirmSeconds = state.postRunConfirmSeconds;
+    final rootPath = settings.lastRoot;
+    final selectedPreset = Preset.byName(settings.lastPreset).name;
+    final skipCjxl = settings.skipCjxl;
+    final preferPermanentDelete = settings.preferPermanentDelete;
+    final safeRun = settings.safeRun;
+    final outputExt = settings.outputExt;
+    final postRunAction = settings.postRunAction;
+    final postRunConfirmEnabled = settings.postRunConfirmEnabled;
+    final postRunConfirmSeconds = settings.postRunConfirmSeconds;
     final running = state.running;
     final paused = state.paused;
     final starting = state.starting;
@@ -86,7 +89,10 @@ class ControlPanel extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              onPressed: () => notifier.pickRoot(),
+              onPressed: () async {
+                final dir = await FilePicker.getDirectoryPath();
+                if (dir != null) await settingsNotifier.setLastRoot(dir);
+              },
               child: const Text('Choose Root'),
             ),
           ],
@@ -103,24 +109,29 @@ class ControlPanel extends ConsumerWidget {
                     (p) => DropdownMenuItem(value: p.name, child: Text(p.name)),
                   )
                   .toList(),
-              onChanged: (v) => notifier.setSelectedPreset(v),
+              onChanged: (v) =>
+                  settingsNotifier.setLastPreset(v ?? Preset.losslessName),
             ),
             const SizedBox(width: 12),
             Checkbox(
               value: skipCjxl,
-              onChanged: (v) => notifier.setSkipCjxl(v),
+              onChanged: (v) => settingsNotifier.setSkipCjxl(v ?? false),
             ),
             const SizedBox(width: 4),
             const Text('Skip cjxl'),
             const SizedBox(width: 12),
             Checkbox(
               value: preferPermanentDelete,
-              onChanged: (v) => notifier.setPreferPermanentDelete(v),
+              onChanged: (v) =>
+                  settingsNotifier.setPreferPermanentDelete(v ?? false),
             ),
             const SizedBox(width: 4),
             const Text('Delete permanently'),
             const SizedBox(width: 12),
-            Checkbox(value: safeRun, onChanged: (v) => notifier.setSafeRun(v)),
+            Checkbox(
+              value: safeRun,
+              onChanged: (v) => settingsNotifier.setSafeRun(v ?? false),
+            ),
             const SizedBox(width: 4),
             const Text('Safe run'),
           ],
@@ -135,7 +146,7 @@ class ControlPanel extends ConsumerWidget {
               items: kOutputExtensions
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
-              onChanged: (v) => notifier.setOutputExt(v),
+              onChanged: (v) => settingsNotifier.setOutputExt(v ?? '.cbz'),
             ),
             const Spacer(),
             ElevatedButton(
@@ -186,12 +197,14 @@ class ControlPanel extends ConsumerWidget {
                   child: Text('Restart'),
                 ),
               ],
-              onChanged: (v) => notifier.setPostRunAction(v),
+              onChanged: (v) =>
+                  settingsNotifier.setPostRunAction(v ?? PostRunAction.none),
             ),
             const SizedBox(width: 12),
             Checkbox(
               value: postRunConfirmEnabled,
-              onChanged: (v) => notifier.setPostRunConfirmEnabled(v),
+              onChanged: (v) =>
+                  settingsNotifier.setPostRunConfirmEnabled(v ?? true),
             ),
             const SizedBox(width: 4),
             const Text('Confirm before action'),
@@ -206,7 +219,7 @@ class ControlPanel extends ConsumerWidget {
                 keyboardType: TextInputType.number,
                 onChanged: (v) {
                   final iv = int.tryParse(v) ?? 0;
-                  notifier.setPostRunConfirmSeconds(iv);
+                  settingsNotifier.setPostRunConfirmSeconds(iv);
                 },
                 decoration: const InputDecoration(
                   isDense: true,

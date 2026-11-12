@@ -135,9 +135,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(optimizationProvider.notifier).addLog(line);
   }
 
-  void _start() {
-    ref.read(optimizationProvider.notifier).start(context);
+  Future<void> _start() async {
+    final rootPath = ref.read(settingsProvider).lastRoot;
+    if (rootPath != null) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Confirm'),
+          content: const Text(
+            'This tool will modify and delete files. Back up your data before proceeding. Continue?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(c).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(c).pop(true),
+              child: const Text('Start'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
+
     _performedPostRun = false;
+    await ref.read(optimizationProvider.notifier).start();
   }
 
   @override

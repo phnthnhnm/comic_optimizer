@@ -3,13 +3,17 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'package:comic_optimizer/core/interfaces/i_encoder_service.dart';
+import 'package:comic_optimizer/core/interfaces/i_process_runner.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
+import 'package:comic_optimizer/infrastructure/services/system_process_runner.dart';
 
 /// Implementation of [IEncoderService] that encodes images to JPEG XL using cjxl.
 final class EncoderServiceImpl implements IEncoderService {
-  const EncoderServiceImpl();
+  final IProcessRunner runner;
+
+  const EncoderServiceImpl({this.runner = const SystemProcessRunner()});
 
   @override
   Future<Result<bool>> encodeFolder(
@@ -60,7 +64,7 @@ final class EncoderServiceImpl implements IEncoderService {
             'Converting WEBP -> PNG: dwebp ${p.basename(f.path)} -o ${p.basename(pngPath)}',
           );
           try {
-            final conv = await Process.run('dwebp', [
+            final conv = await runner.run('dwebp', [
               f.path,
               '-o',
               pngPath,
@@ -103,7 +107,7 @@ final class EncoderServiceImpl implements IEncoderService {
         final args = [inputPath, outPath, ...presetArgs];
         onLog?.call('Running cjxl: cjxl ${maskArgs(args)}');
         try {
-          var result = await Process.run(
+          var result = await runner.run(
             cjxlPath,
             args,
             workingDirectory: folder.path,
@@ -170,7 +174,7 @@ final class EncoderServiceImpl implements IEncoderService {
                 'cjxl exit 1 for ${p.basename(inputPath)}; attempting ImageMagick resave -> ${p.basename(resavedPath)}',
               );
               try {
-                final magick = await Process.run('magick', [
+                final magick = await runner.run('magick', [
                   inputPath,
                   '-strip',
                   resavedPath,
@@ -188,7 +192,7 @@ final class EncoderServiceImpl implements IEncoderService {
                   final retryArgs = [resavedPath, outPath, ...presetArgs];
                   onLog?.call('Retrying cjxl: cjxl ${maskArgs(retryArgs)}');
                   if (waitIfPaused != null) await waitIfPaused();
-                  final retry = await Process.run(
+                  final retry = await runner.run(
                     cjxlPath,
                     retryArgs,
                     workingDirectory: folder.path,

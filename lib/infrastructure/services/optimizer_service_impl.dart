@@ -18,10 +18,9 @@ final class OptimizerServiceImpl implements IOptimizerService {
   final IEncoderService _encoder;
 
   OptimizerServiceImpl({
-    required IArchiveService archive,
-    required IEncoderService encoder,
-  }) : _archive = archive,
-       _encoder = encoder;
+    required this._archive,
+    required this._encoder,
+  });
 
   bool _cancelRequested = false;
   bool _paused = false;

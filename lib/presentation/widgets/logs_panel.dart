@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:comic_optimizer/presentation/theme/app_colors.dart';
 
@@ -233,9 +233,8 @@ class _LogsPanelState extends State<LogsPanel> {
                     onDoubleTap: () {
                       // Expand to fit longest tab name (no ellipsis). Use the actual DefaultTextStyle
                       final dir = Directionality.of(context);
-                      final TextStyle textStyle = DefaultTextStyle.of(
-                        context,
-                      ).style;
+                      final TextStyle textStyle = DefaultTextStyle.of(context)
+                          .style;
                       double maxTextWidth = 0.0;
                       for (final k in keys) {
                         final name = k.split(RegExp(r'[\\/]')).last;

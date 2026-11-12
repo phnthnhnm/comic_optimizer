@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_settings.dart';
@@ -9,6 +9,7 @@ part of 'app_settings.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
+  final _this = this as AppSettings;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.preferPermanentDelete, _this.preferPermanentDelete) || other.preferPermanentDelete == _this.preferPermanentDelete)&&(identical(other.outputExt, _this.outputExt) || other.outputExt == _this.outputExt)&&(identical(other.skipCjxl, _this.skipCjxl) || other.skipCjxl == _this.skipCjxl)&&(identical(other.safeRun, _this.safeRun) || other.safeRun == _this.safeRun)&&(identical(other.cjxlPath, _this.cjxlPath) || other.cjxlPath == _this.cjxlPath)&&(identical(other.lastPreset, _this.lastPreset) || other.lastPreset == _this.lastPreset)&&(identical(other.lastRoot, _this.lastRoot) || other.lastRoot == _this.lastRoot)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.postRunAction, _this.postRunAction) || other.postRunAction == _this.postRunAction)&&(identical(other.postRunConfirmEnabled, _this.postRunConfirmEnabled) || other.postRunConfirmEnabled == _this.postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, _this.postRunConfirmSeconds) || other.postRunConfirmSeconds == _this.postRunConfirmSeconds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
+int get hashCode {
+  final _this = this as AppSettings;
+  return Object.hash(runtimeType,_this.preferPermanentDelete,_this.outputExt,_this.skipCjxl,_this.safeRun,_this.cjxlPath,_this.lastPreset,_this.lastRoot,_this.themeMode,_this.postRunAction,_this.postRunConfirmEnabled,_this.postRunConfirmSeconds);
+}
 
 @override
 String toString() {
-  return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
+  final _this = this as AppSettings;
+  return 'AppSettings(preferPermanentDelete: ${_this.preferPermanentDelete}, outputExt: ${_this.outputExt}, skipCjxl: ${_this.skipCjxl}, safeRun: ${_this.safeRun}, cjxlPath: ${_this.cjxlPath}, lastPreset: ${_this.lastPreset}, lastRoot: ${_this.lastRoot}, themeMode: ${_this.themeMode}, postRunAction: ${_this.postRunAction}, postRunConfirmEnabled: ${_this.postRunConfirmEnabled}, postRunConfirmSeconds: ${_this.postRunConfirmSeconds})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AppSettingsCopyWithImpl<$Res>
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? preferPermanentDelete = null,Object? outputExt = null,Object? skipCjxl = null,Object? safeRun = null,Object? cjxlPath = null,Object? lastPreset = null,Object? lastRoot = freezed,Object? themeMode = null,Object? postRunAction = null,Object? postRunConfirmEnabled = null,Object? postRunConfirmSeconds = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppSettings(
 preferPermanentDelete: null == preferPermanentDelete ? _self.preferPermanentDelete : preferPermanentDelete // ignore: cast_nullable_to_non_nullable
 as bool,outputExt: null == outputExt ? _self.outputExt : outputExt // ignore: cast_nullable_to_non_nullable
 as String,skipCjxl: null == skipCjxl ? _self.skipCjxl : skipCjxl // ignore: cast_nullable_to_non_nullable
@@ -247,16 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.preferPermanentDelete, preferPermanentDelete) || other.preferPermanentDelete == preferPermanentDelete)&&(identical(other.outputExt, outputExt) || other.outputExt == outputExt)&&(identical(other.skipCjxl, skipCjxl) || other.skipCjxl == skipCjxl)&&(identical(other.safeRun, safeRun) || other.safeRun == safeRun)&&(identical(other.cjxlPath, cjxlPath) || other.cjxlPath == cjxlPath)&&(identical(other.lastPreset, lastPreset) || other.lastPreset == lastPreset)&&(identical(other.lastRoot, lastRoot) || other.lastRoot == lastRoot)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.postRunAction, postRunAction) || other.postRunAction == postRunAction)&&(identical(other.postRunConfirmEnabled, postRunConfirmEnabled) || other.postRunConfirmEnabled == postRunConfirmEnabled)&&(identical(other.postRunConfirmSeconds, postRunConfirmSeconds) || other.postRunConfirmSeconds == postRunConfirmSeconds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
+int get hashCode {
+    return Object.hash(runtimeType,preferPermanentDelete,outputExt,skipCjxl,safeRun,cjxlPath,lastPreset,lastRoot,themeMode,postRunAction,postRunConfirmEnabled,postRunConfirmSeconds);
+}
 
 @override
 String toString() {
-  return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
+    return 'AppSettings(preferPermanentDelete: $preferPermanentDelete, outputExt: $outputExt, skipCjxl: $skipCjxl, safeRun: $safeRun, cjxlPath: $cjxlPath, lastPreset: $lastPreset, lastRoot: $lastRoot, themeMode: $themeMode, postRunAction: $postRunAction, postRunConfirmEnabled: $postRunConfirmEnabled, postRunConfirmSeconds: $postRunConfirmSeconds)';
 }
 
 

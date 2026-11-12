@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'preset.dart';
@@ -9,6 +9,7 @@ part of 'preset.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $PresetCopyWith<Preset> get copyWith => _$PresetCopyWithImpl<Preset>(this as Pre
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Preset&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.args, args));
+  final _this = this as Preset;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Preset&&(identical(other.name, _this.name) || other.name == _this.name)&&const DeepCollectionEquality().equals(other.args, _this.args));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(args));
+int get hashCode {
+  final _this = this as Preset;
+  return Object.hash(runtimeType,_this.name,const DeepCollectionEquality().hash(_this.args));
+}
 
 @override
 String toString() {
-  return 'Preset(name: $name, args: $args)';
+  final _this = this as Preset;
+  return 'Preset(name: ${_this.name}, args: ${_this.args})';
 }
 
 
@@ -66,7 +72,7 @@ class _$PresetCopyWithImpl<$Res>
 /// Create a copy of Preset
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? args = null,}) {
-  return _then(_self.copyWith(
+  return _then(Preset(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,args: null == args ? _self.args : args // ignore: cast_nullable_to_non_nullable
 as List<String>,
@@ -210,7 +216,7 @@ return $default(_that.name,_that.args);case _:
 @JsonSerializable()
 
 class _Preset extends Preset {
-  const _Preset({required this.name, final  List<String> args = const []}): _args = args,super._();
+  const _Preset({required this.name,  List<String> args = const []}): _args = args,super._();
   factory _Preset.fromJson(Map<String, dynamic> json) => _$PresetFromJson(json);
 
 @override final  String name;
@@ -235,16 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Preset&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._args, _args));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Preset&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.args, _args));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,const DeepCollectionEquality().hash(_args));
+int get hashCode {
+    return Object.hash(runtimeType,name,const DeepCollectionEquality().hash(_args));
+}
 
 @override
 String toString() {
-  return 'Preset(name: $name, args: $args)';
+    return 'Preset(name: $name, args: $args)';
 }
 
 

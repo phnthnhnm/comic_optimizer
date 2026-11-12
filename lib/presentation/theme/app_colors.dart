@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Static color utility for log line colors used in the logs panel.
 abstract final class AppColors {

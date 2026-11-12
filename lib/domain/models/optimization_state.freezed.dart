@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'optimization_state.dart';
@@ -9,6 +9,7 @@ part of 'optimization_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $OptimizationStateCopyWith<OptimizationState> get copyWith => _$OptimizationStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other.logs, logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
+  final _this = this as OptimizationState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OptimizationState&&(identical(other.running, _this.running) || other.running == _this.running)&&(identical(other.starting, _this.starting) || other.starting == _this.starting)&&(identical(other.paused, _this.paused) || other.paused == _this.paused)&&const DeepCollectionEquality().equals(other.logs, _this.logs)&&(identical(other.currentLogFolder, _this.currentLogFolder) || other.currentLogFolder == _this.currentLogFolder));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,running,starting,paused,const DeepCollectionEquality().hash(logs),currentLogFolder);
+int get hashCode {
+  final _this = this as OptimizationState;
+  return Object.hash(runtimeType,_this.running,_this.starting,_this.paused,const DeepCollectionEquality().hash(_this.logs),_this.currentLogFolder);
+}
 
 @override
 String toString() {
-  return 'OptimizationState(running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder)';
+  final _this = this as OptimizationState;
+  return 'OptimizationState(running: ${_this.running}, starting: ${_this.starting}, paused: ${_this.paused}, logs: ${_this.logs}, currentLogFolder: ${_this.currentLogFolder})';
 }
 
 
@@ -63,7 +69,7 @@ class _$OptimizationStateCopyWithImpl<$Res>
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? logs = null,Object? currentLogFolder = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(OptimizationState(
 running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
 as bool,starting: null == starting ? _self.starting : starting // ignore: cast_nullable_to_non_nullable
 as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_to_non_nullable
@@ -210,7 +216,7 @@ return $default(_that.running,_that.starting,_that.paused,_that.logs,_that.curre
 
 
 class _OptimizationState extends OptimizationState {
-  const _OptimizationState({this.running = false, this.starting = false, this.paused = false, final  Map<String, List<String>> logs = const <String, List<String>>{}, this.currentLogFolder}): _logs = logs,super._();
+  const _OptimizationState({this.running = false, this.starting = false, this.paused = false,  Map<String, List<String>> logs = const <String, List<String>>{}, this.currentLogFolder}): _logs = logs,super._();
   
 
 @override@JsonKey() final  bool running;
@@ -235,16 +241,18 @@ _$OptimizationStateCopyWith<_OptimizationState> get copyWith => __$OptimizationS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other._logs, _logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&const DeepCollectionEquality().equals(other.logs, _logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,running,starting,paused,const DeepCollectionEquality().hash(_logs),currentLogFolder);
+int get hashCode {
+    return Object.hash(runtimeType,running,starting,paused,const DeepCollectionEquality().hash(_logs),currentLogFolder);
+}
 
 @override
 String toString() {
-  return 'OptimizationState(running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder)';
+    return 'OptimizationState(running: $running, starting: $starting, paused: $paused, logs: $logs, currentLogFolder: $currentLogFolder)';
 }
 
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:comic_optimizer/features/settings/screens/about_tab.dart';
 import 'package:comic_optimizer/features/settings/screens/appearance_tab.dart';

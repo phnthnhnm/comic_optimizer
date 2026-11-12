@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
@@ -32,11 +32,11 @@ class _DataTabState extends ConsumerState<DataTab> {
   }
 
   Future<void> _pickCjxl() async {
-    final result = await FilePicker.pickFiles(
+    final files = await FilePicker.pickFiles(
       dialogTitle: 'Select the cjxl executable',
       type: FileType.any,
     );
-    final path = result?.files.single.path;
+    final path = files.isEmpty ? null : files.first.path;
     if (path == null) return;
     _cjxlController.text = path;
     await ref.read(settingsProvider.notifier).setCjxlPath(path);
@@ -79,21 +79,21 @@ class _DataTabState extends ConsumerState<DataTab> {
       );
       await backupFile.writeAsString(jsonEncode(dump));
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Backup saved as $filename')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Backup saved as $filename')));
     }
   }
 
   Future<void> _restoreData() async {
     final notifier = ref.read(settingsProvider.notifier);
-    FilePickerResult? result = await FilePicker.pickFiles(
+    final files = await FilePicker.pickFiles(
       dialogTitle: 'Select backup JSON file',
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
-    if (result != null && result.files.single.path != null) {
-      final file = File(result.files.single.path!);
+    final path = files.isEmpty ? null : files.first.path;
+    if (path != null) {
+      final file = File(path);
       final inputJson = await file.readAsString();
       try {
         final Map<String, dynamic> data = jsonDecode(inputJson);
@@ -117,14 +117,12 @@ class _DataTabState extends ConsumerState<DataTab> {
         }
         await notifier.load();
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Data restored!')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Data restored!')));
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid backup data')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Invalid backup data')));
       }
     }
   }

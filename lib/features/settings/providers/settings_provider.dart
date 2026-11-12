@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod/riverpod.dart';
 
 import 'package:comic_optimizer/core/providers/service_providers.dart';

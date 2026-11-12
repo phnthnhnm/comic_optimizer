@@ -1,5 +1,5 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
@@ -56,9 +56,8 @@ class ControlPanel extends ConsumerWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withAlpha((0.08 * 255).round()),
+                          color: Theme.of(context).colorScheme.primary
+                              .withAlpha((0.08 * 255).round()),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
                             color: Theme.of(context).colorScheme.primary

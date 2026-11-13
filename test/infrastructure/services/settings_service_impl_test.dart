@@ -24,10 +24,12 @@ void main() {
       expect(settings.outputExt, '.cbz');
       expect(settings.preferPermanentDelete, false);
       expect(settings.skipCjxl, false);
-      expect(settings.safeRun, false);
+      expect(settings.safeRun, true);
+      expect(settings.deleteNonImageFiles, true);
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
+      expect(settings.libraryRoots, isEmpty);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -40,9 +42,11 @@ void main() {
         outputExt: '.cbr',
         skipCjxl: true,
         safeRun: true,
+        deleteNonImageFiles: false,
         cjxlPath: '/usr/bin/cjxl',
         lastPreset: 'Lossy',
         lastRoot: r'C:\comics',
+        libraryRoots: [r'C:\comics', r'D:\manga'],
         postRunAction: PostRunAction.shutdown,
         postRunConfirmEnabled: false,
         postRunConfirmSeconds: 120,
@@ -59,9 +63,11 @@ void main() {
       expect(loaded.outputExt, original.outputExt);
       expect(loaded.skipCjxl, original.skipCjxl);
       expect(loaded.safeRun, original.safeRun);
+      expect(loaded.deleteNonImageFiles, original.deleteNonImageFiles);
       expect(loaded.cjxlPath, original.cjxlPath);
       expect(loaded.lastPreset, original.lastPreset);
       expect(loaded.lastRoot, original.lastRoot);
+      expect(loaded.libraryRoots, original.libraryRoots);
       expect(loaded.postRunAction, original.postRunAction);
       expect(loaded.postRunConfirmEnabled, original.postRunConfirmEnabled);
       expect(loaded.postRunConfirmSeconds, original.postRunConfirmSeconds);
@@ -110,6 +116,17 @@ void main() {
       final all = service.getAllRaw();
       expect(all['customKey'], 'customValue');
       expect(all['count'], 42);
+    });
+
+    test('migrates the legacy lastRoot into the library queue', () async {
+      SharedPreferences.setMockInitialValues({'lastRoot': r'C:\comics'});
+      final migratedPrefs = await SharedPreferences.getInstance();
+      final settings =
+          (await SettingsServiceImpl(migratedPrefs).loadSettings()
+                  as Ok<AppSettings>)
+              .value;
+
+      expect(settings.libraryRoots, [r'C:\comics']);
     });
   });
 }

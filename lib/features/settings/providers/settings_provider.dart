@@ -41,6 +41,25 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setSafeRun(bool v) => _update((s) => s.copyWith(safeRun: v));
 
+  Future<void> setDeleteNonImageFiles(bool v) =>
+      _update((s) => s.copyWith(deleteNonImageFiles: v));
+
+  Future<void> setLibraryRoots(List<String> roots) =>
+      _update((s) => s.copyWith(libraryRoots: roots));
+
+  Future<void> addLibraryRoot(String root) {
+    if (state.libraryRoots.contains(root)) return Future.value();
+    return _update(
+      (s) => s.copyWith(libraryRoots: [...s.libraryRoots, root]),
+    );
+  }
+
+  Future<void> removeLibraryRoot(String root) => _update(
+    (s) => s.copyWith(
+      libraryRoots: s.libraryRoots.where((path) => path != root).toList(),
+    ),
+  );
+
   Future<void> setPreferPermanentDelete(bool v) =>
       _update((s) => s.copyWith(preferPermanentDelete: v));
 

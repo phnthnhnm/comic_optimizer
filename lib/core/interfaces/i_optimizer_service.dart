@@ -12,6 +12,7 @@ abstract interface class IOptimizerService {
     Directory root, {
     required List<String> presetArgs,
     required bool skipCjxl,
+    required bool deleteNonImageFiles,
     required String cjxlPath,
     required String outputExtension,
     bool safeRun = false,

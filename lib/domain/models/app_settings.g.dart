@@ -10,10 +10,16 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   preferPermanentDelete: json['preferPermanentDelete'] as bool? ?? false,
   outputExt: json['outputExt'] as String? ?? '.cbz',
   skipCjxl: json['skipCjxl'] as bool? ?? false,
-  safeRun: json['safeRun'] as bool? ?? false,
+  safeRun: json['safeRun'] as bool? ?? true,
+  deleteNonImageFiles: json['deleteNonImageFiles'] as bool? ?? true,
   cjxlPath: json['cjxlPath'] as String? ?? 'cjxl',
   lastPreset: json['lastPreset'] as String? ?? 'Lossless',
   lastRoot: json['lastRoot'] as String?,
+  libraryRoots:
+      (json['libraryRoots'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
   postRunAction:
       $enumDecodeNullable(_$PostRunActionEnumMap, json['postRunAction']) ??
       PostRunAction.none,
@@ -27,9 +33,11 @@ Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
       'outputExt': instance.outputExt,
       'skipCjxl': instance.skipCjxl,
       'safeRun': instance.safeRun,
+      'deleteNonImageFiles': instance.deleteNonImageFiles,
       'cjxlPath': instance.cjxlPath,
       'lastPreset': instance.lastPreset,
       'lastRoot': instance.lastRoot,
+      'libraryRoots': instance.libraryRoots,
       'postRunAction': _$PostRunActionEnumMap[instance.postRunAction]!,
       'postRunConfirmEnabled': instance.postRunConfirmEnabled,
       'postRunConfirmSeconds': instance.postRunConfirmSeconds,

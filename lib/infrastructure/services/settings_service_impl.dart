@@ -18,6 +18,8 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keySkipCjxl = 'skipCjxl';
   static const _keyCjxlPath = 'cjxlPath';
   static const _keySafeRun = 'safeRun';
+  static const _keyDeleteNonImageFiles = 'deleteNonImageFiles';
+  static const _keyLibraryRoots = 'libraryRoots';
   static const _keyPostRunAction = 'postRunAction';
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
@@ -36,9 +38,11 @@ final class SettingsServiceImpl implements ISettingsService {
         outputExt: getOutputExt(),
         skipCjxl: getSkipCjxl(),
         safeRun: getSafeRun(),
+        deleteNonImageFiles: getDeleteNonImageFiles(),
         cjxlPath: getCjxlPath(),
         lastPreset: getLastPreset(),
         lastRoot: getLastRoot(),
+        libraryRoots: getLibraryRoots(),
         postRunAction: PostRunActionX.fromName(getPostRunAction()),
         postRunConfirmEnabled: getPostRunConfirmEnabled(),
         postRunConfirmSeconds: getPostRunConfirmSeconds(),
@@ -56,9 +60,11 @@ final class SettingsServiceImpl implements ISettingsService {
       await setOutputExt(settings.outputExt);
       await setSkipCjxl(settings.skipCjxl);
       await setSafeRun(settings.safeRun);
+      await setDeleteNonImageFiles(settings.deleteNonImageFiles);
       await setCjxlPath(settings.cjxlPath);
       await setLastPreset(settings.lastPreset);
       await setLastRoot(settings.lastRoot);
+      await setLibraryRoots(settings.libraryRoots);
       await setPostRunAction(settings.postRunAction.toName);
       await setPostRunConfirmEnabled(settings.postRunConfirmEnabled);
       await setPostRunConfirmSeconds(settings.postRunConfirmSeconds);
@@ -148,7 +154,18 @@ final class SettingsServiceImpl implements ISettingsService {
       _prefs.getString(_keyLastPreset) ?? Preset.losslessName;
   bool getSkipCjxl() => _prefs.getBool(_keySkipCjxl) ?? false;
   String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
-  bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? false;
+  bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? true;
+  bool getDeleteNonImageFiles() =>
+      _prefs.getBool(_keyDeleteNonImageFiles) ?? true;
+
+  /// Falls back to the legacy `lastRoot` value on first load after upgrading.
+  List<String> getLibraryRoots() {
+    final stored = _prefs.getStringList(_keyLibraryRoots);
+    if (stored != null) return stored;
+    final legacy = getLastRoot();
+    return legacy == null ? const [] : [legacy];
+  }
+
   String getPostRunAction() => _prefs.getString(_keyPostRunAction) ?? 'none';
   bool getPostRunConfirmEnabled() =>
       _prefs.getBool(_keyPostRunConfirmEnabled) ?? true;
@@ -172,6 +189,10 @@ final class SettingsServiceImpl implements ISettingsService {
   Future<void> setSkipCjxl(bool v) => _prefs.setBool(_keySkipCjxl, v);
   Future<void> setCjxlPath(String v) => _prefs.setString(_keyCjxlPath, v);
   Future<void> setSafeRun(bool v) => _prefs.setBool(_keySafeRun, v);
+  Future<void> setDeleteNonImageFiles(bool v) =>
+      _prefs.setBool(_keyDeleteNonImageFiles, v);
+  Future<void> setLibraryRoots(List<String> v) =>
+      _prefs.setStringList(_keyLibraryRoots, v);
 
   Future<void> setPostRunAction(String v) =>
       _prefs.setString(_keyPostRunAction, v);

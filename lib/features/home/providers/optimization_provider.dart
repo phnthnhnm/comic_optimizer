@@ -63,6 +63,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
         Directory(rootPath),
         presetArgs: preset.args,
         skipCjxl: settings.skipCjxl,
+        deleteNonImageFiles: settings.deleteNonImageFiles,
         cjxlPath: settings.cjxlPath,
         safeRun: settings.safeRun,
         outputExtension: settings.outputExt,

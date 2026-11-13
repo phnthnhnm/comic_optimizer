@@ -60,6 +60,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
     Directory root, {
     required List<String> presetArgs,
     required bool skipCjxl,
+    required bool deleteNonImageFiles,
     required String cjxlPath,
     required String outputExtension,
     bool safeRun = false,
@@ -104,6 +105,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
           root.path,
           presetArgs,
           skipCjxl,
+          deleteNonImageFiles,
           cjxlPath,
           outputExtension,
           preferPermanentDelete || safeRun,
@@ -157,6 +159,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
                 sub.path,
                 presetArgs,
                 skipCjxl,
+                deleteNonImageFiles,
                 cjxlPath,
                 outputExtension,
                 preferPermanentDelete || safeRun,
@@ -195,6 +198,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
                 entity.path,
                 presetArgs,
                 skipCjxl,
+                deleteNonImageFiles,
                 cjxlPath,
                 outputExtension,
                 preferPermanentDelete || safeRun,
@@ -231,6 +235,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
     String originalPath,
     List<String> presetArgs,
     bool skipCjxl,
+    bool deleteNonImageFiles,
     String cjxlPath,
     String outputExtension,
     bool preferPermanentDelete, {
@@ -282,11 +287,15 @@ final class OptimizerServiceImpl implements IOptimizerService {
 
       beforeTotalBytes = await sumFileLengths(images);
 
-      await removeNonImageFiles(
-        folder,
-        onLog: onLog,
-        waitIfPaused: waitIfPaused,
-      );
+      if (deleteNonImageFiles) {
+        await removeNonImageFiles(
+          folder,
+          onLog: onLog,
+          waitIfPaused: waitIfPaused,
+        );
+      } else {
+        onLog?.call('Keeping non-image files (setting disabled)');
+      }
 
       final imageFiles = await listImageFiles(
         folder,

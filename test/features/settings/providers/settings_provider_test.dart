@@ -28,6 +28,9 @@ void main() {
       expect(settings.outputExt, '.cbz');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.cjxlPath, 'cjxl');
+      expect(settings.safeRun, true);
+      expect(settings.deleteNonImageFiles, true);
+      expect(settings.libraryRoots, isEmpty);
     });
 
     test('load reads values persisted by the service', () async {
@@ -58,11 +61,29 @@ void main() {
     });
 
     test('clearAllPrefs resets the state to defaults', () async {
-      await notifier.setSafeRun(true);
+      await notifier.setSafeRun(false);
       await notifier.clearAllPrefs();
 
-      expect(container.read(settingsProvider).safeRun, false);
+      expect(container.read(settingsProvider).safeRun, true);
       expect(prefs.getBool('safeRun'), isNull);
+    });
+
+    test('library roots are added once and can be removed', () async {
+      await notifier.addLibraryRoot(r'C:\comics');
+      await notifier.addLibraryRoot(r'C:\comics');
+      await notifier.addLibraryRoot(r'D:\manga');
+
+      expect(container.read(settingsProvider).libraryRoots, [
+        r'C:\comics',
+        r'D:\manga',
+      ]);
+      expect(prefs.getStringList('libraryRoots'), [
+        r'C:\comics',
+        r'D:\manga',
+      ]);
+
+      await notifier.removeLibraryRoot(r'C:\comics');
+      expect(container.read(settingsProvider).libraryRoots, [r'D:\manga']);
     });
   });
 }

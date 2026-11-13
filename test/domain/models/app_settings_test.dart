@@ -9,10 +9,12 @@ void main() {
       expect(settings.preferPermanentDelete, false);
       expect(settings.outputExt, '.cbz');
       expect(settings.skipCjxl, false);
-      expect(settings.safeRun, false);
+      expect(settings.safeRun, true);
+      expect(settings.deleteNonImageFiles, true);
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
+      expect(settings.libraryRoots, isEmpty);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);

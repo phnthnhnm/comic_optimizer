@@ -108,6 +108,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> setPostRunConfirmSeconds(int v) =>
       _update((s) => s.copyWith(postRunConfirmSeconds: v));
 
+  Future<void> completeTutorial() =>
+      _update((s) => s.copyWith(tutorialCompleted: true));
+
   // For backup/restore data tab
   Future<void> setRawString(String key, String value) async {
     final service = ref.read(settingsServiceProvider);

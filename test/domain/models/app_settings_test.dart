@@ -19,6 +19,7 @@ void main() {
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
+      expect(settings.tutorialCompleted, false);
     });
 
     test('copyWith updates individual fields', () {

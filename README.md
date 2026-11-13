@@ -26,6 +26,8 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
 - **Results and history**: space saved, comics grouped by library, failure
   details with retry, a JSON report export, and the last 50 runs on the
   History screen.
+- **First-run tour**: four short, skippable steps covering the queue, presets,
+  safety, and results. Reopen it from the `?` button or Settings → General.
 - **Keyboard-first workflow**: `Ctrl+O` add folder, `Ctrl+Enter` start,
   `Ctrl+P` pause/resume, `Ctrl+E` export, `Ctrl+1`/`Ctrl+2`/`Ctrl+,` navigate.
 - **Desktop feedback**: taskbar progress while a run is active, a best-effort
@@ -228,7 +230,7 @@ windows/                        Flutter Windows runner
 flutter pub get
 flutter analyze                       # must be clean
 dart format lib/ test/
-flutter test                          # 132 tests, including cjxl integration
+flutter test                          # 135 tests, including cjxl integration
 flutter build windows --release
 ```
 

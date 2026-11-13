@@ -102,5 +102,12 @@ void main() {
       expect(container.read(settingsProvider).customPresets, isEmpty);
       expect(container.read(settingsProvider).lastPreset, 'Lossless');
     });
+
+    test('completing the tutorial is persisted', () async {
+      expect(container.read(settingsProvider).tutorialCompleted, false);
+      await notifier.completeTutorial();
+      expect(container.read(settingsProvider).tutorialCompleted, true);
+      expect(prefs.getBool('tutorialCompleted'), true);
+    });
   });
 }

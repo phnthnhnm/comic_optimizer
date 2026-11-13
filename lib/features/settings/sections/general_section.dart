@@ -6,6 +6,7 @@ import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:comic_optimizer/features/settings/widgets/settings_widgets.dart';
+import 'package:comic_optimizer/features/tutorial/tutorial_dialog.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 
 class GeneralSection extends ConsumerWidget {
@@ -144,6 +145,25 @@ class GeneralSection extends ConsumerWidget {
                     ],
                   ),
                 ),
+            ],
+          ),
+        ),
+        SettingsCard(
+          title: 'Getting started',
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'New here, or want a refresher? Replay the short welcome tour.',
+                  style: TextStyle(fontSize: 11.5, color: Catppuccin.overlay2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () => showTutorial(context, ref),
+                icon: const Icon(Icons.school_outlined, size: 17),
+                label: const Text('Show tutorial'),
+              ),
             ],
           ),
         ),

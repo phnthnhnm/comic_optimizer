@@ -15,6 +15,7 @@ import 'package:comic_optimizer/features/home/widgets/library_panel.dart';
 import 'package:comic_optimizer/features/home/widgets/results_view.dart';
 import 'package:comic_optimizer/features/home/widgets/run_workspace.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
+import 'package:comic_optimizer/features/tutorial/tutorial_dialog.dart';
 import 'package:comic_optimizer/presentation/widgets/logs_panel.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -27,14 +28,25 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _performedPostRun = false;
   bool _recordedHistory = false;
+  bool _tutorialAttempted = false;
 
   @override
   void initState() {
     super.initState();
-    // Load settings on first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(settingsProvider.notifier).load();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initialize());
+  }
+
+  Future<void> _initialize() async {
+    await ref.read(settingsProvider.notifier).load();
+    if (!mounted) return;
+    await _maybeShowTutorial();
+  }
+
+  Future<void> _maybeShowTutorial() async {
+    if (_tutorialAttempted) return;
+    _tutorialAttempted = true;
+    if (ref.read(settingsProvider).tutorialCompleted) return;
+    await showTutorial(context, ref);
   }
 
   Future<void> _maybePerformPostRunAction() async {
@@ -199,6 +211,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: const Text('Library'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline_rounded),
+            tooltip: 'Welcome tutorial',
+            onPressed: () => showTutorial(context, ref),
+          ),
           IconButton(
             icon: const Icon(Icons.bug_report),
             tooltip: 'Report a Bug',

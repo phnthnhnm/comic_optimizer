@@ -7,8 +7,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
+import 'package:comic_optimizer/features/home/widgets/library_panel.dart';
+import 'package:comic_optimizer/features/home/widgets/preflight_sheet.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
-import 'package:comic_optimizer/presentation/widgets/controls.dart';
 import 'package:comic_optimizer/presentation/widgets/logs_panel.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -113,28 +114,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _start() async {
-    final rootPath = ref.read(settingsProvider).lastRoot;
-    if (rootPath != null) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Confirm'),
-          content: const Text(
-            'This tool will modify and delete files. Back up your data before proceeding. Continue?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(c).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(c).pop(true),
-              child: const Text('Start'),
-            ),
-          ],
-        ),
-      );
-      if (ok != true) return;
+    final settings = ref.read(settingsProvider);
+    final hasRoots =
+        settings.libraryRoots.isNotEmpty || settings.lastRoot != null;
+    if (hasRoots) {
+      final confirmed = await showPreflightSheet(context, ref);
+      if (!confirmed) return;
     }
 
     _performedPostRun = false;
@@ -173,22 +158,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            ControlPanel(
-              onStart: _start,
-              onCancel: () => ref.read(optimizationProvider.notifier).cancel(),
-              onPause: () => ref.read(optimizationProvider.notifier).pause(),
-              onResume: () => ref.read(optimizationProvider.notifier).resume(),
-            ),
-            const SizedBox(height: 12),
-            const Divider(),
-            LogsPanel(
+        padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final panel = SingleChildScrollView(
+              child: LibraryPanel(onStart: _start),
+            );
+            final logs = LogsPanel(
               logsByFolder: state.logs,
               selectedFolder: state.currentLogFolder,
-            ),
-          ],
+            );
+
+            if (constraints.maxWidth >= 820) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(flex: 3, child: panel),
+                  const SizedBox(width: 20),
+                  Expanded(flex: 2, child: logs),
+                ],
+              );
+            }
+            return Column(
+              children: [
+                Expanded(flex: 3, child: panel),
+                const SizedBox(height: 16),
+                Expanded(flex: 2, child: logs),
+              ],
+            );
+          },
         ),
       ),
     );

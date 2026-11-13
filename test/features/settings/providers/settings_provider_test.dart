@@ -77,10 +77,7 @@ void main() {
         r'C:\comics',
         r'D:\manga',
       ]);
-      expect(prefs.getStringList('libraryRoots'), [
-        r'C:\comics',
-        r'D:\manga',
-      ]);
+      expect(prefs.getStringList('libraryRoots'), [r'C:\comics', r'D:\manga']);
 
       await notifier.removeLibraryRoot(r'C:\comics');
       expect(container.read(settingsProvider).libraryRoots, [r'D:\manga']);

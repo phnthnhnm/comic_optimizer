@@ -92,21 +92,22 @@ folder if you want to distribute it.
 
 ## Usage
 
-1. Click **Choose Root** and select the folder that contains your comics.
-2. Pick a **Preset** (see below).
+1. Click **Add folder** for each comic library. Folders are processed in the
+   order shown; drag the handle to reorder, or remove one with ×.
+2. Pick a **quality preset**:
+   - **Lossless** — perfect quality, largest files.
+   - **Visually lossless** — recommended; indistinguishable at reading size.
+   - **Smaller files** — lossy; smallest output.
 3. Adjust the options:
-   - **Skip cjxl** — archive the existing images without re-encoding.
-   - **Delete permanently** — delete source folders instead of using the
-     Recycle Bin.
-   - **Safe run** — work on a copy of each folder and leave the originals
-     untouched.
-   - **Output ext** — `.cbz`, `.cbr` or `.zip`.
-   - **After finish** — optional power action once the batch completes.
-4. Click **Start** and confirm. Progress and per-folder logs appear in the
-   panel; use **Pause**, **Resume** or **Cancel** at any time.
+   - **Encode to JPEG XL** — archive existing images as-is when disabled.
+   - **Delete non-image files** — remove `ComicInfo.xml`, `.nfo`, `.txt`, etc.
+   - **Keep originals** — process a copy and leave the source folders untouched.
+   - **Advanced** — permanent deletion and the after-finish power action.
+4. Click **Start** and review the preflight summary (comics, images, non-image
+   files). Confirm to run; use **Pause**, **Resume** or **Cancel** at any time.
 
-A comic folder is any folder directly under the chosen root, or directly under
-one of those folders. If the root itself contains only images, the root is
+A comic folder is any folder directly under a library root, or directly under
+one of those folders. If a root itself contains only images, the root is
 treated as a single comic.
 
 ## How it works
@@ -114,10 +115,10 @@ treated as a single comic.
 For every comic folder the app runs this pipeline:
 
 1. Record the size of each image so savings can be reported later.
-2. Delete files that are not images (see the warning below).
+2. Delete files that are not images when **Delete non-image files** is on.
 3. Rename the remaining images to a zero-padded sequence (`001.png`,
    `002.png`, …) so pages are archived in natural order.
-4. If **Skip cjxl** is off, encode each image to `<name>.jxl`:
+4. If **Encode to JPEG XL** is on, encode each image to `<name>.jxl`:
    - `.webp` pages are first converted to PNG with `dwebp`;
    - `cjxl` is run with the selected preset;
    - if `cjxl` exits with code 1, the page is re-saved with `magick` and
@@ -131,9 +132,10 @@ For every comic folder the app runs this pipeline:
    permanently if that option is enabled.
 
 > [!IMPORTANT]
-> - **Non-image files are deleted.** That includes `ComicInfo.xml`, `.nfo`,
->   `.txt` and anything else that is not `.png`, `.jpg`, `.jpeg`, `.webp`,
->   `.apng` or `.jxl`.
+> - **Non-image files are deleted by default.** That includes `ComicInfo.xml`,
+>   `.nfo`, `.txt` and anything else that is not `.png`, `.jpg`, `.jpeg`,
+>   `.webp`, `.apng` or `.jxl`. Turn off **Delete non-image files** to keep
+>   them; they are then packed into the archive.
 > - **Only files directly inside the comic folder are archived.** Nested
 >   subfolders are not packed, but the whole folder is still removed
 >   afterwards.

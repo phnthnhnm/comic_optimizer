@@ -49,9 +49,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> addLibraryRoot(String root) {
     if (state.libraryRoots.contains(root)) return Future.value();
-    return _update(
-      (s) => s.copyWith(libraryRoots: [...s.libraryRoots, root]),
-    );
+    return _update((s) => s.copyWith(libraryRoots: [...s.libraryRoots, root]));
   }
 
   Future<void> removeLibraryRoot(String root) => _update(

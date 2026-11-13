@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:comic_optimizer/core/providers/service_providers.dart';
@@ -157,7 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Comic Optimizer'),
+        title: const Text('Library'),
         actions: [
           IconButton(
             icon: const Icon(Icons.bug_report),
@@ -169,13 +168,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
               }
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: () {
-              context.push('/settings');
             },
           ),
         ],

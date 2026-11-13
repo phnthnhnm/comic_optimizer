@@ -14,9 +14,6 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   cjxlPath: json['cjxlPath'] as String? ?? 'cjxl',
   lastPreset: json['lastPreset'] as String? ?? 'Lossless',
   lastRoot: json['lastRoot'] as String?,
-  themeMode:
-      $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
-      ThemeMode.system,
   postRunAction:
       $enumDecodeNullable(_$PostRunActionEnumMap, json['postRunAction']) ??
       PostRunAction.none,
@@ -33,17 +30,10 @@ Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
       'cjxlPath': instance.cjxlPath,
       'lastPreset': instance.lastPreset,
       'lastRoot': instance.lastRoot,
-      'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
       'postRunAction': _$PostRunActionEnumMap[instance.postRunAction]!,
       'postRunConfirmEnabled': instance.postRunConfirmEnabled,
       'postRunConfirmSeconds': instance.postRunConfirmSeconds,
     };
-
-const _$ThemeModeEnumMap = {
-  ThemeMode.system: 'system',
-  ThemeMode.light: 'light',
-  ThemeMode.dark: 'dark',
-};
 
 const _$PostRunActionEnumMap = {
   PostRunAction.none: 'none',

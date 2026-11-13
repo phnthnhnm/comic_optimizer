@@ -7,6 +7,7 @@ import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
+import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 
 class ControlPanel extends ConsumerWidget {
   final VoidCallback onStart;
@@ -103,6 +104,8 @@ class ControlPanel extends ConsumerWidget {
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: selectedPreset,
+              style: const TextStyle(color: Catppuccin.text, fontSize: 14),
+              dropdownColor: Catppuccin.mantle,
               items: Preset.all
                   .map(
                     (p) => DropdownMenuItem(value: p.name, child: Text(p.name)),
@@ -142,13 +145,15 @@ class ControlPanel extends ConsumerWidget {
             const SizedBox(width: 8),
             DropdownButton<String>(
               value: outputExt,
+              style: const TextStyle(color: Catppuccin.text, fontSize: 14),
+              dropdownColor: Catppuccin.mantle,
               items: kOutputExtensions
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
               onChanged: (v) => settingsNotifier.setOutputExt(v ?? '.cbz'),
             ),
             const Spacer(),
-            ElevatedButton(
+            FilledButton(
               onPressed: !running
                   ? onStart
                   : (starting ? null : (paused ? onResume : onPause)),
@@ -170,6 +175,8 @@ class ControlPanel extends ConsumerWidget {
             const SizedBox(width: 8),
             DropdownButton<PostRunAction>(
               value: postRunAction,
+              style: const TextStyle(color: Catppuccin.text, fontSize: 14),
+              dropdownColor: Catppuccin.mantle,
               items: [
                 DropdownMenuItem(
                   value: PostRunAction.none,

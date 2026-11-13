@@ -32,7 +32,8 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
   delete them permanently.
 - **Post-run actions**: quit, sleep, hibernate, shut down or restart when the
   batch finishes, with an optional confirmation countdown.
-- **Settings backup/restore** to a JSON file, plus light/dark/system themes.
+- **Settings backup/restore** to a JSON file, and one fixed Catppuccin Mocha
+  theme with a green accent.
 
 ## Requirements
 
@@ -161,7 +162,8 @@ Settings are stored with `shared_preferences` at:
 Deleting that file resets the app to its defaults. The **Data** tab also sets
 the `cjxl` executable path (leave it as `cjxl` to resolve the encoder from
 `PATH`), exports a timestamped JSON backup, restores one, or resets everything.
-The **Appearance** tab switches between light, dark and system themes.
+The app uses one fixed Catppuccin Mocha theme with a green accent; there is no
+theme setting.
 
 ## Project structure
 

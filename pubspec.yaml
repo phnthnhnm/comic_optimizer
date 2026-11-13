@@ -23,6 +23,8 @@ dependencies:
   riverpod_annotation: ^4.0.3
   go_router: ^18.1.4
   material_ui: ^1.11.0
+  window_manager: ^0.7.0
+  screen_retriever: ^0.4.0
 
 dev_dependencies:
   flutter_test:

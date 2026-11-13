@@ -1,54 +1,52 @@
+import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 import 'package:comic_optimizer/presentation/theme/app_colors.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('AppColors.colorForLine', () {
-    testWidgets('error lines return redAccent', (tester) async {
+    testWidgets('error lines return Catppuccin red', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('Error: something failed', ctx),
-        Colors.redAccent,
+        Catppuccin.red,
       );
-      expect(
-        AppColors.colorForLine('failed to process', ctx),
-        Colors.redAccent,
-      );
-      expect(AppColors.colorForLine('an err occurred', ctx), Colors.redAccent);
+      expect(AppColors.colorForLine('failed to process', ctx), Catppuccin.red);
+      expect(AppColors.colorForLine('an err occurred', ctx), Catppuccin.red);
     });
 
-    testWidgets('cjxl non-zero exit returns redAccent', (tester) async {
+    testWidgets('cjxl non-zero exit returns Catppuccin red', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
-      expect(AppColors.colorForLine('cjxl exit 1', ctx), Colors.redAccent);
+      expect(AppColors.colorForLine('cjxl exit 1', ctx), Catppuccin.red);
     });
 
-    testWidgets('cjxl exit 0 does NOT return redAccent', (tester) async {
+    testWidgets('cjxl exit 0 does NOT return red', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       final color = AppColors.colorForLine('cjxl exit 0', ctx);
-      expect(color, isNot(Colors.redAccent));
+      expect(color, isNot(Catppuccin.red));
     });
 
-    testWidgets('storage saved >= 50% returns blueAccent', (tester) async {
+    testWidgets('storage saved >= 50% returns Catppuccin blue', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('Storage saved: saved 5.00 MB (50.00%)', ctx),
-        Colors.blueAccent,
+        Catppuccin.blue,
       );
       expect(
         AppColors.colorForLine('saved 10.00 MB (75.50%)', ctx),
-        Colors.blueAccent,
+        Catppuccin.blue,
       );
     });
 
-    testWidgets('storage saved >= 30% and < 50% returns greenAccent', (
+    testWidgets('storage saved >= 30% and < 50% returns Catppuccin green', (
       tester,
     ) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
@@ -56,29 +54,31 @@ void main() {
 
       expect(
         AppColors.colorForLine('saved 1.00 MB (30.00%)', ctx),
-        Colors.greenAccent,
+        Catppuccin.green,
       );
       expect(
         AppColors.colorForLine('saved 1.00 MB (49.99%)', ctx),
-        Colors.greenAccent,
+        Catppuccin.green,
       );
     });
 
-    testWidgets('storage saved >= 0% and < 30% returns amber', (tester) async {
+    testWidgets('storage saved >= 0% and < 30% returns Catppuccin yellow', (
+      tester,
+    ) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('saved 0.10 MB (0.00%)', ctx),
-        isA<Color>(),
+        Catppuccin.yellow,
       );
       expect(
         AppColors.colorForLine('saved 0.10 MB (29.99%)', ctx),
-        isA<Color>(),
+        Catppuccin.yellow,
       );
     });
 
-    testWidgets('storage saved < 0% (negative) returns redAccent', (
+    testWidgets('storage saved < 0% (negative) returns Catppuccin red', (
       tester,
     ) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
@@ -86,7 +86,7 @@ void main() {
 
       expect(
         AppColors.colorForLine('saved 1.00 MB (-5.00%)', ctx),
-        Colors.redAccent,
+        Catppuccin.red,
       );
     });
 
@@ -95,62 +95,59 @@ void main() {
       final ctx = tester.element(find.byType(SizedBox));
 
       final color = AppColors.colorForLine('Start: myfolder', ctx);
-      // Should be the theme's primary color with alpha (not redAccent or
-      // greenAccent)
       expect(color, isNotNull);
-      expect(color, isNot(Colors.redAccent));
+      expect(color, isNot(Catppuccin.red));
     });
 
-    testWidgets('done with ok returns greenAccent shade', (tester) async {
+    testWidgets('done with ok returns Catppuccin green', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('Done: myfolder (OK)', ctx),
-        Colors.greenAccent.shade200,
+        Catppuccin.green,
       );
     });
 
-    testWidgets('removed/deleted lines return orangeAccent', (tester) async {
+    testWidgets('removed/deleted lines return Catppuccin peach', (
+      tester,
+    ) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('Removed duplicate original', ctx),
-        Colors.orangeAccent,
+        Catppuccin.peach,
       );
       expect(
         AppColors.colorForLine('deleted non-image', ctx),
-        Colors.orangeAccent,
+        Catppuccin.peach,
       );
       expect(
         AppColors.colorForLine('removed duplicate foo.png', ctx),
-        Colors.orangeAccent,
+        Catppuccin.peach,
       );
     });
 
-    testWidgets('created archive returns greenAccent', (tester) async {
+    testWidgets('created archive returns Catppuccin green', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('Created archive mycomic.cbz', ctx),
-        Colors.greenAccent,
+        Catppuccin.green,
       );
     });
 
-    testWidgets('running cjxl returns cyanAccent', (tester) async {
+    testWidgets('running cjxl returns Catppuccin teal', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SizedBox()));
       final ctx = tester.element(find.byType(SizedBox));
 
       expect(
         AppColors.colorForLine('Running cjxl: cjxl file.png file.jxl', ctx),
-        Colors.cyanAccent,
+        Catppuccin.teal,
       );
-      expect(
-        AppColors.colorForLine('Created safe copy', ctx),
-        Colors.cyanAccent,
-      );
+      expect(AppColors.colorForLine('Created safe copy', ctx), Catppuccin.teal);
     });
 
     testWidgets('plain text falls back to default text color', (tester) async {
@@ -159,11 +156,10 @@ void main() {
 
       final color = AppColors.colorForLine('some ordinary log message', ctx);
       expect(color, isNotNull);
-      // Should not be any of the special colors
-      expect(color, isNot(Colors.redAccent));
-      expect(color, isNot(Colors.greenAccent));
-      expect(color, isNot(Colors.orangeAccent));
-      expect(color, isNot(Colors.cyanAccent));
+      expect(color, isNot(Catppuccin.red));
+      expect(color, isNot(Catppuccin.green));
+      expect(color, isNot(Catppuccin.peach));
+      expect(color, isNot(Catppuccin.teal));
     });
   });
 

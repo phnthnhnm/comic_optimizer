@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../enums/post_run_action.dart';
@@ -16,7 +15,6 @@ abstract class AppSettings with _$AppSettings {
     @Default('cjxl') String cjxlPath,
     @Default('Lossless') String lastPreset,
     String? lastRoot,
-    @Default(ThemeMode.system) ThemeMode themeMode,
     @Default(PostRunAction.none) PostRunAction postRunAction,
     @Default(true) bool postRunConfirmEnabled,
     @Default(60) int postRunConfirmSeconds,

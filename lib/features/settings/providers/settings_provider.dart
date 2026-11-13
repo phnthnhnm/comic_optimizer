@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:riverpod/riverpod.dart';
 
 import 'package:comic_optimizer/core/providers/service_providers.dart';
@@ -34,9 +33,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
     final service = ref.read(settingsServiceProvider);
     await service.saveSettings(newSettings);
   }
-
-  Future<void> setThemeMode(ThemeMode mode) =>
-      _update((s) => s.copyWith(themeMode: mode));
 
   Future<void> setOutputExt(String ext) =>
       _update((s) => s.copyWith(outputExt: ext));

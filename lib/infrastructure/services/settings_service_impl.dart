@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:comic_optimizer/core/interfaces/i_settings_service.dart';
@@ -22,7 +21,6 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keyPostRunAction = 'postRunAction';
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
-  static const _keyThemeMode = 'theme_mode';
 
   final SharedPreferences _prefs;
 
@@ -41,7 +39,6 @@ final class SettingsServiceImpl implements ISettingsService {
         cjxlPath: getCjxlPath(),
         lastPreset: getLastPreset(),
         lastRoot: getLastRoot(),
-        themeMode: _stringToMode(getThemeMode()),
         postRunAction: PostRunActionX.fromName(getPostRunAction()),
         postRunConfirmEnabled: getPostRunConfirmEnabled(),
         postRunConfirmSeconds: getPostRunConfirmSeconds(),
@@ -62,7 +59,6 @@ final class SettingsServiceImpl implements ISettingsService {
       await setCjxlPath(settings.cjxlPath);
       await setLastPreset(settings.lastPreset);
       await setLastRoot(settings.lastRoot);
-      await setThemeMode(_modeToString(settings.themeMode));
       await setPostRunAction(settings.postRunAction.toName);
       await setPostRunConfirmEnabled(settings.postRunConfirmEnabled);
       await setPostRunConfirmSeconds(settings.postRunConfirmSeconds);
@@ -153,7 +149,6 @@ final class SettingsServiceImpl implements ISettingsService {
   bool getSkipCjxl() => _prefs.getBool(_keySkipCjxl) ?? false;
   String getCjxlPath() => _prefs.getString(_keyCjxlPath) ?? 'cjxl';
   bool getSafeRun() => _prefs.getBool(_keySafeRun) ?? false;
-  String getThemeMode() => _prefs.getString(_keyThemeMode) ?? 'system';
   String getPostRunAction() => _prefs.getString(_keyPostRunAction) ?? 'none';
   bool getPostRunConfirmEnabled() =>
       _prefs.getBool(_keyPostRunConfirmEnabled) ?? true;
@@ -187,8 +182,6 @@ final class SettingsServiceImpl implements ISettingsService {
 
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
 
-  Future<void> setThemeMode(String v) => _prefs.setString(_keyThemeMode, v);
-
   // ── Legacy generic setters (used by restore in SettingsModel) ───────────
 
   Future<bool> setString(String key, String value) =>
@@ -204,24 +197,4 @@ final class SettingsServiceImpl implements ISettingsService {
 
   /// Exposed for backward compatibility with [SettingsModel.getAllPrefs].
   Map<String, dynamic> getAll() => getAllRaw();
-
-  // ── Helpers ─────────────────────────────────────────────────────────────
-
-  static ThemeMode _stringToMode(String s) {
-    switch (s) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      case 'system':
-        return ThemeMode.system;
-    }
-    return ThemeMode.system;
-  }
-
-  static String _modeToString(ThemeMode m) {
-    if (m == ThemeMode.light) return 'light';
-    if (m == ThemeMode.dark) return 'dark';
-    return 'system';
-  }
 }

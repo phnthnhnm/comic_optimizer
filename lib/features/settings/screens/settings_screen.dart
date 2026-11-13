@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:comic_optimizer/features/settings/screens/about_tab.dart';
-import 'package:comic_optimizer/features/settings/screens/appearance_tab.dart';
 import 'package:comic_optimizer/features/settings/screens/data_tab.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -10,21 +9,18 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Settings'),
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Appearance', icon: Icon(Icons.palette)),
-              Tab(text: 'Data', icon: Icon(Icons.folder)),
-              Tab(text: 'About', icon: Icon(Icons.info)),
+              Tab(text: 'Data', icon: Icon(Icons.folder_outlined)),
+              Tab(text: 'About', icon: Icon(Icons.info_outline)),
             ],
           ),
         ),
-        body: const TabBarView(
-          children: [AppearanceTab(), DataTab(), AboutTab()],
-        ),
+        body: const TabBarView(children: [DataTab(), AboutTab()]),
       ),
     );
   }

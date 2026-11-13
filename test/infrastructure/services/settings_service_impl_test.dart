@@ -2,7 +2,6 @@ import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/infrastructure/services/settings_service_impl.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,7 +28,6 @@ void main() {
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
-      expect(settings.themeMode, ThemeMode.system);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -45,7 +43,6 @@ void main() {
         cjxlPath: '/usr/bin/cjxl',
         lastPreset: 'Lossy',
         lastRoot: r'C:\comics',
-        themeMode: ThemeMode.dark,
         postRunAction: PostRunAction.shutdown,
         postRunConfirmEnabled: false,
         postRunConfirmSeconds: 120,
@@ -65,7 +62,6 @@ void main() {
       expect(loaded.cjxlPath, original.cjxlPath);
       expect(loaded.lastPreset, original.lastPreset);
       expect(loaded.lastRoot, original.lastRoot);
-      expect(loaded.themeMode, original.themeMode);
       expect(loaded.postRunAction, original.postRunAction);
       expect(loaded.postRunConfirmEnabled, original.postRunConfirmEnabled);
       expect(loaded.postRunConfirmSeconds, original.postRunConfirmSeconds);

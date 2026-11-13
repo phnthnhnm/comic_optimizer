@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 import 'package:comic_optimizer/presentation/theme/app_colors.dart';
 
 class LogsPanel extends StatefulWidget {
@@ -132,9 +133,9 @@ class _LogsPanelState extends State<LogsPanel> {
       }
     }
 
-    if (hadNonZeroExit || hadErrorText) return Colors.redAccent;
-    if (hadZeroExit) return Colors.green;
-    return Colors.green;
+    if (hadNonZeroExit || hadErrorText) return Catppuccin.red;
+    if (hadZeroExit) return Catppuccin.green;
+    return Catppuccin.green;
   }
 
   @override
@@ -143,7 +144,9 @@ class _LogsPanelState extends State<LogsPanel> {
 
     return Expanded(
       child: Container(
-        decoration: BoxDecoration(border: Border.all(color: Colors.black12)),
+        decoration: BoxDecoration(
+          border: Border.all(color: Catppuccin.surface1),
+        ),
         child: keys.isEmpty
             ? const Center(child: Text('No logs yet.'))
             : Row(
@@ -154,7 +157,7 @@ class _LogsPanelState extends State<LogsPanel> {
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border(
-                          right: BorderSide(color: Colors.black12),
+                          right: BorderSide(color: Catppuccin.surface1),
                         ),
                       ),
                       child: ListView.builder(

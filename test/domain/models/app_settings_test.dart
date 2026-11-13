@@ -1,6 +1,5 @@
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,7 +13,6 @@ void main() {
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
-      expect(settings.themeMode, ThemeMode.system);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -51,7 +49,6 @@ void main() {
         final restored = AppSettings.fromJson(json);
         expect(restored.preferPermanentDelete, settings.preferPermanentDelete);
         expect(restored.outputExt, settings.outputExt);
-        expect(restored.themeMode, settings.themeMode);
         expect(restored.postRunAction, settings.postRunAction);
       });
 

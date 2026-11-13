@@ -7,12 +7,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/optimization_state.dart';
-import 'package:comic_optimizer/domain/models/preflight_summary.dart';
 import 'package:comic_optimizer/domain/models/run_history_entry.dart';
 import 'package:comic_optimizer/features/history/providers/run_history_provider.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
+import 'package:comic_optimizer/features/home/run_launcher.dart';
 import 'package:comic_optimizer/features/home/widgets/library_panel.dart';
-import 'package:comic_optimizer/features/home/widgets/preflight_sheet.dart';
 import 'package:comic_optimizer/features/home/widgets/results_view.dart';
 import 'package:comic_optimizer/features/home/widgets/run_workspace.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
@@ -167,18 +166,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _start() async {
-    final settings = ref.read(settingsProvider);
-    final hasRoots =
-        settings.libraryRoots.isNotEmpty || settings.lastRoot != null;
-    PreflightSummary? summary;
-    if (hasRoots) {
-      summary = await showPreflightSheet(context, ref);
-      if (summary == null) return;
-    }
-
     _performedPostRun = false;
     _recordedHistory = false;
-    await ref.read(optimizationProvider.notifier).start(summary: summary);
+    await startRunWithPreflight(context, ref);
   }
 
   @override
@@ -187,6 +177,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Detect when optimization completes to trigger post-run action
     ref.listen(optimizationProvider, (prev, next) {
+      if (prev?.running != true && next.running) {
+        _performedPostRun = false;
+        _recordedHistory = false;
+      }
       if (prev?.running == true && !next.running) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _recordHistory(next);
@@ -194,6 +188,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       }
     });
+
+    final mode = state.running
+        ? 'run'
+        : state.finishedAt != null
+        ? 'results'
+        : 'library';
 
     return Scaffold(
       appBar: AppBar(
@@ -215,39 +215,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
-        child: state.running
-            ? const RunWorkspace()
-            : state.finishedAt != null
-            ? const ResultsView()
-            : LayoutBuilder(
-                builder: (context, constraints) {
-                  final panel = SingleChildScrollView(
-                    child: LibraryPanel(onStart: _start),
-                  );
-                  final logs = LogsPanel(
-                    logsByFolder: state.logs,
-                    selectedFolder: state.currentLogFolder,
-                  );
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) =>
+              FadeTransition(opacity: animation, child: child),
+          child: KeyedSubtree(
+            key: ValueKey(mode),
+            child: state.running
+                ? const RunWorkspace()
+                : state.finishedAt != null
+                ? const ResultsView()
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final panel = SingleChildScrollView(
+                        child: LibraryPanel(onStart: _start),
+                      );
+                      final logs = LogsPanel(
+                        logsByFolder: state.logs,
+                        selectedFolder: state.currentLogFolder,
+                      );
 
-                  if (constraints.maxWidth >= 820) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(flex: 3, child: panel),
-                        const SizedBox(width: 20),
-                        Expanded(flex: 2, child: logs),
-                      ],
-                    );
-                  }
-                  return Column(
-                    children: [
-                      Expanded(flex: 3, child: panel),
-                      const SizedBox(height: 16),
-                      Expanded(flex: 2, child: logs),
-                    ],
-                  );
-                },
-              ),
+                      if (constraints.maxWidth >= 820) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(flex: 3, child: panel),
+                            const SizedBox(width: 20),
+                            Expanded(flex: 2, child: logs),
+                          ],
+                        );
+                      }
+                      return Column(
+                        children: [
+                          Expanded(flex: 3, child: panel),
+                          const SizedBox(height: 16),
+                          Expanded(flex: 2, child: logs),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+        ),
       ),
     );
   }

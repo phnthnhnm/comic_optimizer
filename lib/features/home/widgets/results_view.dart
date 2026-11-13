@@ -1,7 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -9,8 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/enums/run_log_level.dart';
 import 'package:comic_optimizer/domain/models/folder_run_result.dart';
-import 'package:comic_optimizer/domain/models/optimization_state.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
+import 'package:comic_optimizer/features/home/run_report_exporter.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 import 'package:comic_optimizer/presentation/widgets/logs_panel.dart';
@@ -106,10 +102,13 @@ class ResultsView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _export(context, state, results),
-                  icon: const Icon(Icons.file_download_outlined, size: 18),
-                  label: const Text('Export report'),
+                Tooltip(
+                  message: 'Export report (Ctrl+E)',
+                  child: OutlinedButton.icon(
+                    onPressed: () => exportRunReport(context, state),
+                    icon: const Icon(Icons.file_download_outlined, size: 18),
+                    label: const Text('Export report'),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 FilledButton.icon(
@@ -251,72 +250,6 @@ class ResultsView extends ConsumerWidget {
     if (ok == true) {
       await ref.read(optimizationProvider.notifier).retryFailed();
     }
-  }
-
-  Future<void> _export(
-    BuildContext context,
-    OptimizationState state,
-    List<FolderRunResult> results,
-  ) async {
-    final before = _sum(results.map((r) => r.beforeBytes));
-    final after = _sum(results.map((r) => r.afterBytes));
-    final report = {
-      'app': 'Comic Optimizer',
-      'startedAt': state.startedAt?.toIso8601String(),
-      'finishedAt': state.finishedAt?.toIso8601String(),
-      'durationSeconds': state.startedAt != null && state.finishedAt != null
-          ? state.finishedAt!.difference(state.startedAt!).inSeconds
-          : null,
-      'libraries': state.libraries,
-      'totals': {
-        'comics': results.length,
-        'succeeded': results.where((r) => r.success).length,
-        'failed': results.where((r) => !r.success).length,
-        'images': state.imagesDone,
-        'beforeBytes': before,
-        'afterBytes': after,
-        'savedBytes': before != null && after != null ? before - after : null,
-      },
-      'folders': [
-        for (final result in results)
-          {
-            'path': result.path,
-            'root': result.root,
-            'success': result.success,
-            'beforeBytes': result.beforeBytes,
-            'afterBytes': result.afterBytes,
-            'error': result.error,
-          },
-      ],
-    };
-
-    try {
-      final bytes = Uint8List.fromList(
-        utf8.encode(const JsonEncoder.withIndent('  ').convert(report)),
-      );
-      final uri = await FilePicker.saveFile(
-        dialogTitle: 'Save run report',
-        fileName: 'comic_optimizer_report_${_stamp(DateTime.now())}.json',
-        bytes: bytes,
-        mimeType: 'application/json',
-      );
-      if (uri != null && context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Report saved to $uri')));
-      }
-    } catch (error) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not save report: $error')),
-        );
-      }
-    }
-  }
-
-  static String _stamp(DateTime date) {
-    String two(int value) => value.toString().padLeft(2, '0');
-    return '${date.year}${two(date.month)}${two(date.day)}'
-        '_${two(date.hour)}${two(date.minute)}';
   }
 }
 

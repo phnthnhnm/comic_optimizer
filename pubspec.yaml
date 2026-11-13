@@ -25,6 +25,7 @@ dependencies:
   material_ui: ^1.11.0
   window_manager: ^0.7.0
   screen_retriever: ^0.4.0
+  nativeapi: ^0.6.0
 
 dev_dependencies:
   flutter_test:

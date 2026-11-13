@@ -26,6 +26,11 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
 - **Results and history**: space saved, comics grouped by library, failure
   details with retry, a JSON report export, and the last 50 runs on the
   History screen.
+- **Keyboard-first workflow**: `Ctrl+O` add folder, `Ctrl+Enter` start,
+  `Ctrl+P` pause/resume, `Ctrl+E` export, `Ctrl+1`/`Ctrl+2`/`Ctrl+,` navigate.
+- **Desktop feedback**: taskbar progress while a run is active, a best-effort
+  native notification when it finishes, and accessible labels/tooltips on the
+  primary controls.
 - **Three built-in quality presets** (Lossless, Visually Lossless, Lossy) plus a
   preset editor for saved custom `cjxl` argument sets.
 - **Size guard**: if the new `.jxl` is not smaller than the original image, the
@@ -122,6 +127,18 @@ folder if you want to distribute it.
 A comic folder is any folder directly under a library root, or directly under
 one of those folders. If a root itself contains only images, the root is
 treated as a single comic.
+
+### Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+O` | Add a library folder |
+| `Ctrl+Enter` | Start a run (opens preflight) |
+| `Ctrl+P` | Pause or resume the current run |
+| `Ctrl+E` | Export the finished run as JSON |
+| `Ctrl+1` | Library |
+| `Ctrl+2` | History |
+| `Ctrl+,` | Settings |
 
 ## How it works
 

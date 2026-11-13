@@ -164,9 +164,12 @@ class _RunHeader extends StatelessWidget {
                 ),
               ),
               if (state.running) ...[
-                FilledButton.tonal(
-                  onPressed: paused ? notifier.resume : notifier.pause,
-                  child: Text(paused ? 'Resume' : 'Pause'),
+                Tooltip(
+                  message: paused ? 'Resume (Ctrl+P)' : 'Pause (Ctrl+P)',
+                  child: FilledButton.tonal(
+                    onPressed: paused ? notifier.resume : notifier.pause,
+                    child: Text(paused ? 'Resume' : 'Pause'),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton(
@@ -182,12 +185,18 @@ class _RunHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: Catppuccin.surface0,
+          Semantics(
+            label: 'Run progress',
+            value: progress == null
+                ? 'Preparing'
+                : '${(progress * 100).round()} percent',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor: Catppuccin.surface0,
+              ),
             ),
           ),
           const SizedBox(height: 12),

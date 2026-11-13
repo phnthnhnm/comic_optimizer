@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +7,7 @@ import 'package:comic_optimizer/domain/models/custom_preset.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
+import 'package:comic_optimizer/features/home/run_launcher.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
@@ -65,10 +65,13 @@ class LibraryPanel extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            FilledButton.tonalIcon(
-              onPressed: () => _addRoot(context, ref),
-              icon: const Icon(Icons.create_new_folder_outlined, size: 18),
-              label: const Text('Add folder'),
+            Tooltip(
+              message: 'Add folder (Ctrl+O)',
+              child: FilledButton.tonalIcon(
+                onPressed: () => _addRoot(context, ref),
+                icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                label: const Text('Add folder'),
+              ),
             ),
           ],
         ),
@@ -124,10 +127,13 @@ class LibraryPanel extends ConsumerWidget {
                 child: const Text('Cancel'),
               ),
             ] else
-              FilledButton.icon(
-                onPressed: roots.isEmpty ? null : onStart,
-                icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                label: const Text('Start'),
+              Tooltip(
+                message: 'Start (Ctrl+Enter)',
+                child: FilledButton.icon(
+                  onPressed: roots.isEmpty ? null : onStart,
+                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                  label: const Text('Start'),
+                ),
               ),
           ],
         ),
@@ -135,26 +141,8 @@ class LibraryPanel extends ConsumerWidget {
     );
   }
 
-  Future<void> _addRoot(BuildContext context, WidgetRef ref) async {
-    final settings = ref.read(settingsProvider);
-    final notifier = ref.read(settingsProvider.notifier);
-    final directory = await FilePicker.getDirectoryPath(
-      dialogTitle: 'Add a comic library',
-    );
-    if (directory == null) return;
-
-    if (!context.mounted) return;
-    if (settings.libraryRoots.contains(directory)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('That folder is already in the queue.')),
-      );
-      return;
-    }
-    await notifier.addLibraryRoot(directory);
-    if (settings.lastRoot == null) {
-      await notifier.setLastRoot(directory);
-    }
-  }
+  Future<void> _addRoot(BuildContext context, WidgetRef ref) =>
+      addLibraryFolder(context, ref);
 }
 
 class _QueueCard extends StatelessWidget {

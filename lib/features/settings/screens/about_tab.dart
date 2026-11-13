@@ -5,6 +5,37 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:comic_optimizer/features/settings/widgets/settings_widgets.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 
+class _ShortcutRow extends StatelessWidget {
+  final String keys;
+  final String action;
+
+  const _ShortcutRow({required this.keys, required this.action});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 96,
+            child: Text(
+              keys,
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontFamily: 'monospace',
+                color: Catppuccin.subtext0,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Text(action, style: const TextStyle(fontSize: 12))),
+        ],
+      ),
+    );
+  }
+}
+
 class AboutTab extends StatelessWidget {
   const AboutTab({super.key});
 
@@ -101,6 +132,20 @@ class AboutTab extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
+            ),
+            const SettingsCard(
+              title: 'Keyboard shortcuts',
+              child: Column(
+                children: [
+                  _ShortcutRow(keys: 'Ctrl+O', action: 'Add a library folder'),
+                  _ShortcutRow(keys: 'Ctrl+Enter', action: 'Start a run'),
+                  _ShortcutRow(keys: 'Ctrl+P', action: 'Pause or resume'),
+                  _ShortcutRow(keys: 'Ctrl+E', action: 'Export the run report'),
+                  _ShortcutRow(keys: 'Ctrl+1', action: 'Open Library'),
+                  _ShortcutRow(keys: 'Ctrl+2', action: 'Open History'),
+                  _ShortcutRow(keys: 'Ctrl+,', action: 'Open Settings'),
+                ],
               ),
             ),
             const SettingsCard(

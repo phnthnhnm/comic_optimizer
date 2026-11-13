@@ -141,6 +141,75 @@ void main() {
         expect(notifier.state.paused, false);
       });
 
+      test('iterates the whole library queue', () async {
+        await settings.setLibraryRoots(['/tmp/a', '/tmp/b', '/tmp/c']);
+        stubOptimizer(result: const Ok<void>(null));
+
+        await notifier.start();
+
+        verify(
+          () => mockOptimizer.optimizeRoot(
+            any(),
+            presetArgs: any(named: 'presetArgs'),
+            skipCjxl: any(named: 'skipCjxl'),
+            deleteNonImageFiles: any(named: 'deleteNonImageFiles'),
+            cjxlPath: any(named: 'cjxlPath'),
+            safeRun: any(named: 'safeRun'),
+            outputExtension: any(named: 'outputExtension'),
+            preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            onLog: any(named: 'onLog'),
+            onFolderStart: any(named: 'onFolderStart'),
+            onFolderDone: any(named: 'onFolderDone'),
+          ),
+        ).called(3);
+        expect(notifier.state.rootsTotal, 3);
+        expect(notifier.state.rootsDone, 3);
+        expect(notifier.state.currentRoot, isNull);
+        expect(notifier.state.running, false);
+      });
+
+      test('cancelling after the current root stops the queue', () async {
+        await settings.setLibraryRoots(['/tmp/a', '/tmp/b']);
+        when(
+          () => mockOptimizer.optimizeRoot(
+            any(),
+            presetArgs: any(named: 'presetArgs'),
+            skipCjxl: any(named: 'skipCjxl'),
+            deleteNonImageFiles: any(named: 'deleteNonImageFiles'),
+            cjxlPath: any(named: 'cjxlPath'),
+            safeRun: any(named: 'safeRun'),
+            outputExtension: any(named: 'outputExtension'),
+            preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            onLog: any(named: 'onLog'),
+            onFolderStart: any(named: 'onFolderStart'),
+            onFolderDone: any(named: 'onFolderDone'),
+          ),
+        ).thenAnswer((_) async {
+          notifier.cancel();
+          return const Ok<void>(null);
+        });
+
+        await notifier.start();
+
+        verify(
+          () => mockOptimizer.optimizeRoot(
+            any(),
+            presetArgs: any(named: 'presetArgs'),
+            skipCjxl: any(named: 'skipCjxl'),
+            deleteNonImageFiles: any(named: 'deleteNonImageFiles'),
+            cjxlPath: any(named: 'cjxlPath'),
+            safeRun: any(named: 'safeRun'),
+            outputExtension: any(named: 'outputExtension'),
+            preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            onLog: any(named: 'onLog'),
+            onFolderStart: any(named: 'onFolderStart'),
+            onFolderDone: any(named: 'onFolderDone'),
+          ),
+        ).called(1);
+        expect(notifier.state.rootsDone, 1);
+        expect(notifier.state.running, false);
+      });
+
       test('folder callbacks populate per-folder logs', () async {
         await settings.setLastRoot('/tmp/comics');
         stubOptimizer(result: const Ok<void>(null), runCallbacks: true);

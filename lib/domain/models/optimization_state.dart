@@ -13,6 +13,9 @@ abstract class OptimizationState with _$OptimizationState {
     @Default(false) bool running,
     @Default(false) bool starting,
     @Default(false) bool paused,
+    @Default(0) int rootsTotal,
+    @Default(0) int rootsDone,
+    String? currentRoot,
     @Default(<String, List<String>>{}) Map<String, List<String>> logs,
     String? currentLogFolder,
   }) = _OptimizationState;

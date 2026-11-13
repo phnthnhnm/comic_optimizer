@@ -16,6 +16,7 @@ final class PreflightService {
     var comics = 0;
     var images = 0;
     var nonImageFiles = 0;
+    final comicFolders = <String>[];
 
     for (final rootPath in roots) {
       final root = Directory(rootPath);
@@ -49,6 +50,7 @@ final class PreflightService {
         if (folderImages.isEmpty) continue;
 
         comics++;
+        comicFolders.add(folder.path);
         images += folderImages.length;
         nonImageFiles += files.length - folderImages.length;
       }
@@ -59,6 +61,7 @@ final class PreflightService {
       comics: comics,
       images: images,
       nonImageFiles: nonImageFiles,
+      folders: comicFolders,
     );
   }
 }

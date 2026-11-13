@@ -7,9 +7,12 @@ import 'package:comic_optimizer/infrastructure/services/preflight_service.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 
-/// Shows the preflight sheet and returns true when the user confirms.
-Future<bool> showPreflightSheet(BuildContext context, WidgetRef ref) async {
-  final confirmed = await showModalBottomSheet<bool>(
+/// Shows the preflight sheet and returns the scanned summary when confirmed.
+Future<PreflightSummary?> showPreflightSheet(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  return showModalBottomSheet<PreflightSummary>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Catppuccin.mantle,
@@ -19,7 +22,6 @@ Future<bool> showPreflightSheet(BuildContext context, WidgetRef ref) async {
     ),
     builder: (context) => const PreflightSheet(),
   );
-  return confirmed ?? false;
 }
 
 class PreflightSheet extends ConsumerStatefulWidget {
@@ -84,7 +86,7 @@ class _PreflightSheetState extends ConsumerState<PreflightSheet> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(false),
+                    onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded, size: 20),
                     tooltip: 'Close',
                   ),
@@ -146,14 +148,14 @@ class _PreflightSheetState extends ConsumerState<PreflightSheet> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
+                    onPressed: () => Navigator.of(context).pop(),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 10),
                   FilledButton.icon(
                     onPressed: _data == null || _data!.isEmpty
                         ? null
-                        : () => Navigator.of(context).pop(true),
+                        : () => Navigator.of(context).pop(_data),
                     icon: const Icon(Icons.play_arrow_rounded, size: 20),
                     label: const Text('Start run'),
                   ),

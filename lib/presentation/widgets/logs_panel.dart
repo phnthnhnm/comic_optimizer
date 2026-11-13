@@ -1,10 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:comic_optimizer/domain/enums/run_log_level.dart';
+import 'package:comic_optimizer/domain/models/run_log_entry.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 import 'package:comic_optimizer/presentation/theme/app_colors.dart';
 
 class LogsPanel extends StatefulWidget {
-  final Map<String, List<String>> logsByFolder;
+  final Map<String, List<RunLogEntry>> logsByFolder;
   final String? selectedFolder;
 
   const LogsPanel({super.key, required this.logsByFolder, this.selectedFolder});
@@ -65,21 +67,13 @@ class _LogsPanelState extends State<LogsPanel> {
     }
   }
 
-  Future<void> _scrollToBottom() async {
+  void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
     try {
       _isProgrammaticScroll = true;
-      final max = _scrollController.position.maxScrollExtent;
-      await _scrollController.animateTo(
-        max,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     } catch (_) {
-      try {
-        final max = _scrollController.position.maxScrollExtent;
-        _scrollController.jumpTo(max);
-      } catch (_) {}
+      // The panel may have been rebuilt without clients; nothing to scroll.
     } finally {
       _isProgrammaticScroll = false;
     }
@@ -113,29 +107,32 @@ class _LogsPanelState extends State<LogsPanel> {
   }
 
   Color? _statusColorForKey(String key) {
-    final lines = widget.logsByFolder[key];
-    if (lines == null || lines.isEmpty) return null;
+    final entries = widget.logsByFolder[key];
+    if (entries == null || entries.isEmpty) return null;
 
-    var hadNonZeroExit = false;
-    var hadZeroExit = false;
-    var hadErrorText = false;
-    for (final ln in lines) {
-      final l = ln.toLowerCase();
-      if (l.contains('cjxl retry exit') || l.contains('cjxl exit')) {
-        if (l.contains('exit 0')) {
-          hadZeroExit = true;
-        } else {
-          hadNonZeroExit = true;
-        }
-      }
-      if (l.contains('error') || l.contains('failed') || l.contains('err')) {
-        hadErrorText = true;
+    var hasSuccess = false;
+    var hasWarning = false;
+    var hasError = false;
+    for (final entry in entries) {
+      switch (entry.level) {
+        case RunLogLevel.error:
+          hasError = true;
+          break;
+        case RunLogLevel.warning:
+          hasWarning = true;
+          break;
+        case RunLogLevel.success:
+          hasSuccess = true;
+          break;
+        case RunLogLevel.info:
+          break;
       }
     }
 
-    if (hadNonZeroExit || hadErrorText) return Catppuccin.red;
-    if (hadZeroExit) return Catppuccin.green;
-    return Catppuccin.green;
+    if (hasError) return Catppuccin.red;
+    if (hasWarning) return Catppuccin.yellow;
+    if (hasSuccess) return Catppuccin.green;
+    return null;
   }
 
   @override
@@ -302,11 +299,11 @@ class _LogsPanelState extends State<LogsPanel> {
                                       final TextStyle textStyle =
                                           DefaultTextStyle.of(ctx).style;
                                       double maxLineWidth = 0.0;
-                                      for (final line in lines) {
+                                      for (final entry in lines) {
                                         final tp =
                                             TextPainter(
                                               text: TextSpan(
-                                                text: line,
+                                                text: entry.message,
                                                 style: textStyle,
                                               ),
                                               textDirection: dir,
@@ -365,19 +362,19 @@ class _LogsPanelState extends State<LogsPanel> {
                                                   children: List.generate(
                                                     lines.length,
                                                     (i) {
-                                                      final line = lines[i];
+                                                      final entry = lines[i];
                                                       final color =
-                                                          AppColors.colorForLine(
-                                                            line,
+                                                          AppColors.colorForLevel(
+                                                            entry.level,
                                                             ctx,
                                                           );
                                                       final weight =
-                                                          AppColors.weightForLine(
-                                                            line,
+                                                          AppColors.weightForLevel(
+                                                            entry.level,
                                                           );
                                                       return TextSpan(
                                                         text:
-                                                            line +
+                                                            entry.message +
                                                             (i == lines.length - 1
                                                                 ? ''
                                                                 : '\n'),

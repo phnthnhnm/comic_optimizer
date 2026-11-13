@@ -35,6 +35,7 @@ void main() {
       expect(summary.comics, 2);
       expect(summary.images, 3);
       expect(summary.nonImageFiles, 1);
+      expect(summary.folders, hasLength(2));
     });
 
     test('treats a root containing only images as one comic', () async {

@@ -6,9 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
+import 'package:comic_optimizer/domain/models/preflight_summary.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 import 'package:comic_optimizer/features/home/widgets/library_panel.dart';
 import 'package:comic_optimizer/features/home/widgets/preflight_sheet.dart';
+import 'package:comic_optimizer/features/home/widgets/run_workspace.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:comic_optimizer/presentation/widgets/logs_panel.dart';
 
@@ -117,13 +119,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final settings = ref.read(settingsProvider);
     final hasRoots =
         settings.libraryRoots.isNotEmpty || settings.lastRoot != null;
+    PreflightSummary? summary;
     if (hasRoots) {
-      final confirmed = await showPreflightSheet(context, ref);
-      if (!confirmed) return;
+      summary = await showPreflightSheet(context, ref);
+      if (summary == null) return;
     }
 
     _performedPostRun = false;
-    await ref.read(optimizationProvider.notifier).start();
+    await ref.read(optimizationProvider.notifier).start(summary: summary);
   }
 
   @override
@@ -159,35 +162,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final panel = SingleChildScrollView(
-              child: LibraryPanel(onStart: _start),
-            );
-            final logs = LogsPanel(
-              logsByFolder: state.logs,
-              selectedFolder: state.currentLogFolder,
-            );
+        child: state.running || state.logs.isNotEmpty
+            ? const RunWorkspace()
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final panel = SingleChildScrollView(
+                    child: LibraryPanel(onStart: _start),
+                  );
+                  final logs = LogsPanel(
+                    logsByFolder: state.logs,
+                    selectedFolder: state.currentLogFolder,
+                  );
 
-            if (constraints.maxWidth >= 820) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(flex: 3, child: panel),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 2, child: logs),
-                ],
-              );
-            }
-            return Column(
-              children: [
-                Expanded(flex: 3, child: panel),
-                const SizedBox(height: 16),
-                Expanded(flex: 2, child: logs),
-              ],
-            );
-          },
-        ),
+                  if (constraints.maxWidth >= 820) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(flex: 3, child: panel),
+                        const SizedBox(width: 20),
+                        Expanded(flex: 2, child: logs),
+                      ],
+                    );
+                  }
+                  return Column(
+                    children: [
+                      Expanded(flex: 3, child: panel),
+                      const SizedBox(height: 16),
+                      Expanded(flex: 2, child: logs),
+                    ],
+                  );
+                },
+              ),
       ),
     );
   }

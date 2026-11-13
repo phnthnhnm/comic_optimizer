@@ -66,6 +66,8 @@ final class OptimizerServiceImpl implements IOptimizerService {
     bool safeRun = false,
     bool preferPermanentDelete = false,
     void Function(String)? onLog,
+    void Function(String folder, String file, int index, int total)?
+    onFileStart,
     void Function(String)? onFolderStart,
     void Function(
       String folderPath,
@@ -110,6 +112,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
           outputExtension,
           preferPermanentDelete || safeRun,
           emitStart: !startEmitted,
+          onFileStart: onFileStart,
           onLog: onLog,
           onFolderStart: onFolderStart,
           onFolderDone: onFolderDone,
@@ -164,6 +167,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
                 outputExtension,
                 preferPermanentDelete || safeRun,
                 emitStart: !startEmitted,
+                onFileStart: onFileStart,
                 onLog: onLog,
                 onFolderStart: onFolderStart,
                 onFolderDone: onFolderDone,
@@ -203,6 +207,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
                 outputExtension,
                 preferPermanentDelete || safeRun,
                 emitStart: !startEmitted,
+                onFileStart: onFileStart,
                 onLog: onLog,
                 onFolderStart: onFolderStart,
                 onFolderDone: onFolderDone,
@@ -241,6 +246,8 @@ final class OptimizerServiceImpl implements IOptimizerService {
     bool preferPermanentDelete, {
     bool emitStart = true,
     void Function(String)? onLog,
+    void Function(String folder, String file, int index, int total)?
+    onFileStart,
     void Function(String)? onFolderStart,
     void Function(
       String folderPath,
@@ -320,6 +327,8 @@ final class OptimizerServiceImpl implements IOptimizerService {
             cjxlPath,
             maskArgs,
             onLog: onLog,
+            onFileStart: (path, index, total) =>
+                onFileStart?.call(folder.path, path, index, total),
             isCancelled: () => _cancelRequested,
             waitIfPaused: waitIfPaused,
           );

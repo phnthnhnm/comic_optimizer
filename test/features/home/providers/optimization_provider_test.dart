@@ -4,6 +4,8 @@ import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
 import 'package:comic_optimizer/core/result.dart';
+import 'package:comic_optimizer/domain/enums/folder_run_status.dart';
+import 'package:comic_optimizer/domain/models/preflight_summary.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
@@ -48,6 +50,7 @@ void main() {
           onLog: any(named: 'onLog'),
           onFolderStart: any(named: 'onFolderStart'),
           onFolderDone: any(named: 'onFolderDone'),
+          onFileStart: any(named: 'onFileStart'),
         ),
       ).thenAnswer((invocation) async {
         if (runCallbacks) {
@@ -63,7 +66,16 @@ void main() {
                     int?,
                     Map<String, Map<String, int?>>?,
                   );
+          final onFile =
+              invocation.namedArguments[#onFileStart]
+                  as void Function(String, String, int, int)?;
           onStart('/tmp/comics/Comic A');
+          onFile?.call(
+            '/tmp/comics/Comic A',
+            '/tmp/comics/Comic A/001.png',
+            1,
+            2,
+          );
           onDone('/tmp/comics/Comic A', true, 1000, 400, null);
         }
         return result;
@@ -105,7 +117,7 @@ void main() {
         expect(notifier.state.running, false);
         expect(
           notifier.state.logs['General']!.any(
-            (line) => line.contains('root folder'),
+            (entry) => entry.message.contains('root folder'),
           ),
           true,
         );
@@ -135,6 +147,7 @@ void main() {
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
+            onFileStart: any(named: 'onFileStart'),
           ),
         ).called(1);
         expect(notifier.state.running, false);
@@ -160,11 +173,12 @@ void main() {
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
+            onFileStart: any(named: 'onFileStart'),
           ),
         ).called(3);
         expect(notifier.state.rootsTotal, 3);
         expect(notifier.state.rootsDone, 3);
-        expect(notifier.state.currentRoot, isNull);
+        expect(notifier.state.currentRoot, '/tmp/c');
         expect(notifier.state.running, false);
       });
 
@@ -183,6 +197,7 @@ void main() {
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
+            onFileStart: any(named: 'onFileStart'),
           ),
         ).thenAnswer((_) async {
           notifier.cancel();
@@ -204,10 +219,37 @@ void main() {
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
+            onFileStart: any(named: 'onFileStart'),
           ),
         ).called(1);
         expect(notifier.state.rootsDone, 1);
         expect(notifier.state.running, false);
+      });
+
+      test('seeds queued folders from the preflight summary', () async {
+        await settings.setLastRoot('/tmp/comics');
+        stubOptimizer(result: const Ok<void>(null), runCallbacks: true);
+
+        await notifier.start(
+          summary: const PreflightSummary(
+            roots: 1,
+            comics: 2,
+            images: 4,
+            nonImageFiles: 0,
+            folders: ['/tmp/comics/Comic A', '/tmp/comics/Comic B'],
+          ),
+        );
+
+        expect(
+          notifier.state.folders['/tmp/comics/Comic A'],
+          FolderRunStatus.success,
+        );
+        expect(
+          notifier.state.folders['/tmp/comics/Comic B'],
+          FolderRunStatus.pending,
+        );
+        expect(notifier.state.comicsTotal, 2);
+        expect(notifier.state.imagesTotal, 4);
       });
 
       test('folder callbacks populate per-folder logs', () async {
@@ -217,10 +259,20 @@ void main() {
         await notifier.start();
 
         final logs = notifier.state.logs['/tmp/comics/Comic A']!;
-        expect(logs, contains('Start: /tmp/comics/Comic A'));
-        expect(logs.any((line) => line.startsWith('Done:')), true);
-        expect(logs.any((line) => line.contains('saved')), true);
+        expect(
+          logs.any((entry) => entry.message == 'Start: /tmp/comics/Comic A'),
+          true,
+        );
+        expect(logs.any((entry) => entry.message.startsWith('Done:')), true);
+        expect(logs.any((entry) => entry.message.contains('saved')), true);
         expect(notifier.state.currentLogFolder, 'General');
+        expect(notifier.state.imagesDone, 1);
+        expect(notifier.state.comicsDone, 1);
+        expect(notifier.state.currentFile, isNull);
+        expect(
+          notifier.state.folders['/tmp/comics/Comic A'],
+          FolderRunStatus.success,
+        );
       });
 
       test('logs errors returned by the optimizer', () async {
@@ -231,7 +283,7 @@ void main() {
 
         expect(
           notifier.state.logs['General']!.any(
-            (line) => line.contains('Error: boom'),
+            (entry) => entry.message.contains('Error: boom'),
           ),
           true,
         );
@@ -264,7 +316,12 @@ void main() {
     group('addLog', () {
       test('adds a line under General when no folder is active', () {
         notifier.addLog('test message');
-        expect(notifier.state.logs['General'], contains('test message'));
+        expect(
+          notifier.state.logs['General']!.any(
+            (entry) => entry.message == 'test message',
+          ),
+          true,
+        );
       });
 
       test('accumulates multiple lines', () {

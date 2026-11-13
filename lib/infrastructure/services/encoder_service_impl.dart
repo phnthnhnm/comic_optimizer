@@ -22,6 +22,7 @@ final class EncoderServiceImpl implements IEncoderService {
     String cjxlPath,
     String Function(List<String>) maskArgs, {
     void Function(String)? onLog,
+    void Function(String path, int index, int total)? onFileStart,
     bool Function()? isCancelled,
     Future<void> Function()? waitIfPaused,
   }) async {
@@ -40,7 +41,9 @@ final class EncoderServiceImpl implements IEncoderService {
         (a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)),
       );
 
-      for (final f in encodeFiles) {
+      for (var index = 0; index < encodeFiles.length; index++) {
+        final f = encodeFiles[index];
+        onFileStart?.call(f.path, index + 1, encodeFiles.length);
         if (waitIfPaused != null) await waitIfPaused();
         if (isCancelled != null && isCancelled()) {
           onLog?.call('Operation cancelled by user');

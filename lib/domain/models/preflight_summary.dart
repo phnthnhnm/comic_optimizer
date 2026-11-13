@@ -4,12 +4,14 @@ final class PreflightSummary {
   final int comics;
   final int images;
   final int nonImageFiles;
+  final List<String> folders;
 
   const PreflightSummary({
     required this.roots,
     required this.comics,
     required this.images,
     required this.nonImageFiles,
+    this.folders = const [],
   });
 
   bool get isEmpty => comics == 0;

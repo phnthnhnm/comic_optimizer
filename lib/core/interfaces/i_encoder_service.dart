@@ -10,6 +10,7 @@ abstract interface class IEncoderService {
     String cjxlPath,
     String Function(List<String>) maskArgs, {
     void Function(String)? onLog,
+    void Function(String path, int index, int total)? onFileStart,
     bool Function()? isCancelled,
     Future<void> Function()? waitIfPaused,
   });

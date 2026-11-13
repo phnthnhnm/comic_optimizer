@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OptimizationState {
 
- bool get running; bool get starting; bool get paused; int get rootsTotal; int get rootsDone; String? get currentRoot; Map<String, List<String>> get logs; String? get currentLogFolder;
+ bool get running; bool get starting; bool get paused; int get rootsTotal; int get rootsDone; String? get currentRoot; int get comicsTotal; int get comicsDone; int get imagesTotal; int get imagesDone; String? get currentFolder; String? get currentFile; Map<String, List<RunLogEntry>> get logs; Map<String, FolderRunStatus> get folders; DateTime? get startedAt; DateTime? get finishedAt; String? get currentLogFolder;
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $OptimizationStateCopyWith<OptimizationState> get copyWith => _$OptimizationStat
 @override
 bool operator ==(Object other) {
   final _this = this as OptimizationState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OptimizationState&&(identical(other.running, _this.running) || other.running == _this.running)&&(identical(other.starting, _this.starting) || other.starting == _this.starting)&&(identical(other.paused, _this.paused) || other.paused == _this.paused)&&(identical(other.rootsTotal, _this.rootsTotal) || other.rootsTotal == _this.rootsTotal)&&(identical(other.rootsDone, _this.rootsDone) || other.rootsDone == _this.rootsDone)&&(identical(other.currentRoot, _this.currentRoot) || other.currentRoot == _this.currentRoot)&&const DeepCollectionEquality().equals(other.logs, _this.logs)&&(identical(other.currentLogFolder, _this.currentLogFolder) || other.currentLogFolder == _this.currentLogFolder));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OptimizationState&&(identical(other.running, _this.running) || other.running == _this.running)&&(identical(other.starting, _this.starting) || other.starting == _this.starting)&&(identical(other.paused, _this.paused) || other.paused == _this.paused)&&(identical(other.rootsTotal, _this.rootsTotal) || other.rootsTotal == _this.rootsTotal)&&(identical(other.rootsDone, _this.rootsDone) || other.rootsDone == _this.rootsDone)&&(identical(other.currentRoot, _this.currentRoot) || other.currentRoot == _this.currentRoot)&&(identical(other.comicsTotal, _this.comicsTotal) || other.comicsTotal == _this.comicsTotal)&&(identical(other.comicsDone, _this.comicsDone) || other.comicsDone == _this.comicsDone)&&(identical(other.imagesTotal, _this.imagesTotal) || other.imagesTotal == _this.imagesTotal)&&(identical(other.imagesDone, _this.imagesDone) || other.imagesDone == _this.imagesDone)&&(identical(other.currentFolder, _this.currentFolder) || other.currentFolder == _this.currentFolder)&&(identical(other.currentFile, _this.currentFile) || other.currentFile == _this.currentFile)&&const DeepCollectionEquality().equals(other.logs, _this.logs)&&const DeepCollectionEquality().equals(other.folders, _this.folders)&&(identical(other.startedAt, _this.startedAt) || other.startedAt == _this.startedAt)&&(identical(other.finishedAt, _this.finishedAt) || other.finishedAt == _this.finishedAt)&&(identical(other.currentLogFolder, _this.currentLogFolder) || other.currentLogFolder == _this.currentLogFolder));
 }
 
 
 @override
 int get hashCode {
   final _this = this as OptimizationState;
-  return Object.hash(runtimeType,_this.running,_this.starting,_this.paused,_this.rootsTotal,_this.rootsDone,_this.currentRoot,const DeepCollectionEquality().hash(_this.logs),_this.currentLogFolder);
+  return Object.hash(runtimeType,_this.running,_this.starting,_this.paused,_this.rootsTotal,_this.rootsDone,_this.currentRoot,_this.comicsTotal,_this.comicsDone,_this.imagesTotal,_this.imagesDone,_this.currentFolder,_this.currentFile,const DeepCollectionEquality().hash(_this.logs),const DeepCollectionEquality().hash(_this.folders),_this.startedAt,_this.finishedAt,_this.currentLogFolder);
 }
 
 @override
 String toString() {
   final _this = this as OptimizationState;
-  return 'OptimizationState(running: ${_this.running}, starting: ${_this.starting}, paused: ${_this.paused}, rootsTotal: ${_this.rootsTotal}, rootsDone: ${_this.rootsDone}, currentRoot: ${_this.currentRoot}, logs: ${_this.logs}, currentLogFolder: ${_this.currentLogFolder})';
+  return 'OptimizationState(running: ${_this.running}, starting: ${_this.starting}, paused: ${_this.paused}, rootsTotal: ${_this.rootsTotal}, rootsDone: ${_this.rootsDone}, currentRoot: ${_this.currentRoot}, comicsTotal: ${_this.comicsTotal}, comicsDone: ${_this.comicsDone}, imagesTotal: ${_this.imagesTotal}, imagesDone: ${_this.imagesDone}, currentFolder: ${_this.currentFolder}, currentFile: ${_this.currentFile}, logs: ${_this.logs}, folders: ${_this.folders}, startedAt: ${_this.startedAt}, finishedAt: ${_this.finishedAt}, currentLogFolder: ${_this.currentLogFolder})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $OptimizationStateCopyWith<$Res>  {
   factory $OptimizationStateCopyWith(OptimizationState value, $Res Function(OptimizationState) _then) = _$OptimizationStateCopyWithImpl;
 @useResult
 $Res call({
- bool running, bool starting, bool paused, int rootsTotal, int rootsDone, String? currentRoot, Map<String, List<String>> logs, String? currentLogFolder
+ bool running, bool starting, bool paused, int rootsTotal, int rootsDone, String? currentRoot, int comicsTotal, int comicsDone, int imagesTotal, int imagesDone, String? currentFolder, String? currentFile, Map<String, List<RunLogEntry>> logs, Map<String, FolderRunStatus> folders, DateTime? startedAt, DateTime? finishedAt, String? currentLogFolder
 });
 
 
@@ -68,7 +68,7 @@ class _$OptimizationStateCopyWithImpl<$Res>
 
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? rootsTotal = null,Object? rootsDone = null,Object? currentRoot = freezed,Object? logs = null,Object? currentLogFolder = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? rootsTotal = null,Object? rootsDone = null,Object? currentRoot = freezed,Object? comicsTotal = null,Object? comicsDone = null,Object? imagesTotal = null,Object? imagesDone = null,Object? currentFolder = freezed,Object? currentFile = freezed,Object? logs = null,Object? folders = null,Object? startedAt = freezed,Object? finishedAt = freezed,Object? currentLogFolder = freezed,}) {
   return _then(OptimizationState(
 running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
 as bool,starting: null == starting ? _self.starting : starting // ignore: cast_nullable_to_non_nullable
@@ -76,8 +76,17 @@ as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_
 as bool,rootsTotal: null == rootsTotal ? _self.rootsTotal : rootsTotal // ignore: cast_nullable_to_non_nullable
 as int,rootsDone: null == rootsDone ? _self.rootsDone : rootsDone // ignore: cast_nullable_to_non_nullable
 as int,currentRoot: freezed == currentRoot ? _self.currentRoot : currentRoot // ignore: cast_nullable_to_non_nullable
+as String?,comicsTotal: null == comicsTotal ? _self.comicsTotal : comicsTotal // ignore: cast_nullable_to_non_nullable
+as int,comicsDone: null == comicsDone ? _self.comicsDone : comicsDone // ignore: cast_nullable_to_non_nullable
+as int,imagesTotal: null == imagesTotal ? _self.imagesTotal : imagesTotal // ignore: cast_nullable_to_non_nullable
+as int,imagesDone: null == imagesDone ? _self.imagesDone : imagesDone // ignore: cast_nullable_to_non_nullable
+as int,currentFolder: freezed == currentFolder ? _self.currentFolder : currentFolder // ignore: cast_nullable_to_non_nullable
+as String?,currentFile: freezed == currentFile ? _self.currentFile : currentFile // ignore: cast_nullable_to_non_nullable
 as String?,logs: null == logs ? _self.logs : logs // ignore: cast_nullable_to_non_nullable
-as Map<String, List<String>>,currentLogFolder: freezed == currentLogFolder ? _self.currentLogFolder : currentLogFolder // ignore: cast_nullable_to_non_nullable
+as Map<String, List<RunLogEntry>>,folders: null == folders ? _self.folders : folders // ignore: cast_nullable_to_non_nullable
+as Map<String, FolderRunStatus>,startedAt: freezed == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,finishedAt: freezed == finishedAt ? _self.finishedAt : finishedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,currentLogFolder: freezed == currentLogFolder ? _self.currentLogFolder : currentLogFolder // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -163,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool running,  bool starting,  bool paused,  int rootsTotal,  int rootsDone,  String? currentRoot,  Map<String, List<String>> logs,  String? currentLogFolder)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool running,  bool starting,  bool paused,  int rootsTotal,  int rootsDone,  String? currentRoot,  int comicsTotal,  int comicsDone,  int imagesTotal,  int imagesDone,  String? currentFolder,  String? currentFile,  Map<String, List<RunLogEntry>> logs,  Map<String, FolderRunStatus> folders,  DateTime? startedAt,  DateTime? finishedAt,  String? currentLogFolder)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OptimizationState() when $default != null:
-return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that.rootsDone,_that.currentRoot,_that.logs,_that.currentLogFolder);case _:
+return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that.rootsDone,_that.currentRoot,_that.comicsTotal,_that.comicsDone,_that.imagesTotal,_that.imagesDone,_that.currentFolder,_that.currentFile,_that.logs,_that.folders,_that.startedAt,_that.finishedAt,_that.currentLogFolder);case _:
   return orElse();
 
 }
@@ -184,10 +193,10 @@ return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool running,  bool starting,  bool paused,  int rootsTotal,  int rootsDone,  String? currentRoot,  Map<String, List<String>> logs,  String? currentLogFolder)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool running,  bool starting,  bool paused,  int rootsTotal,  int rootsDone,  String? currentRoot,  int comicsTotal,  int comicsDone,  int imagesTotal,  int imagesDone,  String? currentFolder,  String? currentFile,  Map<String, List<RunLogEntry>> logs,  Map<String, FolderRunStatus> folders,  DateTime? startedAt,  DateTime? finishedAt,  String? currentLogFolder)  $default,) {final _that = this;
 switch (_that) {
 case _OptimizationState():
-return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that.rootsDone,_that.currentRoot,_that.logs,_that.currentLogFolder);case _:
+return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that.rootsDone,_that.currentRoot,_that.comicsTotal,_that.comicsDone,_that.imagesTotal,_that.imagesDone,_that.currentFolder,_that.currentFile,_that.logs,_that.folders,_that.startedAt,_that.finishedAt,_that.currentLogFolder);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +213,10 @@ return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool running,  bool starting,  bool paused,  int rootsTotal,  int rootsDone,  String? currentRoot,  Map<String, List<String>> logs,  String? currentLogFolder)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool running,  bool starting,  bool paused,  int rootsTotal,  int rootsDone,  String? currentRoot,  int comicsTotal,  int comicsDone,  int imagesTotal,  int imagesDone,  String? currentFolder,  String? currentFile,  Map<String, List<RunLogEntry>> logs,  Map<String, FolderRunStatus> folders,  DateTime? startedAt,  DateTime? finishedAt,  String? currentLogFolder)?  $default,) {final _that = this;
 switch (_that) {
 case _OptimizationState() when $default != null:
-return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that.rootsDone,_that.currentRoot,_that.logs,_that.currentLogFolder);case _:
+return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that.rootsDone,_that.currentRoot,_that.comicsTotal,_that.comicsDone,_that.imagesTotal,_that.imagesDone,_that.currentFolder,_that.currentFile,_that.logs,_that.folders,_that.startedAt,_that.finishedAt,_that.currentLogFolder);case _:
   return null;
 
 }
@@ -219,7 +228,7 @@ return $default(_that.running,_that.starting,_that.paused,_that.rootsTotal,_that
 
 
 class _OptimizationState extends OptimizationState {
-  const _OptimizationState({this.running = false, this.starting = false, this.paused = false, this.rootsTotal = 0, this.rootsDone = 0, this.currentRoot,  Map<String, List<String>> logs = const <String, List<String>>{}, this.currentLogFolder}): _logs = logs,super._();
+  const _OptimizationState({this.running = false, this.starting = false, this.paused = false, this.rootsTotal = 0, this.rootsDone = 0, this.currentRoot, this.comicsTotal = 0, this.comicsDone = 0, this.imagesTotal = 0, this.imagesDone = 0, this.currentFolder, this.currentFile,  Map<String, List<RunLogEntry>> logs = const <String, List<RunLogEntry>>{},  Map<String, FolderRunStatus> folders = const <String, FolderRunStatus>{}, this.startedAt, this.finishedAt, this.currentLogFolder}): _logs = logs,_folders = folders,super._();
   
 
 @override@JsonKey() final  bool running;
@@ -228,13 +237,28 @@ class _OptimizationState extends OptimizationState {
 @override@JsonKey() final  int rootsTotal;
 @override@JsonKey() final  int rootsDone;
 @override final  String? currentRoot;
- final  Map<String, List<String>> _logs;
-@override@JsonKey() Map<String, List<String>> get logs {
+@override@JsonKey() final  int comicsTotal;
+@override@JsonKey() final  int comicsDone;
+@override@JsonKey() final  int imagesTotal;
+@override@JsonKey() final  int imagesDone;
+@override final  String? currentFolder;
+@override final  String? currentFile;
+ final  Map<String, List<RunLogEntry>> _logs;
+@override@JsonKey() Map<String, List<RunLogEntry>> get logs {
   if (_logs is EqualUnmodifiableMapView) return _logs;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_logs);
 }
 
+ final  Map<String, FolderRunStatus> _folders;
+@override@JsonKey() Map<String, FolderRunStatus> get folders {
+  if (_folders is EqualUnmodifiableMapView) return _folders;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_folders);
+}
+
+@override final  DateTime? startedAt;
+@override final  DateTime? finishedAt;
 @override final  String? currentLogFolder;
 
 /// Create a copy of OptimizationState
@@ -247,18 +271,18 @@ _$OptimizationStateCopyWith<_OptimizationState> get copyWith => __$OptimizationS
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.rootsTotal, rootsTotal) || other.rootsTotal == rootsTotal)&&(identical(other.rootsDone, rootsDone) || other.rootsDone == rootsDone)&&(identical(other.currentRoot, currentRoot) || other.currentRoot == currentRoot)&&const DeepCollectionEquality().equals(other.logs, _logs)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OptimizationState&&(identical(other.running, running) || other.running == running)&&(identical(other.starting, starting) || other.starting == starting)&&(identical(other.paused, paused) || other.paused == paused)&&(identical(other.rootsTotal, rootsTotal) || other.rootsTotal == rootsTotal)&&(identical(other.rootsDone, rootsDone) || other.rootsDone == rootsDone)&&(identical(other.currentRoot, currentRoot) || other.currentRoot == currentRoot)&&(identical(other.comicsTotal, comicsTotal) || other.comicsTotal == comicsTotal)&&(identical(other.comicsDone, comicsDone) || other.comicsDone == comicsDone)&&(identical(other.imagesTotal, imagesTotal) || other.imagesTotal == imagesTotal)&&(identical(other.imagesDone, imagesDone) || other.imagesDone == imagesDone)&&(identical(other.currentFolder, currentFolder) || other.currentFolder == currentFolder)&&(identical(other.currentFile, currentFile) || other.currentFile == currentFile)&&const DeepCollectionEquality().equals(other.logs, _logs)&&const DeepCollectionEquality().equals(other.folders, _folders)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.finishedAt, finishedAt) || other.finishedAt == finishedAt)&&(identical(other.currentLogFolder, currentLogFolder) || other.currentLogFolder == currentLogFolder));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,running,starting,paused,rootsTotal,rootsDone,currentRoot,const DeepCollectionEquality().hash(_logs),currentLogFolder);
+    return Object.hash(runtimeType,running,starting,paused,rootsTotal,rootsDone,currentRoot,comicsTotal,comicsDone,imagesTotal,imagesDone,currentFolder,currentFile,const DeepCollectionEquality().hash(_logs),const DeepCollectionEquality().hash(_folders),startedAt,finishedAt,currentLogFolder);
 }
 
 @override
 String toString() {
-    return 'OptimizationState(running: $running, starting: $starting, paused: $paused, rootsTotal: $rootsTotal, rootsDone: $rootsDone, currentRoot: $currentRoot, logs: $logs, currentLogFolder: $currentLogFolder)';
+    return 'OptimizationState(running: $running, starting: $starting, paused: $paused, rootsTotal: $rootsTotal, rootsDone: $rootsDone, currentRoot: $currentRoot, comicsTotal: $comicsTotal, comicsDone: $comicsDone, imagesTotal: $imagesTotal, imagesDone: $imagesDone, currentFolder: $currentFolder, currentFile: $currentFile, logs: $logs, folders: $folders, startedAt: $startedAt, finishedAt: $finishedAt, currentLogFolder: $currentLogFolder)';
 }
 
 
@@ -269,7 +293,7 @@ abstract mixin class _$OptimizationStateCopyWith<$Res> implements $OptimizationS
   factory _$OptimizationStateCopyWith(_OptimizationState value, $Res Function(_OptimizationState) _then) = __$OptimizationStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool running, bool starting, bool paused, int rootsTotal, int rootsDone, String? currentRoot, Map<String, List<String>> logs, String? currentLogFolder
+ bool running, bool starting, bool paused, int rootsTotal, int rootsDone, String? currentRoot, int comicsTotal, int comicsDone, int imagesTotal, int imagesDone, String? currentFolder, String? currentFile, Map<String, List<RunLogEntry>> logs, Map<String, FolderRunStatus> folders, DateTime? startedAt, DateTime? finishedAt, String? currentLogFolder
 });
 
 
@@ -286,7 +310,7 @@ class __$OptimizationStateCopyWithImpl<$Res>
 
 /// Create a copy of OptimizationState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? rootsTotal = null,Object? rootsDone = null,Object? currentRoot = freezed,Object? logs = null,Object? currentLogFolder = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? running = null,Object? starting = null,Object? paused = null,Object? rootsTotal = null,Object? rootsDone = null,Object? currentRoot = freezed,Object? comicsTotal = null,Object? comicsDone = null,Object? imagesTotal = null,Object? imagesDone = null,Object? currentFolder = freezed,Object? currentFile = freezed,Object? logs = null,Object? folders = null,Object? startedAt = freezed,Object? finishedAt = freezed,Object? currentLogFolder = freezed,}) {
   return _then(_OptimizationState(
 running: null == running ? _self.running : running // ignore: cast_nullable_to_non_nullable
 as bool,starting: null == starting ? _self.starting : starting // ignore: cast_nullable_to_non_nullable
@@ -294,8 +318,17 @@ as bool,paused: null == paused ? _self.paused : paused // ignore: cast_nullable_
 as bool,rootsTotal: null == rootsTotal ? _self.rootsTotal : rootsTotal // ignore: cast_nullable_to_non_nullable
 as int,rootsDone: null == rootsDone ? _self.rootsDone : rootsDone // ignore: cast_nullable_to_non_nullable
 as int,currentRoot: freezed == currentRoot ? _self.currentRoot : currentRoot // ignore: cast_nullable_to_non_nullable
+as String?,comicsTotal: null == comicsTotal ? _self.comicsTotal : comicsTotal // ignore: cast_nullable_to_non_nullable
+as int,comicsDone: null == comicsDone ? _self.comicsDone : comicsDone // ignore: cast_nullable_to_non_nullable
+as int,imagesTotal: null == imagesTotal ? _self.imagesTotal : imagesTotal // ignore: cast_nullable_to_non_nullable
+as int,imagesDone: null == imagesDone ? _self.imagesDone : imagesDone // ignore: cast_nullable_to_non_nullable
+as int,currentFolder: freezed == currentFolder ? _self.currentFolder : currentFolder // ignore: cast_nullable_to_non_nullable
+as String?,currentFile: freezed == currentFile ? _self.currentFile : currentFile // ignore: cast_nullable_to_non_nullable
 as String?,logs: null == logs ? _self._logs : logs // ignore: cast_nullable_to_non_nullable
-as Map<String, List<String>>,currentLogFolder: freezed == currentLogFolder ? _self.currentLogFolder : currentLogFolder // ignore: cast_nullable_to_non_nullable
+as Map<String, List<RunLogEntry>>,folders: null == folders ? _self._folders : folders // ignore: cast_nullable_to_non_nullable
+as Map<String, FolderRunStatus>,startedAt: freezed == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,finishedAt: freezed == finishedAt ? _self.finishedAt : finishedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,currentLogFolder: freezed == currentLogFolder ? _self.currentLogFolder : currentLogFolder // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

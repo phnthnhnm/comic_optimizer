@@ -9,15 +9,20 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
 `cjxl`, packing the archive, and removing the originals.
 
 > [!WARNING]
-> Comic Optimizer **modifies and deletes files**. It removes non-image files
-> from each comic folder, replaces the original images with `.jxl` versions,
-> and deletes the source folder once the archive is written. Try **Safe run**
-> on a small folder first, and keep a backup of anything you care about.
+> Comic Optimizer **modifies and deletes files**. By default it removes
+> non-image files from each comic folder, replaces the original images with
+> `.jxl` versions, and deletes the source folder once the archive is written.
+> Try **Keep originals** on a small folder first, and keep a backup of anything
+> you care about.
 
 ## Features
 
-- **Batch processing** of an entire library, with per-folder logs, status,
-  pause/resume and cancel.
+- **Batch processing** of an ordered queue of libraries, with per-folder
+  status, live progress, pause/resume and cancel.
+- **Preflight summary** before every run: comics, images and non-image files,
+  with the deletion and safe-run choices in one place.
+- **Run workspace** with comics/images progress, elapsed and remaining time, a
+  folder table, and severity-coloured diagnostics.
 - **Three quality presets** (Lossless, Visually Lossless, Lossy) mapped to
   `cjxl` distance settings.
 - **Size guard**: if the new `.jxl` is not smaller than the original image, the
@@ -104,7 +109,9 @@ folder if you want to distribute it.
    - **Keep originals** — process a copy and leave the source folders untouched.
    - **Advanced** — permanent deletion and the after-finish power action.
 4. Click **Start** and review the preflight summary (comics, images, non-image
-   files). Confirm to run; use **Pause**, **Resume** or **Cancel** at any time.
+   files). Confirm to run; the workspace shows live comics/images progress,
+   elapsed and remaining time, a folder table and diagnostics. Use **Pause**,
+   **Resume** or **Cancel** in the header at any time.
 
 A comic folder is any folder directly under a library root, or directly under
 one of those folders. If a root itself contains only images, the root is

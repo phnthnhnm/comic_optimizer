@@ -90,3 +90,26 @@ String storageSummaryText({
   if (includeFolderName && folderName != null) return '$folderName: $formatted';
   return 'Storage saved: $formatted';
 }
+
+/// Compact byte size for results and history cards.
+String formatBytes(int? bytes) {
+  if (bytes == null) return '—';
+  if (bytes < 1024) return '$bytes B';
+  final kb = bytes / 1024;
+  if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
+  final mb = kb / 1024;
+  if (mb < 1024) return '${mb.toStringAsFixed(1)} MB';
+  return '${(mb / 1024).toStringAsFixed(2)} GB';
+}
+
+/// `03:12` for short runs, `1h 03m` for long ones.
+String formatDuration(Duration duration) {
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60);
+  final seconds = duration.inSeconds.remainder(60);
+  if (hours > 0) {
+    return '${hours}h ${minutes.toString().padLeft(2, '0')}m';
+  }
+  return '${minutes.toString().padLeft(2, '0')}:'
+      '${seconds.toString().padLeft(2, '0')}';
+}

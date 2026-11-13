@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../enums/folder_run_status.dart';
+import 'folder_run_result.dart';
 import 'run_log_entry.dart';
 
 part 'optimization_state.freezed.dart';
@@ -19,6 +20,7 @@ abstract class OptimizationState with _$OptimizationState {
     @Default(0) int rootsTotal,
     @Default(0) int rootsDone,
     String? currentRoot,
+    @Default(<String>[]) List<String> libraries,
     @Default(0) int comicsTotal,
     @Default(0) int comicsDone,
     @Default(0) int imagesTotal,
@@ -27,6 +29,7 @@ abstract class OptimizationState with _$OptimizationState {
     String? currentFile,
     @Default(<String, List<RunLogEntry>>{}) Map<String, List<RunLogEntry>> logs,
     @Default(<String, FolderRunStatus>{}) Map<String, FolderRunStatus> folders,
+    @Default(<String, FolderRunResult>{}) Map<String, FolderRunResult> results,
     DateTime? startedAt,
     DateTime? finishedAt,
     String? currentLogFolder,

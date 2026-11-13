@@ -36,6 +36,7 @@ void main() {
     void stubOptimizer({
       required Result<void> result,
       bool runCallbacks = false,
+      bool folderSucceeded = true,
     }) {
       when(
         () => mockOptimizer.optimizeRoot(
@@ -76,7 +77,7 @@ void main() {
             1,
             2,
           );
-          onDone('/tmp/comics/Comic A', true, 1000, 400, null);
+          onDone('/tmp/comics/Comic A', folderSucceeded, 1000, 400, null);
         }
         return result;
       });
@@ -273,6 +274,11 @@ void main() {
           notifier.state.folders['/tmp/comics/Comic A'],
           FolderRunStatus.success,
         );
+        final result = notifier.state.results['/tmp/comics/Comic A']!;
+        expect(result.success, true);
+        expect(result.root, '/tmp/comics');
+        expect(result.beforeBytes, 1000);
+        expect(result.afterBytes, 400);
       });
 
       test('logs errors returned by the optimizer', () async {
@@ -287,6 +293,39 @@ void main() {
           ),
           true,
         );
+        expect(notifier.state.running, false);
+      });
+
+      test('retryFailed reruns the affected library', () async {
+        await settings.setLastRoot('/tmp/comics');
+        stubOptimizer(
+          result: const Ok<void>(null),
+          runCallbacks: true,
+          folderSucceeded: false,
+        );
+
+        await notifier.start();
+        expect(notifier.state.results['/tmp/comics/Comic A']!.success, false);
+
+        await notifier.retryFailed();
+
+        verify(
+          () => mockOptimizer.optimizeRoot(
+            any(),
+            presetArgs: any(named: 'presetArgs'),
+            skipCjxl: any(named: 'skipCjxl'),
+            deleteNonImageFiles: any(named: 'deleteNonImageFiles'),
+            cjxlPath: any(named: 'cjxlPath'),
+            safeRun: any(named: 'safeRun'),
+            outputExtension: any(named: 'outputExtension'),
+            preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            onLog: any(named: 'onLog'),
+            onFolderStart: any(named: 'onFolderStart'),
+            onFolderDone: any(named: 'onFolderDone'),
+            onFileStart: any(named: 'onFileStart'),
+          ),
+        ).called(2);
+        expect(notifier.state.libraries, ['/tmp/comics']);
         expect(notifier.state.running, false);
       });
     });

@@ -10,6 +10,7 @@ import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/enums/folder_run_status.dart';
 import 'package:comic_optimizer/domain/enums/run_log_level.dart';
+import 'package:comic_optimizer/domain/models/folder_run_result.dart';
 import 'package:comic_optimizer/domain/models/optimization_state.dart';
 import 'package:comic_optimizer/domain/models/preflight_summary.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
@@ -50,6 +51,15 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     state = current.copyWith(logs: logs);
   }
 
+  String? _lastError(String folder) {
+    final entries = state.logs[folder];
+    if (entries == null) return null;
+    for (var i = entries.length - 1; i >= 0; i--) {
+      if (entries[i].level == RunLogLevel.error) return entries[i].message;
+    }
+    return null;
+  }
+
   /// The queue, with a fallback to the legacy single `lastRoot`.
   List<String> _rootsToRun() {
     final settings = ref.read(settingsProvider);
@@ -64,9 +74,12 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     if (completer != null) await completer.future;
   }
 
-  Future<void> start({PreflightSummary? summary}) async {
+  Future<void> start({
+    PreflightSummary? summary,
+    List<String>? rootsOverride,
+  }) async {
     final settings = ref.read(settingsProvider);
-    final roots = _rootsToRun();
+    final roots = rootsOverride ?? _rootsToRun();
     if (roots.isEmpty) {
       _log('Add at least one root folder to the library first.');
       return;
@@ -83,6 +96,8 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
         for (final folder in summary?.folders ?? const <String>[])
           folder: FolderRunStatus.pending,
       },
+      results: {},
+      libraries: roots,
       currentLogFolder: null,
       currentRoot: null,
       currentFolder: null,
@@ -147,6 +162,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
           },
           onFolderDone: (folder, ok, beforeBytes, afterBytes, _) {
             folderSizes[folder] = {'before': beforeBytes, 'after': afterBytes};
+            final error = ok ? null : _lastError(folder);
             _log('Done: $folder (${ok ? 'OK' : 'ERR'})', folder: folder);
             state = state.copyWith(
               currentLogFolder: null,
@@ -156,6 +172,17 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
               folders: {
                 ...state.folders,
                 folder: ok ? FolderRunStatus.success : FolderRunStatus.failed,
+              },
+              results: {
+                ...state.results,
+                folder: FolderRunResult(
+                  path: folder,
+                  root: state.currentRoot ?? '',
+                  success: ok,
+                  beforeBytes: beforeBytes,
+                  afterBytes: afterBytes,
+                  error: error,
+                ),
               },
             );
             _log(
@@ -216,6 +243,29 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     _paused = false;
     _pauseCompleter = null;
     state = const OptimizationState();
+  }
+
+  /// Re-runs the libraries that contain failed comics.
+  Future<void> retryFailed() async {
+    final failures = state.results.values.where((r) => !r.success).toList();
+    if (failures.isEmpty) return;
+    final roots = failures
+        .map((r) => r.root)
+        .where((root) => root.isNotEmpty)
+        .toSet()
+        .toList();
+    if (roots.isEmpty) return;
+
+    await start(
+      summary: PreflightSummary(
+        roots: roots.length,
+        comics: failures.length,
+        images: 0,
+        nonImageFiles: 0,
+        folders: failures.map((r) => r.path).toList(),
+      ),
+      rootsOverride: roots,
+    );
   }
 
   void cancel() {

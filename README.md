@@ -23,6 +23,9 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
   with the deletion and safe-run choices in one place.
 - **Run workspace** with comics/images progress, elapsed and remaining time, a
   folder table, and severity-coloured diagnostics.
+- **Results and history**: space saved, comics grouped by library, failure
+  details with retry, a JSON report export, and the last 50 runs on the
+  History screen.
 - **Three quality presets** (Lossless, Visually Lossless, Lossy) mapped to
   `cjxl` distance settings.
 - **Size guard**: if the new `.jxl` is not smaller than the original image, the
@@ -112,6 +115,9 @@ folder if you want to distribute it.
    files). Confirm to run; the workspace shows live comics/images progress,
    elapsed and remaining time, a folder table and diagnostics. Use **Pause**,
    **Resume** or **Cancel** in the header at any time.
+5. When the run finishes, review **Results**: space saved, comics grouped by
+   library, and any failures with **Retry failed**. **Export report** saves a
+   JSON summary, and **History** keeps the last 50 runs.
 
 A comic folder is any folder directly under a library root, or directly under
 one of those folders. If a root itself contains only images, the root is

@@ -66,6 +66,12 @@ class _Sidebar extends StatelessWidget {
               onTap: () => context.go('/'),
             ),
             _NavItem(
+              label: 'History',
+              icon: Icons.history_rounded,
+              selected: location.startsWith('/history'),
+              onTap: () => context.go('/history'),
+            ),
+            _NavItem(
               label: 'Settings',
               icon: Icons.tune_rounded,
               selected: location.startsWith('/settings'),

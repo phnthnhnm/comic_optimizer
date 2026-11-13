@@ -5,12 +5,13 @@
 A Windows app that turns folders of comic pages into `.cbz` archives,
 re-encoding each page to JPEG XL.
 
-<p align="center">
-  <img src="docs/screenshots/library.png" width="49%" alt="Library screen" />
-  <img src="docs/screenshots/run.png" width="49%" alt="Run in progress" />
-  <img src="docs/screenshots/results.png" width="49%" alt="Run results" />
-  <img src="docs/screenshots/settings.png" width="49%" alt="Settings screen" />
-</p>
+![Library](docs/screenshots/library.png)
+
+![Run in progress](docs/screenshots/run.png)
+
+![Run results](docs/screenshots/results.png)
+
+![Settings](docs/screenshots/settings.png)
 
 > [!WARNING]
 > The app **modifies and deletes files**. It removes non-image files by default

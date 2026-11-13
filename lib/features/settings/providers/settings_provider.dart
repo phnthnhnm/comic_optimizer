@@ -111,6 +111,9 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> completeTutorial() =>
       _update((s) => s.copyWith(tutorialCompleted: true));
 
+  Future<void> setAnimationsEnabled(bool v) =>
+      _update((s) => s.copyWith(animationsEnabled: v));
+
   // For backup/restore data tab
   Future<void> setRawString(String key, String value) async {
     final service = ref.read(settingsServiceProvider);

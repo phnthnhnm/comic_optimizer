@@ -23,6 +23,7 @@ abstract class AppSettings with _$AppSettings {
     @Default(true) bool postRunConfirmEnabled,
     @Default(60) int postRunConfirmSeconds,
     @Default(false) bool tutorialCompleted,
+    @Default(true) bool animationsEnabled,
   }) = _AppSettings;
 
   factory AppSettings.fromJson(Map<String, dynamic> json) =>

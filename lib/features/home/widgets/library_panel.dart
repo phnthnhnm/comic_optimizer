@@ -316,7 +316,9 @@ class _PresetStripState extends State<_PresetStrip> {
     Scrollable.ensureVisible(
       context,
       alignment: 0.5,
-      duration: const Duration(milliseconds: 220),
+      duration: MediaQuery.of(context).disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 220),
       curve: Curves.easeOut,
     );
   }
@@ -380,7 +382,9 @@ class _PresetCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+          duration: MediaQuery.of(context).disableAnimations
+              ? Duration.zero
+              : const Duration(milliseconds: 140),
           height: 88,
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(

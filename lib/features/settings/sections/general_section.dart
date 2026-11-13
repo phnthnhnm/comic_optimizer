@@ -167,6 +167,17 @@ class GeneralSection extends ConsumerWidget {
             ],
           ),
         ),
+        SettingsCard(
+          title: 'Motion',
+          child: SettingsSwitchRow(
+            title: 'Enable animations',
+            subtitle:
+                'Page and view transitions, tutorials, and selection motion. '
+                'Turn off if motion feels distracting.',
+            value: settings.animationsEnabled,
+            onChanged: notifier.setAnimationsEnabled,
+          ),
+        ),
       ],
     );
   }

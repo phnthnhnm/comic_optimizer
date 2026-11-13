@@ -36,6 +36,7 @@ void main() {
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
       expect(settings.tutorialCompleted, false);
+      expect(settings.animationsEnabled, true);
     });
 
     test('saveSettings and loadSettings round-trip', () async {
@@ -63,6 +64,7 @@ void main() {
         postRunConfirmSeconds: 120,
         preferPermanentDelete: true,
         tutorialCompleted: true,
+        animationsEnabled: false,
       );
 
       final saveResult = await service.saveSettings(original);
@@ -86,6 +88,7 @@ void main() {
       expect(loaded.postRunConfirmSeconds, original.postRunConfirmSeconds);
       expect(loaded.preferPermanentDelete, original.preferPermanentDelete);
       expect(loaded.tutorialCompleted, original.tutorialCompleted);
+      expect(loaded.animationsEnabled, original.animationsEnabled);
     });
 
     test('lastRoot null round-trips correctly', () async {

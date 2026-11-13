@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
 import 'package:comic_optimizer/core/router.dart';
+import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/shell/window_bounds.dart';
 
@@ -26,18 +27,32 @@ Future<void> main() async {
   );
 }
 
-class ComicOptimizerApp extends StatelessWidget {
+class ComicOptimizerApp extends ConsumerWidget {
   const ComicOptimizerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final animationsEnabled = ref.watch(
+      settingsProvider.select((settings) => settings.animationsEnabled),
+    );
+    final theme = AppTheme.mocha(animationsEnabled: animationsEnabled);
+
     return MaterialApp.router(
       title: 'Comic Optimizer',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.mocha,
-      darkTheme: AppTheme.mocha,
+      theme: theme,
+      darkTheme: theme,
       themeMode: ThemeMode.dark,
       routerConfig: router,
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            disableAnimations: !animationsEnabled || media.disableAnimations,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

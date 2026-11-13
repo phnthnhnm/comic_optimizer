@@ -109,5 +109,11 @@ void main() {
       expect(container.read(settingsProvider).tutorialCompleted, true);
       expect(prefs.getBool('tutorialCompleted'), true);
     });
+
+    test('animation preference is persisted', () async {
+      await notifier.setAnimationsEnabled(false);
+      expect(container.read(settingsProvider).animationsEnabled, false);
+      expect(prefs.getBool('animationsEnabled'), false);
+    });
   });
 }

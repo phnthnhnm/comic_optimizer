@@ -31,6 +31,7 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   postRunConfirmEnabled: json['postRunConfirmEnabled'] as bool? ?? true,
   postRunConfirmSeconds: (json['postRunConfirmSeconds'] as num?)?.toInt() ?? 60,
   tutorialCompleted: json['tutorialCompleted'] as bool? ?? false,
+  animationsEnabled: json['animationsEnabled'] as bool? ?? true,
 );
 
 Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
@@ -49,6 +50,7 @@ Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
       'postRunConfirmEnabled': instance.postRunConfirmEnabled,
       'postRunConfirmSeconds': instance.postRunConfirmSeconds,
       'tutorialCompleted': instance.tutorialCompleted,
+      'animationsEnabled': instance.animationsEnabled,
     };
 
 const _$PostRunActionEnumMap = {

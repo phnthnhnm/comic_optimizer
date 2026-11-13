@@ -73,6 +73,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
   @override
   Widget build(BuildContext context) {
     final step = _steps[_index];
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -118,7 +119,9 @@ class _TutorialDialogState extends State<TutorialDialog> {
               ),
               const SizedBox(height: 14),
               AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
+                duration: disableAnimations
+                    ? Duration.zero
+                    : const Duration(milliseconds: 180),
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 transitionBuilder: (child, animation) =>
@@ -214,7 +217,9 @@ class _TutorialDialogState extends State<TutorialDialog> {
                 children: [
                   for (var i = 0; i < _steps.length; i++)
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
+                      duration: disableAnimations
+                          ? Duration.zero
+                          : const Duration(milliseconds: 160),
                       margin: const EdgeInsets.only(right: 5),
                       width: i == _index ? 18 : 6,
                       height: 6,

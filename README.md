@@ -30,9 +30,12 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
   safety, and results. Reopen it from the `?` button or Settings → General.
 - **Keyboard-first workflow**: `Ctrl+O` add folder, `Ctrl+Enter` start,
   `Ctrl+P` pause/resume, `Ctrl+E` export, `Ctrl+1`/`Ctrl+2`/`Ctrl+,` navigate.
-- **Desktop feedback**: taskbar progress while a run is active, a best-effort
+- **Desktop feedback**: the app launches maximized and remembers a sensible
+  restored size, with taskbar progress while a run is active, a best-effort
   native notification when it finishes, and accessible labels/tooltips on the
   primary controls.
+- **Motion control**: page transitions are a simple fade; turn animations off
+  in Settings → General if motion feels distracting.
 - **Three built-in quality presets** (Lossless, Visually Lossless, Lossy) plus a
   preset editor for saved custom `cjxl` argument sets.
 - **Size guard**: if the new `.jxl` is not smaller than the original image, the
@@ -230,7 +233,7 @@ windows/                        Flutter Windows runner
 flutter pub get
 flutter analyze                       # must be clean
 dart format lib/ test/
-flutter test                          # 135 tests, including cjxl integration
+flutter test                          # 137 tests, including cjxl integration
 flutter build windows --release
 ```
 

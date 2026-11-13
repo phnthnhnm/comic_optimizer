@@ -20,6 +20,7 @@ void main() {
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
       expect(settings.tutorialCompleted, false);
+      expect(settings.animationsEnabled, true);
     });
 
     test('copyWith updates individual fields', () {

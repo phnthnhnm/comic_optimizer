@@ -345,7 +345,9 @@ class _NavItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppRadius.md),
             hoverColor: Catppuccin.surface0.withAlpha(140),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
+              duration: MediaQuery.of(context).disableAnimations
+                  ? Duration.zero
+                  : const Duration(milliseconds: 120),
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(

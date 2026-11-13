@@ -28,6 +28,7 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
   static const _keyTutorialCompleted = 'tutorialCompleted';
+  static const _keyAnimationsEnabled = 'animationsEnabled';
 
   final SharedPreferences _prefs;
 
@@ -53,6 +54,7 @@ final class SettingsServiceImpl implements ISettingsService {
         postRunConfirmEnabled: getPostRunConfirmEnabled(),
         postRunConfirmSeconds: getPostRunConfirmSeconds(),
         tutorialCompleted: getTutorialCompleted(),
+        animationsEnabled: getAnimationsEnabled(),
       );
       return Ok(settings);
     } catch (e) {
@@ -77,6 +79,7 @@ final class SettingsServiceImpl implements ISettingsService {
       await setPostRunConfirmEnabled(settings.postRunConfirmEnabled);
       await setPostRunConfirmSeconds(settings.postRunConfirmSeconds);
       await setTutorialCompleted(settings.tutorialCompleted);
+      await setAnimationsEnabled(settings.animationsEnabled);
       return const Ok<void>(null);
     } catch (e) {
       return Err('Failed to save settings', cause: e);
@@ -196,6 +199,7 @@ final class SettingsServiceImpl implements ISettingsService {
   int getPostRunConfirmSeconds() =>
       _prefs.getInt(_keyPostRunConfirmSeconds) ?? 60;
   bool getTutorialCompleted() => _prefs.getBool(_keyTutorialCompleted) ?? false;
+  bool getAnimationsEnabled() => _prefs.getBool(_keyAnimationsEnabled) ?? true;
 
   // ── Legacy setters (backward compatible with SettingsModel) ─────────────
 
@@ -231,6 +235,8 @@ final class SettingsServiceImpl implements ISettingsService {
       _prefs.setInt(_keyPostRunConfirmSeconds, v);
   Future<void> setTutorialCompleted(bool v) =>
       _prefs.setBool(_keyTutorialCompleted, v);
+  Future<void> setAnimationsEnabled(bool v) =>
+      _prefs.setBool(_keyAnimationsEnabled, v);
 
   Future<void> setLastPreset(String v) => _prefs.setString(_keyLastPreset, v);
 

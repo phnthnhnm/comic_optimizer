@@ -56,7 +56,8 @@ final class WindowBoundsStore {
   }
 }
 
-/// Configures the native window and restores its last geometry.
+/// Configures the native window, restores its normal geometry, and starts
+/// maximized.
 ///
 /// The window is created by the Windows runner before Flutter starts, so this
 /// runs before `runApp`; the runner shows it on the first frame.
@@ -82,11 +83,10 @@ Future<void> configureWindow(SharedPreferences prefs) async {
     _applyDefaultGeometry(window);
   }
 
-  if (saved?.maximized ?? false) window.maximize();
-
+  // Capture the normal bounds before the runner shows the window maximized so
+  // restoring down still has a sensible size. The native runner performs the
+  // actual SW_SHOWMAXIMIZED on the first Flutter frame.
   WindowBoundsKeeper(window: window, store: store);
-  window.show();
-  window.focus();
 }
 
 void _applyDefaultGeometry(Window window) {

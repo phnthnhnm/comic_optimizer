@@ -233,7 +233,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: Padding(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
+          duration: MediaQuery.of(context).disableAnimations
+              ? Duration.zero
+              : const Duration(milliseconds: 220),
           switchInCurve: Curves.easeOut,
           switchOutCurve: Curves.easeIn,
           transitionBuilder: (child, animation) =>

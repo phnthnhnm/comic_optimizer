@@ -59,7 +59,7 @@ abstract final class AppTheme {
     surfaceTint: Catppuccin.green,
   );
 
-  static ThemeData get mocha {
+  static ThemeData mocha({bool animationsEnabled = true}) {
     final base = ThemeData(
       brightness: Brightness.dark,
       colorScheme: scheme,
@@ -75,6 +75,14 @@ abstract final class AppTheme {
     return base.copyWith(
       textTheme: textTheme,
       primaryTextTheme: textTheme,
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final platform in TargetPlatform.values)
+            platform: animationsEnabled
+                ? const _FadePageTransitionsBuilder()
+                : const _NoPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: const AppBarThemeData(
         backgroundColor: Catppuccin.base,
         foregroundColor: Catppuccin.text,
@@ -219,5 +227,38 @@ abstract final class AppTheme {
         textColor: Catppuccin.text,
       ),
     );
+  }
+}
+
+class _FadePageTransitionsBuilder extends PageTransitionsBuilder {
+  const _FadePageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+      child: child,
+    );
+  }
+}
+
+class _NoPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return child;
   }
 }

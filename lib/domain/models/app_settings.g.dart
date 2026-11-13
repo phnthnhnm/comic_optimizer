@@ -20,6 +20,11 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
           ?.map((e) => e as String)
           .toList() ??
       const <String>[],
+  customPresets:
+      (json['customPresets'] as List<dynamic>?)
+          ?.map((e) => CustomPreset.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CustomPreset>[],
   postRunAction:
       $enumDecodeNullable(_$PostRunActionEnumMap, json['postRunAction']) ??
       PostRunAction.none,
@@ -38,6 +43,7 @@ Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
       'lastPreset': instance.lastPreset,
       'lastRoot': instance.lastRoot,
       'libraryRoots': instance.libraryRoots,
+      'customPresets': instance.customPresets,
       'postRunAction': _$PostRunActionEnumMap[instance.postRunAction]!,
       'postRunConfirmEnabled': instance.postRunConfirmEnabled,
       'postRunConfirmSeconds': instance.postRunConfirmSeconds,

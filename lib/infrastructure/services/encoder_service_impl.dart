@@ -16,6 +16,28 @@ final class EncoderServiceImpl implements IEncoderService {
   const EncoderServiceImpl({this.runner = const SystemProcessRunner()});
 
   @override
+  Future<Result<String>> probeVersion(String cjxlPath) async {
+    try {
+      final result = await runner.run(cjxlPath, ['--version']);
+      if (result.exitCode != 0) {
+        final stderr = result.stderr.toString().trim();
+        return Err(
+          stderr.isEmpty
+              ? 'cjxl exited with code ${result.exitCode}'
+              : stderr.split(RegExp(r'\r?\n')).first.trim(),
+        );
+      }
+      final stdout = result.stdout.toString().trim();
+      if (stdout.isEmpty) return const Ok('cjxl (unknown version)');
+      return Ok(stdout.split(RegExp(r'\r?\n')).first.trim());
+    } on ProcessException catch (error) {
+      return Err(error.message);
+    } catch (error) {
+      return Err('$error');
+    }
+  }
+
+  @override
   Future<Result<bool>> encodeFolder(
     Directory folder,
     List<String> presetArgs,

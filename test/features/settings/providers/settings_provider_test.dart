@@ -1,4 +1,5 @@
 import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
+import 'package:comic_optimizer/domain/models/custom_preset.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
@@ -81,6 +82,25 @@ void main() {
 
       await notifier.removeLibraryRoot(r'C:\comics');
       expect(container.read(settingsProvider).libraryRoots, [r'D:\manga']);
+    });
+
+    test('custom presets can be saved, renamed and removed', () async {
+      const preset = CustomPreset(name: 'Mine', distance: 2.0);
+      await notifier.saveCustomPreset(preset);
+
+      expect(container.read(settingsProvider).customPresets, [preset]);
+      expect(prefs.getString('customPresets'), contains('Mine'));
+
+      await notifier.setLastPreset('Mine');
+      const renamed = CustomPreset(name: 'Renamed', distance: 3.0);
+      await notifier.saveCustomPreset(renamed, previousName: 'Mine');
+
+      expect(container.read(settingsProvider).customPresets, [renamed]);
+      expect(container.read(settingsProvider).lastPreset, 'Renamed');
+
+      await notifier.removeCustomPreset('Renamed');
+      expect(container.read(settingsProvider).customPresets, isEmpty);
+      expect(container.read(settingsProvider).lastPreset, 'Lossless');
     });
   });
 }

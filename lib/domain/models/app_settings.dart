@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../enums/post_run_action.dart';
+import 'custom_preset.dart';
 
 part 'app_settings.freezed.dart';
 part 'app_settings.g.dart';
@@ -17,6 +18,7 @@ abstract class AppSettings with _$AppSettings {
     @Default('Lossless') String lastPreset,
     String? lastRoot,
     @Default(<String>[]) List<String> libraryRoots,
+    @Default(<CustomPreset>[]) List<CustomPreset> customPresets,
     @Default(PostRunAction.none) PostRunAction postRunAction,
     @Default(true) bool postRunConfirmEnabled,
     @Default(60) int postRunConfirmSeconds,

@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'custom_preset.dart';
+
 part 'preset.freezed.dart';
 part 'preset.g.dart';
 
@@ -33,5 +35,17 @@ abstract class Preset with _$Preset {
 
   static Preset byName(String name) {
     return all.firstWhere((p) => p.name == name, orElse: () => lossless);
+  }
+
+  /// Resolves a built-in or user-defined preset, falling back to lossless.
+  static Preset resolve(String name, Iterable<CustomPreset> customPresets) {
+    final builtIn = byName(name);
+    if (builtIn.name == name) return builtIn;
+    for (final preset in customPresets) {
+      if (preset.name == name) {
+        return Preset(name: preset.name, args: preset.args);
+      }
+    }
+    return lossless;
   }
 }

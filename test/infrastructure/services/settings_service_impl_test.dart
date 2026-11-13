@@ -1,6 +1,7 @@
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
+import 'package:comic_optimizer/domain/models/custom_preset.dart';
 import 'package:comic_optimizer/infrastructure/services/settings_service_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +31,7 @@ void main() {
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
       expect(settings.libraryRoots, isEmpty);
+      expect(settings.customPresets, isEmpty);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -47,6 +49,14 @@ void main() {
         lastPreset: 'Lossy',
         lastRoot: r'C:\comics',
         libraryRoots: [r'C:\comics', r'D:\manga'],
+        customPresets: [
+          CustomPreset(
+            name: 'Archival',
+            distance: 1.5,
+            losslessJpeg: true,
+            extraArgs: '--effort=7',
+          ),
+        ],
         postRunAction: PostRunAction.shutdown,
         postRunConfirmEnabled: false,
         postRunConfirmSeconds: 120,
@@ -68,6 +78,7 @@ void main() {
       expect(loaded.lastPreset, original.lastPreset);
       expect(loaded.lastRoot, original.lastRoot);
       expect(loaded.libraryRoots, original.libraryRoots);
+      expect(loaded.customPresets, original.customPresets);
       expect(loaded.postRunAction, original.postRunAction);
       expect(loaded.postRunConfirmEnabled, original.postRunConfirmEnabled);
       expect(loaded.postRunConfirmSeconds, original.postRunConfirmSeconds);

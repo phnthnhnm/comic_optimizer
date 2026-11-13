@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
+import 'package:comic_optimizer/domain/models/custom_preset.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
@@ -34,7 +35,12 @@ class LibraryPanel extends ConsumerWidget {
     final run = ref.watch(optimizationProvider);
     final runNotifier = ref.read(optimizationProvider.notifier);
     final roots = settings.libraryRoots;
-    final preset = Preset.byName(settings.lastPreset);
+    final preset = Preset.resolve(settings.lastPreset, settings.customPresets);
+    final presets = [
+      ...Preset.all,
+      for (final custom in settings.customPresets)
+        Preset(name: custom.name, args: custom.args),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,23 +91,11 @@ class LibraryPanel extends ConsumerWidget {
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            for (var index = 0; index < Preset.all.length; index++)
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: index == Preset.all.length - 1 ? 0 : 8,
-                  ),
-                  child: _PresetCard(
-                    preset: Preset.all[index],
-                    selected: preset.name == Preset.all[index].name,
-                    onTap: () =>
-                        settingsNotifier.setLastPreset(Preset.all[index].name),
-                  ),
-                ),
-              ),
-          ],
+        _PresetStrip(
+          presets: presets,
+          selectedName: preset.name,
+          subtitleFor: (item) => _presetSubtitle(item, settings.customPresets),
+          onSelected: settingsNotifier.setLastPreset,
         ),
         const SizedBox(height: AppSpacing.xl),
         _OptionsCard(settings: settings, settingsNotifier: settingsNotifier),
@@ -294,20 +288,104 @@ class _QueueTile extends StatelessWidget {
   }
 }
 
+class _PresetStrip extends StatefulWidget {
+  final List<Preset> presets;
+  final String selectedName;
+  final String Function(Preset) subtitleFor;
+  final ValueChanged<String> onSelected;
+
+  const _PresetStrip({
+    required this.presets,
+    required this.selectedName,
+    required this.subtitleFor,
+    required this.onSelected,
+  });
+
+  @override
+  State<_PresetStrip> createState() => _PresetStripState();
+}
+
+class _PresetStripState extends State<_PresetStrip> {
+  final Map<String, GlobalKey> _keys = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelected());
+  }
+
+  @override
+  void didUpdateWidget(covariant _PresetStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedName != widget.selectedName) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelected());
+    }
+  }
+
+  void _revealSelected() {
+    final context = _keys[widget.selectedName]?.currentContext;
+    if (context == null) return;
+    Scrollable.ensureVisible(
+      context,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final preset in widget.presets)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: KeyedSubtree(
+                key: _keys.putIfAbsent(preset.name, GlobalKey.new),
+                child: SizedBox(
+                  width: 186,
+                  child: _PresetCard(
+                    preset: preset,
+                    subtitle: widget.subtitleFor(preset),
+                    selected: widget.selectedName == preset.name,
+                    onTap: () => widget.onSelected(preset.name),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String _presetSubtitle(Preset preset, List<CustomPreset> customPresets) {
+  final copy = _presetCopy[preset.name];
+  if (copy != null) return copy.$2;
+  for (final custom in customPresets) {
+    if (custom.name == preset.name) return custom.description;
+  }
+  return '';
+}
+
 class _PresetCard extends StatelessWidget {
   final Preset preset;
+  final String subtitle;
   final bool selected;
   final VoidCallback onTap;
 
   const _PresetCard({
     required this.preset,
+    required this.subtitle,
     required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final copy = _presetCopy[preset.name] ?? (preset.name, '');
+    final title = _presetCopy[preset.name]?.$1 ?? preset.name;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -332,7 +410,7 @@ class _PresetCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      copy.$1,
+                      title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -352,7 +430,7 @@ class _PresetCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                copy.$2,
+                subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

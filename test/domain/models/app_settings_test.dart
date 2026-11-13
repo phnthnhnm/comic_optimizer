@@ -15,6 +15,7 @@ void main() {
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
       expect(settings.libraryRoots, isEmpty);
+      expect(settings.customPresets, isEmpty);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);

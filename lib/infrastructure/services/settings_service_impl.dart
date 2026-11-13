@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:comic_optimizer/core/interfaces/i_settings_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
+import 'package:comic_optimizer/domain/models/custom_preset.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 
 /// Implementation of [ISettingsService] backed by SharedPreferences.
@@ -20,6 +23,7 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keySafeRun = 'safeRun';
   static const _keyDeleteNonImageFiles = 'deleteNonImageFiles';
   static const _keyLibraryRoots = 'libraryRoots';
+  static const _keyCustomPresets = 'customPresets';
   static const _keyPostRunAction = 'postRunAction';
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
@@ -43,6 +47,7 @@ final class SettingsServiceImpl implements ISettingsService {
         lastPreset: getLastPreset(),
         lastRoot: getLastRoot(),
         libraryRoots: getLibraryRoots(),
+        customPresets: getCustomPresets(),
         postRunAction: PostRunActionX.fromName(getPostRunAction()),
         postRunConfirmEnabled: getPostRunConfirmEnabled(),
         postRunConfirmSeconds: getPostRunConfirmSeconds(),
@@ -65,6 +70,7 @@ final class SettingsServiceImpl implements ISettingsService {
       await setLastPreset(settings.lastPreset);
       await setLastRoot(settings.lastRoot);
       await setLibraryRoots(settings.libraryRoots);
+      await setCustomPresets(settings.customPresets);
       await setPostRunAction(settings.postRunAction.toName);
       await setPostRunConfirmEnabled(settings.postRunConfirmEnabled);
       await setPostRunConfirmSeconds(settings.postRunConfirmSeconds);
@@ -166,6 +172,21 @@ final class SettingsServiceImpl implements ISettingsService {
     return legacy == null ? const [] : [legacy];
   }
 
+  List<CustomPreset> getCustomPresets() {
+    final raw = _prefs.getString(_keyCustomPresets);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return decoded
+          .whereType<Map>()
+          .map((item) => CustomPreset.fromJson(item.cast<String, dynamic>()))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   String getPostRunAction() => _prefs.getString(_keyPostRunAction) ?? 'none';
   bool getPostRunConfirmEnabled() =>
       _prefs.getBool(_keyPostRunConfirmEnabled) ?? true;
@@ -193,6 +214,10 @@ final class SettingsServiceImpl implements ISettingsService {
       _prefs.setBool(_keyDeleteNonImageFiles, v);
   Future<void> setLibraryRoots(List<String> v) =>
       _prefs.setStringList(_keyLibraryRoots, v);
+  Future<void> setCustomPresets(List<CustomPreset> presets) => _prefs.setString(
+    _keyCustomPresets,
+    jsonEncode(presets.map((preset) => preset.toJson()).toList()),
+  );
 
   Future<void> setPostRunAction(String v) =>
       _prefs.setString(_keyPostRunAction, v);

@@ -85,7 +85,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
       return;
     }
 
-    final preset = Preset.byName(settings.lastPreset);
+    final preset = Preset.resolve(settings.lastPreset, settings.customPresets);
     _cancelRequested = false;
     _paused = false;
     _pauseCompleter = null;

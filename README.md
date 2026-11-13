@@ -26,8 +26,8 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
 - **Results and history**: space saved, comics grouped by library, failure
   details with retry, a JSON report export, and the last 50 runs on the
   History screen.
-- **Three quality presets** (Lossless, Visually Lossless, Lossy) mapped to
-  `cjxl` distance settings.
+- **Three built-in quality presets** (Lossless, Visually Lossless, Lossy) plus a
+  preset editor for saved custom `cjxl` argument sets.
 - **Size guard**: if the new `.jxl` is not smaller than the original image, the
   `.jxl` is discarded and the original is kept.
 - **Automatic fallbacks**: WebP pages are converted with `dwebp`; JPEGs that
@@ -51,7 +51,7 @@ whole pipeline — cleaning up each folder, normalizing page order, encoding wit
   the only hard external dependency; without it the encoding step cannot run.
   The current release is tested against `cjxl` v0.13.0. `cjxl` v0.11 or newer
   is expected to work, since the presets only use long-standing flags. If the
-  encoder lives somewhere else, set its full path in **Settings → Data**.
+  encoder lives somewhere else, set its full path in **Settings → Encoding**.
 - **Optional: [ImageMagick](https://imagemagick.org/) (`magick`).** Used only
   as a retry path when `cjxl` exits with code 1 (for example on CMYK or
   slightly malformed JPEGs).
@@ -164,7 +164,8 @@ For every comic folder the app runs this pipeline:
 | Visually Lossless | `--distance=1.0 --lossless_jpeg=0 --quiet` | Re-encodes pixels at distance 1.0. Visually indistinguishable at normal reading size. |
 | Lossy | `--distance=3.0 --lossless_jpeg=0 --quiet` | Smallest files. Good for quick reading; fine line art may show artifacts. |
 
-Presets live in `lib/domain/models/preset.dart`.
+Presets live in `lib/domain/models/preset.dart`. Custom presets created in the
+app are stored with the rest of the settings and appear alongside the built-ins.
 
 ## Settings and data
 
@@ -174,9 +175,17 @@ Settings are stored with `shared_preferences` at:
 %APPDATA%\com.phanthanhnam\comic_optimizer\shared_preferences.json
 ```
 
-Deleting that file resets the app to its defaults. The **Data** tab also sets
-the `cjxl` executable path (leave it as `cjxl` to resolve the encoder from
-`PATH`), exports a timestamped JSON backup, restores one, or resets everything.
+Deleting that file resets the app to its defaults. **Settings** is split into
+six sections:
+
+- **General** — default quality preset, archive format, and the after-run action.
+- **Encoding** — the `cjxl` path (leave it as `cjxl` to resolve from `PATH`),
+  with **Check version** detection.
+- **Presets** — built-in argument sets plus saved custom presets.
+- **Safety** — Keep originals, non-image deletion, and permanent deletion.
+- **Data** — timestamped JSON backup, restore, and full reset.
+- **About** — version, source link, and credits.
+
 The app uses one fixed Catppuccin Mocha theme with a green accent; there is no
 theme setting.
 
@@ -202,7 +211,7 @@ windows/                        Flutter Windows runner
 flutter pub get
 flutter analyze                       # must be clean
 dart format lib/ test/
-flutter test                          # 106 tests, including cjxl integration
+flutter test                          # 132 tests, including cjxl integration
 flutter build windows --release
 ```
 
@@ -220,7 +229,7 @@ otherwise, so install libjxl to get full coverage.
 
 | Symptom | Cause / fix |
 | --- | --- |
-| `ProcessException: The system cannot find the file specified` | `cjxl` is not on `PATH`. Install libjxl, or set the full path in Settings → Data. |
+| `ProcessException: The system cannot find the file specified` | `cjxl` is not on `PATH`. Install libjxl, or set the full path in Settings → Encoding. |
 | `cjxl exit 1` followed by an ImageMagick retry | The JPEG could not be transcoded as-is. The app re-saves it as PNG and retries; install ImageMagick to enable this fallback. |
 | `Reverted larger .jxl` | Expected: the encoded file was not smaller, so the original was kept. |
 | WebP pages are skipped or fail | Install `dwebp` from libwebp. |

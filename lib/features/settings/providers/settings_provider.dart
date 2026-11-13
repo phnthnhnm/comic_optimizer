@@ -4,6 +4,8 @@ import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
+import 'package:comic_optimizer/domain/models/custom_preset.dart';
+import 'package:comic_optimizer/domain/models/preset.dart';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
   SettingsNotifier.new,
@@ -46,6 +48,34 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setLibraryRoots(List<String> roots) =>
       _update((s) => s.copyWith(libraryRoots: roots));
+
+  Future<void> setCustomPresets(List<CustomPreset> presets) =>
+      _update((s) => s.copyWith(customPresets: presets));
+
+  Future<void> saveCustomPreset(CustomPreset preset, {String? previousName}) =>
+      _update((s) {
+        final oldName = previousName ?? preset.name;
+        final presets =
+            s.customPresets
+                .where(
+                  (item) => item.name != oldName && item.name != preset.name,
+                )
+                .toList()
+              ..add(preset);
+        return s.copyWith(
+          customPresets: presets,
+          lastPreset: s.lastPreset == oldName ? preset.name : s.lastPreset,
+        );
+      });
+
+  Future<void> removeCustomPreset(String name) => _update((s) {
+    return s.copyWith(
+      customPresets: s.customPresets
+          .where((preset) => preset.name != name)
+          .toList(),
+      lastPreset: s.lastPreset == name ? Preset.losslessName : s.lastPreset,
+    );
+  });
 
   Future<void> addLibraryRoot(String root) {
     if (state.libraryRoots.contains(root)) return Future.value();

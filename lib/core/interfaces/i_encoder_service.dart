@@ -4,6 +4,9 @@ import '../../core/result.dart';
 
 /// Contract for encoding images to JPEG XL via cjxl.
 abstract interface class IEncoderService {
+  /// Runs `cjxl --version` and returns its first output line.
+  Future<Result<String>> probeVersion(String cjxlPath);
+
   Future<Result<bool>> encodeFolder(
     Directory folder,
     List<String> presetArgs,

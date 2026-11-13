@@ -14,6 +14,7 @@ import 'package:comic_optimizer/features/home/run_report_exporter.dart';
 
 import '../design_system/app_theme.dart';
 import '../design_system/catppuccin.dart';
+import '../widgets/app_logo.dart';
 
 /// Persistent application frame: brand and navigation on the left, content on
 /// the right.
@@ -282,18 +283,17 @@ class _Brand extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 24, 18, 8),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
+          DecoratedBox(
             decoration: BoxDecoration(
-              color: Catppuccin.green,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Catppuccin.green.withAlpha(28),
+                  blurRadius: 14,
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.photo_library_rounded,
-              size: 18,
-              color: Catppuccin.base,
-            ),
+            child: const AppLogo(size: 38),
           ),
           const SizedBox(width: 10),
           const Expanded(

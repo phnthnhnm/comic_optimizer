@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:comic_optimizer/features/settings/widgets/settings_widgets.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
+import 'package:comic_optimizer/presentation/widgets/app_logo.dart';
 
 class _ShortcutRow extends StatelessWidget {
   final String keys;
@@ -52,19 +53,7 @@ class AboutTab extends StatelessWidget {
             SettingsCard(
               child: Row(
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: Catppuccin.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.photo_library_rounded,
-                      color: Catppuccin.base,
-                      size: 24,
-                    ),
-                  ),
+                  const AppLogo(size: 46),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(

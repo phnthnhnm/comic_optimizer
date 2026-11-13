@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#1e1e2e"/>
+      <stop offset="1" stop-color="#11111b"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#e6e9f5"/>
+      <stop offset="1" stop-color="#cdd6f4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#a6e3a1" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#a6e3a1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#b9f0b2"/>
+      <stop offset="1" stop-color="#a6e3a1"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="32" y="32" width="960" height="960" rx="224" fill="url(#bg)"/>
+  <circle cx="790" cy="230" r="330" fill="url(#glow)"/>
+  <rect x="38" y="38" width="948" height="948" rx="218" fill="none" stroke="#a6e3a1" stroke-opacity="0.34" stroke-width="18"/>
+
+  <g transform="rotate(7 540 520)">
+    <rect x="300" y="202" width="470" height="620" rx="38" fill="#45475a"/>
+    <rect x="300" y="202" width="470" height="620" rx="38" fill="none" stroke="#585b70" stroke-width="4"/>
+  </g>
+
+  <rect x="238" y="188" width="500" height="642" rx="44" fill="#000000" opacity="0.30"/>
+  <rect x="222" y="170" width="500" height="642" rx="44" fill="url(#page)"/>
+
+  <!-- Top panel: speech bubble -->
+  <rect x="274" y="230" width="396" height="178" rx="20" fill="#313244"/>
+  <rect x="304" y="264" width="218" height="92" rx="46" fill="url(#mint)"/>
+  <path d="M 352 350 L 338 390 L 388 354 Z" fill="url(#mint)"/>
+  <rect x="338" y="294" width="112" height="12" rx="6" fill="#1e1e2e" opacity="0.78"/>
+  <rect x="338" y="318" width="78" height="12" rx="6" fill="#1e1e2e" opacity="0.5"/>
+
+  <!-- Bottom panel: optimized check -->
+  <rect x="274" y="436" width="396" height="328" rx="20" fill="#313244"/>
+  <circle cx="472" cy="592" r="102" fill="#a6e3a1" opacity="0.12"/>
+  <path d="M 392 596 L 446 650 L 556 526" fill="none" stroke="url(#mint)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="330" y="704" width="284" height="12" rx="6" fill="#a6adc8" opacity="0.28"/>
+
+  <!-- Sparkle -->
+  <path d="M 806 118 C 820 188 844 212 914 226 C 844 240 820 264 806 334 C 792 264 768 240 698 226 C 768 212 792 188 806 118 Z" fill="url(#mint)"/>
+  <path d="M 900 326 C 906 354 916 364 944 370 C 916 376 906 386 900 414 C 894 386 884 376 856 370 C 884 364 894 354 900 326 Z" fill="#94e2d5"/>
+</svg>

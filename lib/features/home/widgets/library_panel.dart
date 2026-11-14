@@ -4,6 +4,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/models/custom_preset.dart';
@@ -104,6 +105,7 @@ class LibraryPanel extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
+          _ResumeBanner(onResume: onStart),
           _QueueCard(
             roots: roots,
             onRemove: (root) async {
@@ -217,6 +219,59 @@ class LibraryPanel extends ConsumerWidget {
 
   Future<void> _addRoot(BuildContext context, WidgetRef ref) =>
       addLibraryFolder(context, ref);
+}
+
+class _ResumeBanner extends ConsumerStatefulWidget {
+  final VoidCallback onResume;
+
+  const _ResumeBanner({required this.onResume});
+
+  @override
+  ConsumerState<_ResumeBanner> createState() => _ResumeBannerState();
+}
+
+class _ResumeBannerState extends ConsumerState<_ResumeBanner> {
+  var _dismissed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_dismissed) return const SizedBox.shrink();
+    final journal = ref.watch(runJournalStoreProvider).read();
+    if (journal == null || journal.completed.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Catppuccin.surface0,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: Catppuccin.green.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.restore_rounded, size: 17, color: Catppuccin.green),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Interrupted run found — ${journal.completed.length} '
+              '${journal.completed.length == 1 ? 'comic' : 'comics'} already '
+              'completed.',
+              style: const TextStyle(fontSize: 11.5),
+            ),
+          ),
+          TextButton(onPressed: widget.onResume, child: const Text('Resume')),
+          TextButton(
+            onPressed: () async {
+              await ref.read(runJournalStoreProvider).clear();
+              if (mounted) setState(() => _dismissed = true);
+            },
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _QueueCard extends StatelessWidget {

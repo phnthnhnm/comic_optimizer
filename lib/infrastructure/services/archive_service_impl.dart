@@ -34,6 +34,7 @@ final class ArchiveServiceImpl implements IArchiveService {
       await parent.create(recursive: true);
 
       final names = <String>{};
+      final expectedSizes = <String, int>{};
       final archive = Archive();
       for (final entry in entries) {
         if (waitIfPaused != null) await waitIfPaused();
@@ -48,6 +49,7 @@ final class ArchiveServiceImpl implements IArchiveService {
           return Err('Duplicate archive entry: $name');
         }
         final bytes = await entry.file.readAsBytes();
+        expectedSizes[name] = bytes.length;
         archive.addFile(ArchiveFile(name, bytes.length, bytes));
       }
 
@@ -60,7 +62,7 @@ final class ArchiveServiceImpl implements IArchiveService {
         await raf.close();
       }
 
-      final verify = await _verify(part, entries.length);
+      final verify = await _verify(part, expectedSizes);
       if (verify != null) {
         await _deleteQuietly(part);
         return Err('Archive verification failed: $verify');
@@ -98,17 +100,23 @@ final class ArchiveServiceImpl implements IArchiveService {
     }
   }
 
-  Future<String?> _verify(File file, int expectedEntries) async {
+  Future<String?> _verify(File file, Map<String, int> expectedSizes) async {
     try {
       final bytes = await file.readAsBytes();
       final archive = ZipDecoder().decodeBytes(bytes);
-      if (archive.files.length != expectedEntries) {
-        return 'expected $expectedEntries entries, found ${archive.files.length}';
+      if (archive.files.length != expectedSizes.length) {
+        return 'expected ${expectedSizes.length} entries, '
+            'found ${archive.files.length}';
       }
       final names = <String>{};
       for (final entry in archive.files) {
         if (!names.add(entry.name)) return 'duplicate entry ${entry.name}';
-        if (entry.size < 0) return 'invalid size for ${entry.name}';
+        final expected = expectedSizes[entry.name];
+        if (expected == null) return 'unexpected entry ${entry.name}';
+        final content = entry.content;
+        if (content.length != expected) {
+          return 'content mismatch for ${entry.name}';
+        }
       }
       return null;
     } catch (e) {

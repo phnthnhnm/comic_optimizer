@@ -12,6 +12,7 @@ import 'package:comic_optimizer/domain/models/library_entry.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 import 'package:comic_optimizer/features/home/run_launcher.dart';
+import 'package:comic_optimizer/features/home/widgets/archive_import_dialog.dart';
 import 'package:comic_optimizer/features/home/widgets/library_overrides_dialog.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
@@ -83,6 +84,15 @@ class LibraryPanel extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
+              Tooltip(
+                message: 'Import .cbz or .zip archives',
+                child: OutlinedButton.icon(
+                  onPressed: () => showArchiveImportDialog(context, ref),
+                  icon: const Icon(Icons.upload_file_rounded, size: 18),
+                  label: const Text('Import'),
+                ),
+              ),
+              const SizedBox(width: 8),
               Tooltip(
                 message: 'Add folder (Ctrl+O)',
                 child: FilledButton.tonalIcon(

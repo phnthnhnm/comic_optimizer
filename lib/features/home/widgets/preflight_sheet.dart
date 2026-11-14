@@ -200,9 +200,11 @@ class _PreflightSheetState extends ConsumerState<PreflightSheet> {
               _Notice(
                 icon: Icons.folder_outlined,
                 color: Catppuccin.overlay2,
-                text: settings.outputMode == OutputMode.besideSource
+                text:
+                    settings.outputMode == OutputMode.besideSource ||
+                        settings.outputDirectory.isEmpty
                     ? 'Archives are written beside each source folder.'
-                    : 'Archives are written to ${settings.outputDirectory.isEmpty ? 'the library root' : settings.outputDirectory}.',
+                    : 'Archives are written to ${settings.outputDirectory}.',
               ),
               const SizedBox(height: 8),
               Row(

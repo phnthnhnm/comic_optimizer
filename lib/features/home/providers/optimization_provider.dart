@@ -93,7 +93,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     if (settings.preventSleep) sleepInhibitor.inhibit();
 
     final journalStore = ref.read(runJournalStoreProvider);
-    final fingerprint = _runFingerprint(settings, roots);
+    final fingerprint = _runFingerprint(settings);
     var journal = journalStore.read();
     if (journal != null && journal.fingerprint != fingerprint) {
       await journalStore.clear();
@@ -286,6 +286,9 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
       _log('Error: $e');
       _log(st.toString());
     } finally {
+      try {
+        await journalWrite;
+      } catch (_) {}
       state = state.copyWith(
         running: false,
         starting: false,
@@ -370,7 +373,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
   void addLog(String line) => _log(line);
 }
 
-String _runFingerprint(AppSettings settings, List<String> roots) {
+String _runFingerprint(AppSettings settings) {
   final buffer = StringBuffer()
     ..write('run-journal-v1|')
     ..write(settings.outputExt)
@@ -393,9 +396,7 @@ String _runFingerprint(AppSettings settings, List<String> roots) {
     ..write('|')
     ..write(settings.collisionPolicy.name)
     ..write('|')
-    ..write(settings.lastPreset)
-    ..write('|')
-    ..write(roots.join('\\u0000'));
+    ..write(settings.lastPreset);
   for (final entry in settings.libraries) {
     buffer
       ..write('|')

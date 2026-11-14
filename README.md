@@ -14,16 +14,20 @@ re-encoding each page to JPEG XL.
 ![Settings](docs/screenshots/settings.png)
 
 > [!WARNING]
-> The app **modifies and deletes files**. It removes non-image files by default
-> and deletes each source folder once its archive is written. Try **Keep
-> originals** on a small folder first.
+> The app **modifies and deletes files**. With **Keep originals** off, it
+> removes non-image files by default and deletes each source folder once its
+> archive is written. Try **Keep originals** on a small folder first.
 
 ## Features
 
-- Ordered library queue with preflight, live progress, pause/resume, cancel, results and history.
+- Ordered library queue with preflight estimates, live progress, pause/resume, cancel, results and history.
 - Lossless, Visually Lossless and Lossy presets, plus saved custom `cjxl` arguments.
-- Safe run, keep-originals, Recycle Bin cleanup, size guard and encoder fallbacks.
-- First-run tutorial, keyboard shortcuts, taskbar progress and completion notifications.
+- Staged, verified archives: the source stays untouched until the archive is published.
+- Per-library preset/output overrides, custom output folders, naming templates and collision policies.
+- Skip up-to-date archives and resume interrupted queues from a run journal.
+- Bounded parallel encoding, sleep prevention, size guard and encoder fallbacks.
+- Import `.cbz`/`.zip` archives into the same pipeline without touching the originals.
+- First-run tutorial, keyboard shortcuts, taskbar progress, drag-and-drop folders and completion notifications.
 - Starts maximized; animations are a simple fade and can be disabled in Settings → General.
 
 ## Requirements
@@ -54,10 +58,13 @@ available from the latest successful [CI run](https://github.com/phnthnhnm/comic
 
 ## Usage
 
-1. Add one or more library folders. Drag to reorder them.
-2. Pick a preset and options. **Keep originals** is the safe choice for a first run.
-3. Click **Start**, review the preflight summary, then confirm.
-4. Review savings and failures in **Results**, or revisit past runs in **History**.
+1. Add or drag in library folders, or use **Import** to optimize existing
+   `.cbz`/`.zip` archives.
+2. Pick a preset and options. Use the gear on a queue entry for per-library
+   overrides. **Keep originals** is the safe choice for a first run.
+3. Click **Start**, review the preflight and its size estimate, then confirm.
+4. Review savings, reveal archives, and retry failures in **Results**, or
+   revisit past runs in **History**.
 
 A comic is a folder directly under a library root, or directly under one of
 those folders. A root containing only images is treated as one comic.
@@ -74,15 +81,17 @@ those folders. A root containing only images is treated as one comic.
 
 ## How it works
 
-1. Count the folder's files and record image sizes.
-2. If enabled, remove non-image files such as `ComicInfo.xml`.
-3. Rename pages to `001`, `002`, … so they archive in order.
-4. Encode with `cjxl`; WebP is converted with `dwebp`, failed JPEGs are retried
-   through ImageMagick, and a larger `.jxl` is discarded.
-5. Write `<folder>.cbz` and delete the source folder (Recycle Bin by default).
+1. Scan the comic and record image sizes.
+2. Encode pages into a temporary staging folder; WebP is converted with
+   `dwebp`, failed JPEGs are retried through ImageMagick, and a larger `.jxl`
+   is discarded.
+3. Normalize pages to `001`, `002`, … and build the archive.
+4. Verify every archive entry, atomically publish it, and only then delete the
+   source folder (if **Keep originals** is off).
 
-Only files directly inside a comic folder are archived. Archives are always
-ZIP, even with a `.cbr` extension, and existing archives are overwritten.
+Archives are written beside the source by default, or to a configured output
+folder with a naming template. Only files directly inside a comic folder are
+archived; an existing archive is replaced only after the new one verifies.
 
 ## Presets
 
@@ -99,9 +108,10 @@ built-ins.
 
 Settings live at
 `%APPDATA%\com.phanthanhnam\comic_optimizer\shared_preferences.json`.
-The Settings screen covers defaults, the encoder path, presets, safety,
-timestamped JSON backup/restore, reset and About. The theme is fixed to
-Catppuccin Mocha with a green accent.
+General covers output location, naming, collision behavior, skip-existing,
+parallel encoders, sleep prevention and motion. Other sections cover the
+encoder path, presets, safety, timestamped JSON backup/restore and About. The
+theme is fixed to Catppuccin Mocha with a green accent.
 
 ## Development
 
@@ -119,7 +129,7 @@ Codegen after changing a freezed model or serialized enum:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-The suite has 139 tests; encoder integration tests use the real `cjxl` when it
+The suite has 159 tests; encoder integration tests use the real `cjxl` when it
 is installed and skip otherwise.
 
 ## Troubleshooting
@@ -128,7 +138,8 @@ is installed and skip otherwise.
 | --- | --- |
 | `cjxl` not found | Install libjxl or set the full path in Settings → Encoding |
 | WebP pages fail | Install `dwebp` from libwebp |
-| Source folder remains | Keep originals/Safe run is on, or check the log for a write or lock error |
+| Source folder remains | Keep originals is on, or check the log for a write or lock error |
+| Import produced no archive | Check the log and that the archive contains supported images |
 
 ## Contributing
 

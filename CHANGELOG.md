@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.0](https://github.com/phnthnhnm/comic_optimizer/compare/v0.4.0...v0.5.0) (2026-11-14)
+
+
+### Features
+
+* **history:** add search, filters, and lifetime totals ([b868b66](https://github.com/phnthnhnm/comic_optimizer/commit/b868b6649c5ddcdfbe315bfc020b9d85ebc474f8))
+* **import:** add safe CBZ/ZIP archive imports ([22bad60](https://github.com/phnthnhnm/comic_optimizer/commit/22bad60bac611101778ef81ee3b3d5006e4a325f))
+* **pipeline:** stage, verify, and publish archives safely ([d6d5172](https://github.com/phnthnhnm/comic_optimizer/commit/d6d5172875b3400a772d7bf8dbf9b413135941b7))
+* **queue:** surface interrupted runs and resume state ([dfe727d](https://github.com/phnthnhnm/comic_optimizer/commit/dfe727d8ea3b458211250125e4df8aa6dd50fca9))
+
 ## [0.4.0](https://github.com/phnthnhnm/comic_optimizer/compare/v0.3.0...v0.4.0) (2026-11-13)
 
 

@@ -27,6 +27,7 @@ re-encoding each page to JPEG XL.
 - Skip up-to-date archives and resume interrupted queues from a run journal.
 - Bounded parallel encoding, sleep prevention, size guard and encoder fallbacks.
 - Import `.cbz`/`.zip` archives into the same pipeline without touching the originals.
+- History search, failure filters, and lifetime run/image/savings totals.
 - First-run tutorial, keyboard shortcuts, taskbar progress, drag-and-drop folders and completion notifications.
 - Starts maximized; animations are a simple fade and can be disabled in Settings → General.
 
@@ -129,7 +130,7 @@ Codegen after changing a freezed model or serialized enum:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-The suite has 159 tests; encoder integration tests use the real `cjxl` when it
+The suite has 161 tests; encoder integration tests use the real `cjxl` when it
 is installed and skip otherwise.
 
 ## Troubleshooting

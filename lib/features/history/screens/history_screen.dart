@@ -2,9 +2,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/models/run_history_entry.dart';
 import 'package:comic_optimizer/features/history/providers/run_history_provider.dart';
+import 'package:comic_optimizer/infrastructure/services/lifetime_stats_store.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 
@@ -35,6 +37,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       _ => const <RunHistoryEntry>[],
     };
     final visible = _filtered(entries);
+    final lifetime = ref.watch(lifetimeStatsStoreProvider).read();
 
     return Scaffold(
       appBar: AppBar(
@@ -78,7 +81,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ],
                   ),
                 ),
-                if (entries.isNotEmpty) _LifetimeSummary(entries: entries),
+                if (entries.isNotEmpty) _LifetimeSummary(stats: lifetime),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -197,24 +200,19 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 }
 
 class _LifetimeSummary extends StatelessWidget {
-  final List<RunHistoryEntry> entries;
+  final LifetimeStats stats;
 
-  const _LifetimeSummary({required this.entries});
+  const _LifetimeSummary({required this.stats});
 
   @override
   Widget build(BuildContext context) {
-    final saved = entries.fold<int>(
-      0,
-      (sum, entry) => sum + (entry.savedBytes ?? 0),
-    );
-    final images = entries.fold<int>(0, (sum, entry) => sum + entry.images);
     return Row(
       children: [
-        _SummaryPill(label: '${entries.length} runs'),
+        _SummaryPill(label: '${stats.runs} runs'),
         const SizedBox(width: 6),
-        _SummaryPill(label: '$images images'),
+        _SummaryPill(label: '${stats.images} images'),
         const SizedBox(width: 6),
-        _SummaryPill(label: '${formatBytes(saved)} saved'),
+        _SummaryPill(label: '${formatBytes(stats.savedBytes)} saved'),
       ],
     );
   }

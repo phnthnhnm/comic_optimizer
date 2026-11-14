@@ -11,6 +11,7 @@ import '../interfaces/i_sleep_inhibitor.dart';
 import '../../infrastructure/services/archive_service_impl.dart';
 import '../../infrastructure/services/encoder_service_impl.dart';
 import '../../infrastructure/services/optimizer_service_impl.dart';
+import '../../infrastructure/services/lifetime_stats_store.dart';
 import '../../infrastructure/services/post_run_service_impl.dart';
 import '../../infrastructure/services/run_history_service_impl.dart';
 import '../../infrastructure/services/run_journal_store.dart';
@@ -52,6 +53,10 @@ final runHistoryServiceProvider = Provider<IRunHistoryService>(
 
 final runJournalStoreProvider = Provider<RunJournalStore>(
   (ref) => RunJournalStore(ref.watch(sharedPreferencesProvider)),
+);
+
+final lifetimeStatsStoreProvider = Provider<LifetimeStatsStore>(
+  (ref) => LifetimeStatsStore(ref.watch(sharedPreferencesProvider)),
 );
 
 final sleepInhibitorProvider = Provider<ISleepInhibitor>(

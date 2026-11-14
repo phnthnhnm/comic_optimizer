@@ -163,6 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .toList(),
     );
     await ref.read(runHistoryProvider.notifier).append(entry);
+    await ref.read(lifetimeStatsStoreProvider).record(entry);
   }
 
   static int? _sumBytes(Iterable<int?> values) {

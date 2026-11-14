@@ -1,5 +1,8 @@
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
+import 'package:comic_optimizer/domain/models/library_entry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,8 +17,15 @@ void main() {
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
-      expect(settings.libraryRoots, isEmpty);
+      expect(settings.libraries, isEmpty);
       expect(settings.customPresets, isEmpty);
+      expect(settings.outputMode, OutputMode.besideSource);
+      expect(settings.outputDirectory, isEmpty);
+      expect(settings.namingTemplate, '{folder}');
+      expect(settings.collisionPolicy, CollisionPolicy.overwrite);
+      expect(settings.skipExistingArchives, false);
+      expect(settings.maxParallelEncodes, 2);
+      expect(settings.preventSleep, true);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -63,6 +73,21 @@ void main() {
           skipCjxl: true,
           postRunConfirmSeconds: 30,
           lastRoot: '/some/path',
+          libraries: const [
+            LibraryEntry(
+              path: '/some/path',
+              preset: 'Lossy',
+              outputDirectory: '/out',
+              safeRunOverride: false,
+            ),
+          ],
+          outputMode: OutputMode.custom,
+          outputDirectory: '/out',
+          namingTemplate: '{library} - {folder}',
+          collisionPolicy: CollisionPolicy.suffix,
+          skipExistingArchives: true,
+          maxParallelEncodes: 3,
+          preventSleep: false,
         );
         final json = settings.toJson();
         final restored = AppSettings.fromJson(json);
@@ -70,6 +95,14 @@ void main() {
         expect(restored.skipCjxl, true);
         expect(restored.postRunConfirmSeconds, 30);
         expect(restored.lastRoot, '/some/path');
+        expect(restored.libraries.single.path, '/some/path');
+        expect(restored.libraries.single.preset, 'Lossy');
+        expect(restored.outputMode, OutputMode.custom);
+        expect(restored.namingTemplate, '{library} - {folder}');
+        expect(restored.collisionPolicy, CollisionPolicy.suffix);
+        expect(restored.skipExistingArchives, true);
+        expect(restored.maxParallelEncodes, 3);
+        expect(restored.preventSleep, false);
       });
     });
   });

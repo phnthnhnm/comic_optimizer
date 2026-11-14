@@ -31,7 +31,8 @@ void main() {
     });
 
     test('output extensions are the ones offered in the UI', () {
-      expect(kOutputExtensions, ['.cbz', '.cbr', '.zip']);
+      expect(kOutputExtensions, ['.cbz', '.zip']);
+      expect(kOutputExtensions, isNot(contains('.cbr')));
     });
   });
 }

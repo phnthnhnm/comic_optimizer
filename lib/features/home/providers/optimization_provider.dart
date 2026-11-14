@@ -10,12 +10,14 @@ import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/enums/folder_run_status.dart';
 import 'package:comic_optimizer/domain/enums/run_log_level.dart';
+import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/models/folder_run_result.dart';
 import 'package:comic_optimizer/domain/models/optimization_state.dart';
 import 'package:comic_optimizer/domain/models/preflight_summary.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/domain/models/run_log_entry.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
+import 'package:comic_optimizer/infrastructure/services/run_journal_store.dart';
 
 final optimizationProvider =
     NotifierProvider<OptimizationNotifier, OptimizationState>(
@@ -63,7 +65,9 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
   /// The queue, with a fallback to the legacy single `lastRoot`.
   List<String> _rootsToRun() {
     final settings = ref.read(settingsProvider);
-    if (settings.libraryRoots.isNotEmpty) return settings.libraryRoots;
+    if (settings.libraries.isNotEmpty) {
+      return settings.libraries.map((entry) => entry.path).toList();
+    }
     final legacy = settings.lastRoot;
     return legacy == null ? const [] : [legacy];
   }
@@ -85,7 +89,28 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
       return;
     }
 
-    final preset = Preset.resolve(settings.lastPreset, settings.customPresets);
+    final sleepInhibitor = ref.read(sleepInhibitorProvider);
+    if (settings.preventSleep) sleepInhibitor.inhibit();
+
+    final journalStore = ref.read(runJournalStoreProvider);
+    final fingerprint = _runFingerprint(settings, roots);
+    var journal = journalStore.read();
+    if (journal != null && journal.fingerprint != fingerprint) {
+      await journalStore.clear();
+      journal = null;
+      _log('Previous run settings changed; starting a fresh journal.');
+    }
+    if (journal == null) {
+      journal = RunJournal(
+        fingerprint: fingerprint,
+        completed: const {},
+        updatedAt: DateTime.now(),
+      );
+      await journalStore.write(journal);
+    }
+    final completed = Set<String>.from(journal.completed);
+    var journalWrite = Future<void>.value();
+
     _cancelRequested = false;
     _paused = false;
     _pauseCompleter = null;
@@ -117,6 +142,9 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
     // Kept local: it only feeds the end-of-run summary.
     final folderSizes = <String, Map<String, int?>>{};
     var hadErrors = false;
+    if (completed.isNotEmpty) {
+      _log('Resuming: ${completed.length} completed comics will be skipped.');
+    }
 
     try {
       for (var index = 0; index < roots.length; index++) {
@@ -127,6 +155,13 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
         }
 
         final root = roots[index];
+        final matching = settings.libraries
+            .where((entry) => entry.path == root)
+            .toList();
+        final library = matching.isEmpty ? null : matching.first;
+        final presetName = library?.preset ?? settings.lastPreset;
+        final rootPreset = Preset.resolve(presetName, settings.customPresets);
+        final rootSafeRun = library?.safeRunOverride ?? settings.safeRun;
         state = state.copyWith(currentRoot: root, starting: false);
         _log('Root: $root (${index + 1}/${roots.length})');
 
@@ -135,13 +170,22 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
 
         final result = await optimizer.optimizeRoot(
           Directory(root),
-          presetArgs: preset.args,
+          presetArgs: rootPreset.args,
           skipCjxl: settings.skipCjxl,
           deleteNonImageFiles: settings.deleteNonImageFiles,
           cjxlPath: settings.cjxlPath,
-          safeRun: settings.safeRun,
+          safeRun: rootSafeRun,
           outputExtension: settings.outputExt,
           preferPermanentDelete: settings.preferPermanentDelete,
+          presetName: rootPreset.name,
+          namingTemplate: settings.namingTemplate,
+          globalOutputDirectory: settings.outputDirectory,
+          libraryOutputDirectory: library?.outputDirectory,
+          outputMode: settings.outputMode,
+          collisionPolicy: settings.collisionPolicy,
+          skipExistingArchives: settings.skipExistingArchives,
+          maxParallelEncodes: settings.maxParallelEncodes,
+          completedFolders: completed,
           onLog: (msg) => _log(msg),
           onFileStart: (folder, file, index, total) {
             state = state.copyWith(
@@ -160,9 +204,22 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
               folders: {...state.folders, folder: FolderRunStatus.running},
             );
           },
-          onFolderDone: (folder, ok, beforeBytes, afterBytes, _) {
+          onFolderDone: (folder, ok, beforeBytes, afterBytes, _, archivePath) {
             folderSizes[folder] = {'before': beforeBytes, 'after': afterBytes};
             final error = ok ? null : _lastError(folder);
+            if (!ok) hadErrors = true;
+            if (ok) {
+              completed.add(folder);
+              journalWrite = journalWrite.then(
+                (_) => journalStore.write(
+                  RunJournal(
+                    fingerprint: fingerprint,
+                    completed: Set<String>.from(completed),
+                    updatedAt: DateTime.now(),
+                  ),
+                ),
+              );
+            }
             _log('Done: $folder (${ok ? 'OK' : 'ERR'})', folder: folder);
             state = state.copyWith(
               currentLogFolder: null,
@@ -182,6 +239,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
                   beforeBytes: beforeBytes,
                   afterBytes: afterBytes,
                   error: error,
+                  archivePath: archivePath,
                 ),
               },
             );
@@ -220,6 +278,10 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
       } else if (!_cancelRequested) {
         _log(hadErrors ? 'Finished with errors.' : 'All done.');
       }
+      if (!_cancelRequested && !hadErrors) {
+        await journalWrite;
+        await journalStore.clear();
+      }
     } catch (e, st) {
       _log('Error: $e');
       _log(st.toString());
@@ -233,6 +295,7 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
         finishedAt: DateTime.now(),
       );
       _currentOptimizer = null;
+      if (settings.preventSleep) sleepInhibitor.release();
     }
   }
 
@@ -305,4 +368,56 @@ class OptimizationNotifier extends Notifier<OptimizationState> {
   }
 
   void addLog(String line) => _log(line);
+}
+
+String _runFingerprint(AppSettings settings, List<String> roots) {
+  final buffer = StringBuffer()
+    ..write('run-journal-v1|')
+    ..write(settings.outputExt)
+    ..write('|')
+    ..write(settings.skipCjxl)
+    ..write('|')
+    ..write(settings.deleteNonImageFiles)
+    ..write('|')
+    ..write(settings.cjxlPath)
+    ..write('|')
+    ..write(settings.safeRun)
+    ..write('|')
+    ..write(settings.preferPermanentDelete)
+    ..write('|')
+    ..write(settings.outputMode.name)
+    ..write('|')
+    ..write(settings.outputDirectory)
+    ..write('|')
+    ..write(settings.namingTemplate)
+    ..write('|')
+    ..write(settings.collisionPolicy.name)
+    ..write('|')
+    ..write(settings.lastPreset)
+    ..write('|')
+    ..write(roots.join('\\u0000'));
+  for (final entry in settings.libraries) {
+    buffer
+      ..write('|')
+      ..write(entry.path)
+      ..write('\\u0001')
+      ..write(entry.preset)
+      ..write('\\u0001')
+      ..write(entry.outputDirectory)
+      ..write('\\u0001')
+      ..write(entry.safeRunOverride);
+  }
+  for (final preset in settings.customPresets) {
+    buffer
+      ..write('|')
+      ..write(preset.name)
+      ..write('\\u0001')
+      ..write(preset.args.join(','));
+  }
+  var hash = 0x811c9dc5;
+  for (final unit in buffer.toString().codeUnits) {
+    hash ^= unit;
+    hash = (hash * 0x01000193) & 0xffffffff;
+  }
+  return hash.toRadixString(16).padLeft(8, '0');
 }

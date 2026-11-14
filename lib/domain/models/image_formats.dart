@@ -14,7 +14,7 @@ const Set<String> kImageExtensions = {
 };
 
 /// Archive extensions offered as output.
-const List<String> kOutputExtensions = ['.cbz', '.cbr', '.zip'];
+const List<String> kOutputExtensions = ['.cbz', '.zip'];
 
 /// Whether [path] points at a supported image, regardless of case.
 bool isSupportedImage(String path) =>

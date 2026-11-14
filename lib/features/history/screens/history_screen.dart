@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/models/run_history_entry.dart';
@@ -7,16 +8,33 @@ import 'package:comic_optimizer/features/history/providers/run_history_provider.
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
 
-class HistoryScreen extends ConsumerWidget {
+enum _HistoryFilter { all, success, failed }
+
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  final _search = TextEditingController();
+  _HistoryFilter _filter = _HistoryFilter.all;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final history = ref.watch(runHistoryProvider);
     final entries = switch (history) {
       AsyncData(:final value) => value,
       _ => const <RunHistoryEntry>[],
     };
+    final visible = _filtered(entries);
 
     return Scaffold(
       appBar: AppBar(
@@ -35,16 +53,74 @@ class HistoryScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Recent runs',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'The last 50 completed runs, newest first.',
-              style: TextStyle(fontSize: 12, color: Catppuccin.overlay1),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent runs',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'The last 50 completed runs, newest first.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Catppuccin.overlay1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (entries.isNotEmpty) _LifetimeSummary(entries: entries),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
+            if (entries.isNotEmpty) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _search,
+                      decoration: const InputDecoration(
+                        hintText: 'Search by library or date',
+                        prefixIcon: Icon(Icons.search_rounded, size: 18),
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SegmentedButton<_HistoryFilter>(
+                    segments: const [
+                      ButtonSegment(
+                        value: _HistoryFilter.all,
+                        label: Text('All'),
+                      ),
+                      ButtonSegment(
+                        value: _HistoryFilter.success,
+                        label: Text('Succeeded'),
+                      ),
+                      ButtonSegment(
+                        value: _HistoryFilter.failed,
+                        label: Text('With failures'),
+                      ),
+                    ],
+                    selected: {_filter},
+                    onSelectionChanged: (value) =>
+                        setState(() => _filter = value.first),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
             Expanded(
               child: switch (history) {
                 AsyncLoading() => const Center(
@@ -57,11 +133,17 @@ class HistoryScreen extends ConsumerWidget {
                   ),
                 ),
                 _ when entries.isEmpty => const _EmptyHistory(),
+                _ when visible.isEmpty => const Center(
+                  child: Text(
+                    'No runs match this filter.',
+                    style: TextStyle(color: Catppuccin.overlay1),
+                  ),
+                ),
                 _ => ListView.separated(
-                  itemCount: entries.length,
+                  itemCount: visible.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) =>
-                      _HistoryCard(entry: entries[index]),
+                      _HistoryCard(entry: visible[index]),
                 ),
               },
             ),
@@ -69,6 +151,25 @@ class HistoryScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  List<RunHistoryEntry> _filtered(List<RunHistoryEntry> entries) {
+    final query = _search.text.trim().toLowerCase();
+    return entries.where((entry) {
+      final matchesFilter = switch (_filter) {
+        _HistoryFilter.all => true,
+        _HistoryFilter.success => entry.failed == 0,
+        _HistoryFilter.failed => entry.failed > 0,
+      };
+      if (!matchesFilter) return false;
+      if (query.isEmpty) return true;
+      final haystack = [
+        _formatDate(entry.finishedAt),
+        ...entry.libraries.map((library) => p.basename(library)),
+        ...entry.failedFolders.map((folder) => p.basename(folder)),
+      ].join(' ').toLowerCase();
+      return haystack.contains(query);
+    }).toList();
   }
 
   Future<void> _clear(BuildContext context, WidgetRef ref) async {
@@ -92,6 +193,51 @@ class HistoryScreen extends ConsumerWidget {
     if (ok == true) {
       await ref.read(runHistoryProvider.notifier).clear();
     }
+  }
+}
+
+class _LifetimeSummary extends StatelessWidget {
+  final List<RunHistoryEntry> entries;
+
+  const _LifetimeSummary({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = entries.fold<int>(
+      0,
+      (sum, entry) => sum + (entry.savedBytes ?? 0),
+    );
+    final images = entries.fold<int>(0, (sum, entry) => sum + entry.images);
+    return Row(
+      children: [
+        _SummaryPill(label: '${entries.length} runs'),
+        const SizedBox(width: 6),
+        _SummaryPill(label: '$images images'),
+        const SizedBox(width: 6),
+        _SummaryPill(label: '${formatBytes(saved)} saved'),
+      ],
+    );
+  }
+}
+
+class _SummaryPill extends StatelessWidget {
+  final String label;
+
+  const _SummaryPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: Catppuccin.surface0,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 10.5, color: Catppuccin.subtext0),
+      ),
+    );
   }
 }
 
@@ -199,24 +345,24 @@ class _HistoryCard extends StatelessWidget {
       ),
     );
   }
+}
 
-  static String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    String two(int value) => value.toString().padLeft(2, '0');
-    return '${months[date.month - 1]} ${date.day}, ${date.year}'
-        ' · ${two(date.hour)}:${two(date.minute)}';
-  }
+String _formatDate(DateTime date) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  String two(int value) => value.toString().padLeft(2, '0');
+  return '${months[date.month - 1]} ${date.day}, ${date.year}'
+      ' · ${two(date.hour)}:${two(date.minute)}';
 }

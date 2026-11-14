@@ -4,9 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:comic_optimizer/core/interfaces/i_settings_service.dart';
 import 'package:comic_optimizer/core/result.dart';
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/models/custom_preset.dart';
+import 'package:comic_optimizer/domain/models/library_entry.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 
 /// Implementation of [ISettingsService] backed by SharedPreferences.
@@ -23,7 +26,15 @@ final class SettingsServiceImpl implements ISettingsService {
   static const _keySafeRun = 'safeRun';
   static const _keyDeleteNonImageFiles = 'deleteNonImageFiles';
   static const _keyLibraryRoots = 'libraryRoots';
+  static const _keyLibraries = 'libraries';
   static const _keyCustomPresets = 'customPresets';
+  static const _keyOutputMode = 'outputMode';
+  static const _keyOutputDirectory = 'outputDirectory';
+  static const _keyNamingTemplate = 'namingTemplate';
+  static const _keyCollisionPolicy = 'collisionPolicy';
+  static const _keySkipExistingArchives = 'skipExistingArchives';
+  static const _keyMaxParallelEncodes = 'maxParallelEncodes';
+  static const _keyPreventSleep = 'preventSleep';
   static const _keyPostRunAction = 'postRunAction';
   static const _keyPostRunConfirmEnabled = 'postRunConfirmEnabled';
   static const _keyPostRunConfirmSeconds = 'postRunConfirmSeconds';
@@ -48,8 +59,15 @@ final class SettingsServiceImpl implements ISettingsService {
         cjxlPath: getCjxlPath(),
         lastPreset: getLastPreset(),
         lastRoot: getLastRoot(),
-        libraryRoots: getLibraryRoots(),
+        libraries: getLibraries(),
         customPresets: getCustomPresets(),
+        outputMode: getOutputMode(),
+        outputDirectory: getOutputDirectory(),
+        namingTemplate: getNamingTemplate(),
+        collisionPolicy: getCollisionPolicy(),
+        skipExistingArchives: getSkipExistingArchives(),
+        maxParallelEncodes: getMaxParallelEncodes(),
+        preventSleep: getPreventSleep(),
         postRunAction: PostRunActionX.fromName(getPostRunAction()),
         postRunConfirmEnabled: getPostRunConfirmEnabled(),
         postRunConfirmSeconds: getPostRunConfirmSeconds(),
@@ -73,8 +91,15 @@ final class SettingsServiceImpl implements ISettingsService {
       await setCjxlPath(settings.cjxlPath);
       await setLastPreset(settings.lastPreset);
       await setLastRoot(settings.lastRoot);
-      await setLibraryRoots(settings.libraryRoots);
+      await setLibraries(settings.libraries);
       await setCustomPresets(settings.customPresets);
+      await setOutputMode(settings.outputMode);
+      await setOutputDirectory(settings.outputDirectory);
+      await setNamingTemplate(settings.namingTemplate);
+      await setCollisionPolicy(settings.collisionPolicy);
+      await setSkipExistingArchives(settings.skipExistingArchives);
+      await setMaxParallelEncodes(settings.maxParallelEncodes);
+      await setPreventSleep(settings.preventSleep);
       await setPostRunAction(settings.postRunAction.toName);
       await setPostRunConfirmEnabled(settings.postRunConfirmEnabled);
       await setPostRunConfirmSeconds(settings.postRunConfirmSeconds);
@@ -160,7 +185,11 @@ final class SettingsServiceImpl implements ISettingsService {
   bool getPreferPermanentDelete() =>
       _prefs.getBool(_keyPreferPermanentDelete) ?? false;
 
-  String getOutputExt() => _prefs.getString(_keyOutputExt) ?? '.cbz';
+  String getOutputExt() {
+    final ext = _prefs.getString(_keyOutputExt) ?? '.cbz';
+    return ext.toLowerCase() == '.cbr' ? '.cbz' : ext;
+  }
+
   String? getLastRoot() => _prefs.getString(_keyLastRoot);
   String getLastPreset() =>
       _prefs.getString(_keyLastPreset) ?? Preset.losslessName;
@@ -170,13 +199,60 @@ final class SettingsServiceImpl implements ISettingsService {
   bool getDeleteNonImageFiles() =>
       _prefs.getBool(_keyDeleteNonImageFiles) ?? true;
 
-  /// Falls back to the legacy `lastRoot` value on first load after upgrading.
-  List<String> getLibraryRoots() {
-    final stored = _prefs.getStringList(_keyLibraryRoots);
-    if (stored != null) return stored;
-    final legacy = getLastRoot();
-    return legacy == null ? const [] : [legacy];
+  /// Reads the structured queue, migrating the legacy path-only list.
+  List<LibraryEntry> getLibraries() {
+    final raw = _prefs.getString(_keyLibraries);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          return decoded
+              .whereType<Map>()
+              .map(
+                (item) => LibraryEntry.fromJson(item.cast<String, dynamic>()),
+              )
+              .toList();
+        }
+      } catch (_) {}
+    }
+
+    final legacy = _prefs.getStringList(_keyLibraryRoots);
+    if (legacy != null && legacy.isNotEmpty) {
+      return legacy.map((path) => LibraryEntry(path: path)).toList();
+    }
+
+    final lastRoot = getLastRoot();
+    return lastRoot == null ? const [] : [LibraryEntry(path: lastRoot)];
   }
+
+  OutputMode getOutputMode() {
+    final raw = _prefs.getString(_keyOutputMode);
+    return OutputMode.values.firstWhere(
+      (value) => value.name == raw,
+      orElse: () => OutputMode.besideSource,
+    );
+  }
+
+  String getOutputDirectory() => _prefs.getString(_keyOutputDirectory) ?? '';
+  String getNamingTemplate() =>
+      _prefs.getString(_keyNamingTemplate) ?? '{folder}';
+
+  CollisionPolicy getCollisionPolicy() {
+    final raw = _prefs.getString(_keyCollisionPolicy);
+    return CollisionPolicy.values.firstWhere(
+      (value) => value.name == raw,
+      orElse: () => CollisionPolicy.overwrite,
+    );
+  }
+
+  bool getSkipExistingArchives() =>
+      _prefs.getBool(_keySkipExistingArchives) ?? false;
+  int getMaxParallelEncodes() => _prefs.getInt(_keyMaxParallelEncodes) ?? 2;
+  bool getPreventSleep() => _prefs.getBool(_keyPreventSleep) ?? true;
+
+  /// Legacy helper retained for old callers.
+  List<String> getLibraryRoots() =>
+      getLibraries().map((entry) => entry.path).toList();
 
   List<CustomPreset> getCustomPresets() {
     final raw = _prefs.getString(_keyCustomPresets);
@@ -220,8 +296,37 @@ final class SettingsServiceImpl implements ISettingsService {
   Future<void> setSafeRun(bool v) => _prefs.setBool(_keySafeRun, v);
   Future<void> setDeleteNonImageFiles(bool v) =>
       _prefs.setBool(_keyDeleteNonImageFiles, v);
-  Future<void> setLibraryRoots(List<String> v) =>
-      _prefs.setStringList(_keyLibraryRoots, v);
+  Future<void> setLibraryRoots(List<String> v) async {
+    await _prefs.setStringList(_keyLibraryRoots, v);
+    await setLibraries(v.map((path) => LibraryEntry(path: path)).toList());
+  }
+
+  Future<void> setLibraries(List<LibraryEntry> libraries) async {
+    await _prefs.setString(
+      _keyLibraries,
+      jsonEncode(libraries.map((entry) => entry.toJson()).toList()),
+    );
+    // Keep the legacy key populated for one release so downgrades keep the
+    // queue paths (overrides are intentionally not representable there).
+    await _prefs.setStringList(
+      _keyLibraryRoots,
+      libraries.map((entry) => entry.path).toList(),
+    );
+  }
+
+  Future<void> setOutputMode(OutputMode v) =>
+      _prefs.setString(_keyOutputMode, v.name);
+  Future<void> setOutputDirectory(String v) =>
+      _prefs.setString(_keyOutputDirectory, v);
+  Future<void> setNamingTemplate(String v) =>
+      _prefs.setString(_keyNamingTemplate, v);
+  Future<void> setCollisionPolicy(CollisionPolicy v) =>
+      _prefs.setString(_keyCollisionPolicy, v.name);
+  Future<void> setSkipExistingArchives(bool v) =>
+      _prefs.setBool(_keySkipExistingArchives, v);
+  Future<void> setMaxParallelEncodes(int v) =>
+      _prefs.setInt(_keyMaxParallelEncodes, v);
+  Future<void> setPreventSleep(bool v) => _prefs.setBool(_keyPreventSleep, v);
   Future<void> setCustomPresets(List<CustomPreset> presets) => _prefs.setString(
     _keyCustomPresets,
     jsonEncode(presets.map((preset) => preset.toJson()).toList()),

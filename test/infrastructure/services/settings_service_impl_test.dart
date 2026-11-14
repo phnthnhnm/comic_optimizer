@@ -1,7 +1,10 @@
 import 'package:comic_optimizer/core/result.dart';
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/models/custom_preset.dart';
+import 'package:comic_optimizer/domain/models/library_entry.dart';
 import 'package:comic_optimizer/infrastructure/services/settings_service_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,8 +33,14 @@ void main() {
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.lastPreset, 'Lossless');
       expect(settings.lastRoot, isNull);
-      expect(settings.libraryRoots, isEmpty);
+      expect(settings.libraries, isEmpty);
       expect(settings.customPresets, isEmpty);
+      expect(settings.outputMode, OutputMode.besideSource);
+      expect(settings.namingTemplate, '{folder}');
+      expect(settings.collisionPolicy, CollisionPolicy.overwrite);
+      expect(settings.skipExistingArchives, false);
+      expect(settings.maxParallelEncodes, 2);
+      expect(settings.preventSleep, true);
       expect(settings.postRunAction, PostRunAction.none);
       expect(settings.postRunConfirmEnabled, true);
       expect(settings.postRunConfirmSeconds, 60);
@@ -50,7 +59,15 @@ void main() {
         cjxlPath: '/usr/bin/cjxl',
         lastPreset: 'Lossy',
         lastRoot: r'C:\comics',
-        libraryRoots: [r'C:\comics', r'D:\manga'],
+        libraries: [
+          LibraryEntry(
+            path: r'C:\comics',
+            preset: 'Lossy',
+            outputDirectory: r'D:\optimized',
+            safeRunOverride: false,
+          ),
+          LibraryEntry(path: r'D:\manga'),
+        ],
         customPresets: [
           CustomPreset(
             name: 'Archival',
@@ -65,6 +82,13 @@ void main() {
         preferPermanentDelete: true,
         tutorialCompleted: true,
         animationsEnabled: false,
+        outputMode: OutputMode.custom,
+        outputDirectory: r'D:\optimized',
+        namingTemplate: '{folder} ({preset})',
+        collisionPolicy: CollisionPolicy.suffix,
+        skipExistingArchives: true,
+        maxParallelEncodes: 3,
+        preventSleep: false,
       );
 
       final saveResult = await service.saveSettings(original);
@@ -74,15 +98,22 @@ void main() {
       expect(loadResult, isA<Ok<AppSettings>>());
       final loaded = (loadResult as Ok<AppSettings>).value;
 
-      expect(loaded.outputExt, original.outputExt);
+      expect(loaded.outputExt, '.cbz');
       expect(loaded.skipCjxl, original.skipCjxl);
       expect(loaded.safeRun, original.safeRun);
       expect(loaded.deleteNonImageFiles, original.deleteNonImageFiles);
       expect(loaded.cjxlPath, original.cjxlPath);
       expect(loaded.lastPreset, original.lastPreset);
       expect(loaded.lastRoot, original.lastRoot);
-      expect(loaded.libraryRoots, original.libraryRoots);
+      expect(loaded.libraries, original.libraries);
       expect(loaded.customPresets, original.customPresets);
+      expect(loaded.outputMode, original.outputMode);
+      expect(loaded.outputDirectory, original.outputDirectory);
+      expect(loaded.namingTemplate, original.namingTemplate);
+      expect(loaded.collisionPolicy, original.collisionPolicy);
+      expect(loaded.skipExistingArchives, original.skipExistingArchives);
+      expect(loaded.maxParallelEncodes, original.maxParallelEncodes);
+      expect(loaded.preventSleep, original.preventSleep);
       expect(loaded.postRunAction, original.postRunAction);
       expect(loaded.postRunConfirmEnabled, original.postRunConfirmEnabled);
       expect(loaded.postRunConfirmSeconds, original.postRunConfirmSeconds);
@@ -143,7 +174,33 @@ void main() {
                   as Ok<AppSettings>)
               .value;
 
-      expect(settings.libraryRoots, [r'C:\comics']);
+      expect(settings.libraries.single.path, r'C:\comics');
+    });
+
+    test('migrates the legacy path list into structured libraries', () async {
+      SharedPreferences.setMockInitialValues({
+        'libraryRoots': [r'C:\comics', r'D:\manga'],
+      });
+      final migratedPrefs = await SharedPreferences.getInstance();
+      final settings =
+          (await SettingsServiceImpl(migratedPrefs).loadSettings()
+                  as Ok<AppSettings>)
+              .value;
+
+      expect(settings.libraries.map((entry) => entry.path), [
+        r'C:\comics',
+        r'D:\manga',
+      ]);
+    });
+
+    test('normalizes a legacy .cbr output preference to .cbz', () async {
+      SharedPreferences.setMockInitialValues({'outputExt': '.cbr'});
+      final migratedPrefs = await SharedPreferences.getInstance();
+      final settings =
+          (await SettingsServiceImpl(migratedPrefs).loadSettings()
+                  as Ok<AppSettings>)
+              .value;
+      expect(settings.outputExt, '.cbz');
     });
   });
 }

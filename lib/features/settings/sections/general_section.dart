@@ -1,6 +1,9 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
@@ -145,6 +148,144 @@ class GeneralSection extends ConsumerWidget {
                     ],
                   ),
                 ),
+            ],
+          ),
+        ),
+        SettingsCard(
+          title: 'Output',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DropdownButtonFormField<OutputMode>(
+                initialValue: settings.outputMode,
+                decoration: const InputDecoration(
+                  labelText: 'Archive location',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                dropdownColor: Catppuccin.mantle,
+                items: const [
+                  DropdownMenuItem(
+                    value: OutputMode.besideSource,
+                    child: Text('Beside the source folder'),
+                  ),
+                  DropdownMenuItem(
+                    value: OutputMode.custom,
+                    child: Text('Custom folder'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) notifier.setOutputMode(value);
+                },
+              ),
+              if (settings.outputMode == OutputMode.custom) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: settings.outputDirectory,
+                        decoration: const InputDecoration(
+                          labelText: 'Output folder',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        onChanged: notifier.setOutputDirectory,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () async {
+                        final directory = await FilePicker.getDirectoryPath(
+                          dialogTitle: 'Choose an output folder',
+                        );
+                        if (directory != null) {
+                          await notifier.setOutputDirectory(directory);
+                        }
+                      },
+                      child: const Text('Browse'),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 12),
+              TextFormField(
+                initialValue: settings.namingTemplate,
+                decoration: const InputDecoration(
+                  labelText: 'Archive name',
+                  helperText:
+                      'Tokens: {folder}, {library}, {preset}, {date}, {index}',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onChanged: notifier.setNamingTemplate,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<CollisionPolicy>(
+                initialValue: settings.collisionPolicy,
+                decoration: const InputDecoration(
+                  labelText: 'If the archive already exists',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                dropdownColor: Catppuccin.mantle,
+                items: const [
+                  DropdownMenuItem(
+                    value: CollisionPolicy.overwrite,
+                    child: Text('Overwrite'),
+                  ),
+                  DropdownMenuItem(
+                    value: CollisionPolicy.skip,
+                    child: Text('Skip'),
+                  ),
+                  DropdownMenuItem(
+                    value: CollisionPolicy.suffix,
+                    child: Text('Add a numeric suffix'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) notifier.setCollisionPolicy(value);
+                },
+              ),
+              const SizedBox(height: 4),
+              SettingsSwitchRow(
+                title: 'Skip up-to-date archives',
+                subtitle: 'Ignore comics whose archive is newer than the source folder.',
+                value: settings.skipExistingArchives,
+                onChanged: notifier.setSkipExistingArchives,
+              ),
+            ],
+          ),
+        ),
+        SettingsCard(
+          title: 'Performance',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DropdownButtonFormField<int>(
+                initialValue: settings.maxParallelEncodes.clamp(1, 4),
+                decoration: const InputDecoration(
+                  labelText: 'Parallel encoders',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                dropdownColor: Catppuccin.mantle,
+                items: const [
+                  DropdownMenuItem(value: 1, child: Text('1 (sequential)')),
+                  DropdownMenuItem(value: 2, child: Text('2')),
+                  DropdownMenuItem(value: 3, child: Text('3')),
+                  DropdownMenuItem(value: 4, child: Text('4')),
+                ],
+                onChanged: (value) {
+                  if (value != null) notifier.setMaxParallelEncodes(value);
+                },
+              ),
+              SettingsSwitchRow(
+                title: 'Prevent sleep while running',
+                subtitle: 'Keep the PC awake until the queue finishes.',
+                value: settings.preventSleep,
+                onChanged: notifier.setPreventSleep,
+              ),
             ],
           ),
         ),

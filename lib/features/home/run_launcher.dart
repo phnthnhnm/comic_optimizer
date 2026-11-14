@@ -17,7 +17,7 @@ Future<void> addLibraryFolder(BuildContext context, WidgetRef ref) async {
   if (directory == null) return;
 
   if (!context.mounted) return;
-  if (settings.libraryRoots.contains(directory)) {
+  if (settings.libraries.any((entry) => entry.path == directory)) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('That folder is already in the queue.')),
     );
@@ -32,8 +32,7 @@ Future<void> addLibraryFolder(BuildContext context, WidgetRef ref) async {
 /// Runs the preflight sheet and starts the queue when the user confirms.
 Future<void> startRunWithPreflight(BuildContext context, WidgetRef ref) async {
   final settings = ref.read(settingsProvider);
-  final hasRoots =
-      settings.libraryRoots.isNotEmpty || settings.lastRoot != null;
+  final hasRoots = settings.libraries.isNotEmpty || settings.lastRoot != null;
   PreflightSummary? summary;
   if (hasRoots) {
     summary = await showPreflightSheet(context, ref);

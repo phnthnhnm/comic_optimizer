@@ -4,6 +4,8 @@ import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/providers/shared_preferences_provider.dart';
 import 'package:comic_optimizer/core/result.dart';
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/enums/folder_run_status.dart';
 import 'package:comic_optimizer/domain/models/preflight_summary.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
@@ -25,6 +27,9 @@ class FakeDirectory extends Fake implements Directory {}
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeDirectory());
+    registerFallbackValue(OutputMode.besideSource);
+    registerFallbackValue(CollisionPolicy.overwrite);
+    registerFallbackValue(<String>{});
   });
 
   group('OptimizationNotifier', () {
@@ -48,6 +53,15 @@ void main() {
           safeRun: any(named: 'safeRun'),
           outputExtension: any(named: 'outputExtension'),
           preferPermanentDelete: any(named: 'preferPermanentDelete'),
+          presetName: any(named: 'presetName'),
+          namingTemplate: any(named: 'namingTemplate'),
+          globalOutputDirectory: any(named: 'globalOutputDirectory'),
+          libraryOutputDirectory: any(named: 'libraryOutputDirectory'),
+          outputMode: any(named: 'outputMode'),
+          collisionPolicy: any(named: 'collisionPolicy'),
+          skipExistingArchives: any(named: 'skipExistingArchives'),
+          maxParallelEncodes: any(named: 'maxParallelEncodes'),
+          completedFolders: any(named: 'completedFolders'),
           onLog: any(named: 'onLog'),
           onFolderStart: any(named: 'onFolderStart'),
           onFolderDone: any(named: 'onFolderDone'),
@@ -66,6 +80,7 @@ void main() {
                     int?,
                     int?,
                     Map<String, Map<String, int?>>?,
+                    String?,
                   );
           final onFile =
               invocation.namedArguments[#onFileStart]
@@ -77,7 +92,14 @@ void main() {
             1,
             2,
           );
-          onDone('/tmp/comics/Comic A', folderSucceeded, 1000, 400, null);
+          onDone(
+            '/tmp/comics/Comic A',
+            folderSucceeded,
+            1000,
+            400,
+            null,
+            '/tmp/comics/Comic A.cbz',
+          );
         }
         return result;
       });
@@ -145,6 +167,15 @@ void main() {
             safeRun: true,
             outputExtension: '.zip',
             preferPermanentDelete: true,
+            presetName: Preset.lossyName,
+            namingTemplate: '{folder}',
+            globalOutputDirectory: '',
+            libraryOutputDirectory: null,
+            outputMode: OutputMode.besideSource,
+            collisionPolicy: CollisionPolicy.overwrite,
+            skipExistingArchives: false,
+            maxParallelEncodes: 2,
+            completedFolders: any(named: 'completedFolders'),
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
@@ -171,6 +202,15 @@ void main() {
             safeRun: any(named: 'safeRun'),
             outputExtension: any(named: 'outputExtension'),
             preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            presetName: any(named: 'presetName'),
+            namingTemplate: any(named: 'namingTemplate'),
+            globalOutputDirectory: any(named: 'globalOutputDirectory'),
+            libraryOutputDirectory: any(named: 'libraryOutputDirectory'),
+            outputMode: any(named: 'outputMode'),
+            collisionPolicy: any(named: 'collisionPolicy'),
+            skipExistingArchives: any(named: 'skipExistingArchives'),
+            maxParallelEncodes: any(named: 'maxParallelEncodes'),
+            completedFolders: any(named: 'completedFolders'),
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
@@ -195,6 +235,15 @@ void main() {
             safeRun: any(named: 'safeRun'),
             outputExtension: any(named: 'outputExtension'),
             preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            presetName: any(named: 'presetName'),
+            namingTemplate: any(named: 'namingTemplate'),
+            globalOutputDirectory: any(named: 'globalOutputDirectory'),
+            libraryOutputDirectory: any(named: 'libraryOutputDirectory'),
+            outputMode: any(named: 'outputMode'),
+            collisionPolicy: any(named: 'collisionPolicy'),
+            skipExistingArchives: any(named: 'skipExistingArchives'),
+            maxParallelEncodes: any(named: 'maxParallelEncodes'),
+            completedFolders: any(named: 'completedFolders'),
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
@@ -217,6 +266,15 @@ void main() {
             safeRun: any(named: 'safeRun'),
             outputExtension: any(named: 'outputExtension'),
             preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            presetName: any(named: 'presetName'),
+            namingTemplate: any(named: 'namingTemplate'),
+            globalOutputDirectory: any(named: 'globalOutputDirectory'),
+            libraryOutputDirectory: any(named: 'libraryOutputDirectory'),
+            outputMode: any(named: 'outputMode'),
+            collisionPolicy: any(named: 'collisionPolicy'),
+            skipExistingArchives: any(named: 'skipExistingArchives'),
+            maxParallelEncodes: any(named: 'maxParallelEncodes'),
+            completedFolders: any(named: 'completedFolders'),
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),
@@ -319,6 +377,15 @@ void main() {
             safeRun: any(named: 'safeRun'),
             outputExtension: any(named: 'outputExtension'),
             preferPermanentDelete: any(named: 'preferPermanentDelete'),
+            presetName: any(named: 'presetName'),
+            namingTemplate: any(named: 'namingTemplate'),
+            globalOutputDirectory: any(named: 'globalOutputDirectory'),
+            libraryOutputDirectory: any(named: 'libraryOutputDirectory'),
+            outputMode: any(named: 'outputMode'),
+            collisionPolicy: any(named: 'collisionPolicy'),
+            skipExistingArchives: any(named: 'skipExistingArchives'),
+            maxParallelEncodes: any(named: 'maxParallelEncodes'),
+            completedFolders: any(named: 'completedFolders'),
             onLog: any(named: 'onLog'),
             onFolderStart: any(named: 'onFolderStart'),
             onFolderDone: any(named: 'onFolderDone'),

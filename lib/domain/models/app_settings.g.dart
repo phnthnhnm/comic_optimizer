@@ -15,16 +15,27 @@ _AppSettings _$AppSettingsFromJson(Map<String, dynamic> json) => _AppSettings(
   cjxlPath: json['cjxlPath'] as String? ?? 'cjxl',
   lastPreset: json['lastPreset'] as String? ?? 'Lossless',
   lastRoot: json['lastRoot'] as String?,
-  libraryRoots:
-      (json['libraryRoots'] as List<dynamic>?)
-          ?.map((e) => e as String)
+  libraries:
+      (json['libraries'] as List<dynamic>?)
+          ?.map((e) => LibraryEntry.fromJson(e as Map<String, dynamic>))
           .toList() ??
-      const <String>[],
+      const <LibraryEntry>[],
   customPresets:
       (json['customPresets'] as List<dynamic>?)
           ?.map((e) => CustomPreset.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <CustomPreset>[],
+  outputMode:
+      $enumDecodeNullable(_$OutputModeEnumMap, json['outputMode']) ??
+      OutputMode.besideSource,
+  outputDirectory: json['outputDirectory'] as String? ?? '',
+  namingTemplate: json['namingTemplate'] as String? ?? '{folder}',
+  collisionPolicy:
+      $enumDecodeNullable(_$CollisionPolicyEnumMap, json['collisionPolicy']) ??
+      CollisionPolicy.overwrite,
+  skipExistingArchives: json['skipExistingArchives'] as bool? ?? false,
+  maxParallelEncodes: (json['maxParallelEncodes'] as num?)?.toInt() ?? 2,
+  preventSleep: json['preventSleep'] as bool? ?? true,
   postRunAction:
       $enumDecodeNullable(_$PostRunActionEnumMap, json['postRunAction']) ??
       PostRunAction.none,
@@ -44,14 +55,32 @@ Map<String, dynamic> _$AppSettingsToJson(_AppSettings instance) =>
       'cjxlPath': instance.cjxlPath,
       'lastPreset': instance.lastPreset,
       'lastRoot': instance.lastRoot,
-      'libraryRoots': instance.libraryRoots,
-      'customPresets': instance.customPresets,
+      'libraries': instance.libraries.map((e) => e.toJson()).toList(),
+      'customPresets': instance.customPresets.map((e) => e.toJson()).toList(),
+      'outputMode': _$OutputModeEnumMap[instance.outputMode]!,
+      'outputDirectory': instance.outputDirectory,
+      'namingTemplate': instance.namingTemplate,
+      'collisionPolicy': _$CollisionPolicyEnumMap[instance.collisionPolicy]!,
+      'skipExistingArchives': instance.skipExistingArchives,
+      'maxParallelEncodes': instance.maxParallelEncodes,
+      'preventSleep': instance.preventSleep,
       'postRunAction': _$PostRunActionEnumMap[instance.postRunAction]!,
       'postRunConfirmEnabled': instance.postRunConfirmEnabled,
       'postRunConfirmSeconds': instance.postRunConfirmSeconds,
       'tutorialCompleted': instance.tutorialCompleted,
       'animationsEnabled': instance.animationsEnabled,
     };
+
+const _$OutputModeEnumMap = {
+  OutputMode.besideSource: 'besideSource',
+  OutputMode.custom: 'custom',
+};
+
+const _$CollisionPolicyEnumMap = {
+  CollisionPolicy.overwrite: 'overwrite',
+  CollisionPolicy.skip: 'skip',
+  CollisionPolicy.suffix: 'suffix',
+};
 
 const _$PostRunActionEnumMap = {
   PostRunAction.none: 'none',

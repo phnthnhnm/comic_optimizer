@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:comic_optimizer/core/platform_actions.dart';
 import 'package:comic_optimizer/core/utils.dart';
 import 'package:comic_optimizer/domain/enums/run_log_level.dart';
 import 'package:comic_optimizer/domain/models/folder_run_result.dart';
@@ -491,6 +492,19 @@ class _LibraryCard extends StatelessWidget {
                       color: Catppuccin.overlay2,
                     ),
                   ),
+                  if (result.archivePath != null) ...[
+                    const SizedBox(width: 6),
+                    IconButton(
+                      onPressed: () => revealInExplorer(result.archivePath!),
+                      tooltip: 'Show archive in Explorer',
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 16,
+                      icon: const Icon(
+                        Icons.folder_open_outlined,
+                        color: Catppuccin.overlay1,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

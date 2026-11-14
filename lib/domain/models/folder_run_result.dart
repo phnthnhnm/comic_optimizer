@@ -6,6 +6,7 @@ final class FolderRunResult {
   final int? beforeBytes;
   final int? afterBytes;
   final String? error;
+  final String? archivePath;
 
   const FolderRunResult({
     required this.path,
@@ -14,5 +15,6 @@ final class FolderRunResult {
     this.beforeBytes,
     this.afterBytes,
     this.error,
+    this.archivePath,
   });
 }

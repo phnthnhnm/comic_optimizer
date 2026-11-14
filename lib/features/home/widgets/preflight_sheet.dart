@@ -1,8 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:comic_optimizer/core/providers/service_providers.dart';
+import 'package:comic_optimizer/core/utils.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/models/preflight_summary.dart';
+import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
+import 'package:comic_optimizer/infrastructure/services/preflight_estimator.dart';
 import 'package:comic_optimizer/infrastructure/services/preflight_service.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
@@ -33,6 +38,7 @@ class PreflightSheet extends ConsumerStatefulWidget {
 
 class _PreflightSheetState extends ConsumerState<PreflightSheet> {
   late final Future<PreflightSummary> _summary;
+  Future<PreflightEstimate?>? _estimate;
   PreflightSummary? _data;
 
   @override
@@ -40,14 +46,30 @@ class _PreflightSheetState extends ConsumerState<PreflightSheet> {
     super.initState();
     _summary = _scan();
     _summary.then((value) {
-      if (mounted) setState(() => _data = value);
+      if (mounted) {
+        setState(() => _data = value);
+        _startEstimate(value);
+      }
+    });
+  }
+
+  void _startEstimate(PreflightSummary summary) {
+    final settings = ref.read(settingsProvider);
+    if (settings.skipCjxl || summary.folders.isEmpty) return;
+    final preset = Preset.resolve(settings.lastPreset, settings.customPresets);
+    setState(() {
+      _estimate = PreflightEstimator(ref.read(encoderServiceProvider)).estimate(
+        folders: summary.folders,
+        presetArgs: preset.args,
+        cjxlPath: settings.cjxlPath,
+      );
     });
   }
 
   Future<PreflightSummary> _scan() {
     final settings = ref.read(settingsProvider);
-    final roots = settings.libraryRoots.isNotEmpty
-        ? settings.libraryRoots
+    final roots = settings.libraries.isNotEmpty
+        ? settings.libraries.map((entry) => entry.path).toList()
         : [if (settings.lastRoot != null) settings.lastRoot!];
     return const PreflightService().scan(roots);
   }
@@ -130,6 +152,37 @@ class _PreflightSheetState extends ConsumerState<PreflightSheet> {
                   );
                 },
               ),
+              if (_estimate != null)
+                FutureBuilder<PreflightEstimate?>(
+                  future: _estimate,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: Text(
+                          'Estimating output size…',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Catppuccin.overlay1,
+                          ),
+                        ),
+                      );
+                    }
+                    final estimate = snapshot.data;
+                    if (estimate == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: _Notice(
+                        icon: Icons.auto_graph_rounded,
+                        color: Catppuccin.green,
+                        text:
+                            'Estimated archive: ${formatBytes(estimate.estimatedBytes)} '
+                            'from ${estimate.sampledImages} sample '
+                            '${estimate.sampledImages == 1 ? 'page' : 'pages'}.',
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 18),
               _PolicySwitch(
                 title: 'Delete non-image files',
@@ -143,7 +196,15 @@ class _PreflightSheetState extends ConsumerState<PreflightSheet> {
                 value: settings.safeRun,
                 onChanged: notifier.setSafeRun,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              _Notice(
+                icon: Icons.folder_outlined,
+                color: Catppuccin.overlay2,
+                text: settings.outputMode == OutputMode.besideSource
+                    ? 'Archives are written beside each source folder.'
+                    : 'Archives are written to ${settings.outputDirectory.isEmpty ? 'the library root' : settings.outputDirectory}.',
+              ),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

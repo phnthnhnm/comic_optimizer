@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:path/path.dart' as p;
 
@@ -8,25 +9,31 @@ import 'package:comic_optimizer/core/interfaces/i_encoder_service.dart';
 import 'package:comic_optimizer/core/interfaces/i_optimizer_service.dart';
 import 'package:comic_optimizer/core/result.dart';
 import 'package:comic_optimizer/core/utils.dart';
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
 import 'package:comic_optimizer/infrastructure/services/file_io_service.dart';
+import 'package:comic_optimizer/infrastructure/services/output_path_resolver.dart';
 
-/// Implementation of [IOptimizerService] that orchestrates comic folder
-/// optimization: cleaning, renaming, encoding, and archiving.
+/// Orchestrates comic optimization without mutating the source folder until a
+/// verified archive has been published.
 final class OptimizerServiceImpl implements IOptimizerService {
   final IArchiveService _archive;
   final IEncoderService _encoder;
+  final OutputPathResolver _outputs;
 
-  OptimizerServiceImpl({required this._archive, required this._encoder});
+  OptimizerServiceImpl(
+    this._archive,
+    this._encoder, [
+    this._outputs = const OutputPathResolver(),
+  ]);
 
   bool _cancelRequested = false;
   bool _paused = false;
   Completer<void>? _pauseCompleter;
 
   @override
-  void cancel() {
-    _cancelRequested = true;
-  }
+  void cancel() => _cancelRequested = true;
 
   @override
   void pause() {
@@ -47,11 +54,10 @@ final class OptimizerServiceImpl implements IOptimizerService {
     }
   }
 
-  /// Await while paused; returns immediately when not paused.
   Future<void> waitIfPaused() async {
     if (_paused) {
-      final c = _pauseCompleter;
-      if (c != null) await c.future;
+      final completer = _pauseCompleter;
+      if (completer != null) await completer.future;
     }
   }
 
@@ -65,6 +71,15 @@ final class OptimizerServiceImpl implements IOptimizerService {
     required String outputExtension,
     bool safeRun = false,
     bool preferPermanentDelete = false,
+    String presetName = '',
+    String namingTemplate = '{folder}',
+    String globalOutputDirectory = '',
+    String? libraryOutputDirectory,
+    OutputMode outputMode = OutputMode.besideSource,
+    CollisionPolicy collisionPolicy = CollisionPolicy.overwrite,
+    bool skipExistingArchives = false,
+    int maxParallelEncodes = 2,
+    Set<String> completedFolders = const {},
     void Function(String)? onLog,
     void Function(String folder, String file, int index, int total)?
     onFileStart,
@@ -75,6 +90,7 @@ final class OptimizerServiceImpl implements IOptimizerService {
       int? beforeBytes,
       int? afterBytes,
       Map<String, Map<String, int?>>? perFileSizes,
+      String? archivePath,
     )?
     onFolderDone,
   }) async {
@@ -83,150 +99,39 @@ final class OptimizerServiceImpl implements IOptimizerService {
         return Err('Root does not exist: ${root.path}');
       }
 
-      // If the selected root folder contains only image files (no subfolders),
-      // optimize the root folder itself instead of skipping.
-      final rootChildren = await root
-          .list(recursive: false, followLinks: false)
-          .toList();
-      final rootHasDirs = rootChildren.any((e) => e is Directory);
-      final rootFiles = rootChildren.whereType<File>().toList();
-      final rootHasImages = rootFiles.any((f) => isSupportedImage(f.path));
-      if (!rootHasDirs && rootHasImages) {
-        Directory working = root;
-        var startEmitted = false;
-        final safeResult = await makeSafeCopyIfRequested(
-          root,
-          safeRun,
-          onLog: onLog,
-          onFolderStart: onFolderStart,
-        );
-        working = safeResult.working;
-        startEmitted = safeResult.startEmitted;
-        await _processFolder(
-          working,
-          root.path,
-          presetArgs,
-          skipCjxl,
-          deleteNonImageFiles,
-          cjxlPath,
-          outputExtension,
-          preferPermanentDelete || safeRun,
-          emitStart: !startEmitted,
-          onFileStart: onFileStart,
-          onLog: onLog,
-          onFolderStart: onFolderStart,
-          onFolderDone: onFolderDone,
-        );
-        if (safeRun && working.path != root.path) {
-          try {
-            if (await Directory(working.path).exists()) {
-              await Directory(working.path).delete(recursive: true);
-              onLog?.call('Removed safe copy ${working.path}');
-            }
-          } catch (e) {
-            onLog?.call('Failed to remove safe copy ${working.path}: $e');
-          }
-        }
-        return const Ok<void>(null);
-      }
-
-      await for (final entity in root.list(
-        recursive: false,
-        followLinks: false,
-      )) {
+      final comics = await _collectComics(root);
+      for (var index = 0; index < comics.length; index++) {
         await waitIfPaused();
         if (_cancelRequested) {
           onLog?.call('Operation cancelled by user');
           break;
         }
-        if (entity is Directory) {
-          // If directory contains subdirectories, process each subdir; else process the directory itself
-          final children = await entity.list(followLinks: false).toList();
-          final hasDirs = children.any((e) => e is Directory);
-          if (hasDirs) {
-            for (final sub in children.whereType<Directory>()) {
-              await waitIfPaused();
-              if (_cancelRequested) break;
-              Directory working = sub;
-              var startEmitted = false;
-              final safeResult = await makeSafeCopyIfRequested(
-                sub,
-                safeRun,
-                onLog: onLog,
-                onFolderStart: onFolderStart,
-              );
-              working = safeResult.working;
-              startEmitted = safeResult.startEmitted;
-              await _processFolder(
-                working,
-                sub.path,
-                presetArgs,
-                skipCjxl,
-                deleteNonImageFiles,
-                cjxlPath,
-                outputExtension,
-                preferPermanentDelete || safeRun,
-                emitStart: !startEmitted,
-                onFileStart: onFileStart,
-                onLog: onLog,
-                onFolderStart: onFolderStart,
-                onFolderDone: onFolderDone,
-              );
-              // If we created a working copy and it still exists, attempt to delete it now
-              if (safeRun && working.path != sub.path) {
-                try {
-                  if (await Directory(working.path).exists()) {
-                    await Directory(working.path).delete(recursive: true);
-                    onLog?.call('Removed safe copy ${working.path}');
-                  }
-                } catch (e) {
-                  onLog?.call('Failed to remove safe copy ${working.path}: $e');
-                }
-              }
-            }
-          } else {
-            {
-              await waitIfPaused();
-              Directory working = entity;
-              var startEmitted = false;
-              final safeResult = await makeSafeCopyIfRequested(
-                entity,
-                safeRun,
-                onLog: onLog,
-                onFolderStart: onFolderStart,
-              );
-              working = safeResult.working;
-              startEmitted = safeResult.startEmitted;
-              await _processFolder(
-                working,
-                entity.path,
-                presetArgs,
-                skipCjxl,
-                deleteNonImageFiles,
-                cjxlPath,
-                outputExtension,
-                preferPermanentDelete || safeRun,
-                emitStart: !startEmitted,
-                onFileStart: onFileStart,
-                onLog: onLog,
-                onFolderStart: onFolderStart,
-                onFolderDone: onFolderDone,
-              );
-              if (safeRun && working.path != entity.path) {
-                try {
-                  if (await Directory(working.path).exists()) {
-                    await Directory(working.path).delete(recursive: true);
-                    onLog?.call('Removed safe copy ${working.path}');
-                  }
-                } catch (e) {
-                  onLog?.call('Failed to remove safe copy ${working.path}: $e');
-                }
-              }
-            }
-          }
-        }
+        await _processComic(
+          comics[index],
+          root,
+          index + 1,
+          presetArgs: presetArgs,
+          skipCjxl: skipCjxl,
+          deleteNonImageFiles: deleteNonImageFiles,
+          cjxlPath: cjxlPath,
+          outputExtension: outputExtension,
+          safeRun: safeRun,
+          preferPermanentDelete: preferPermanentDelete,
+          presetName: presetName,
+          namingTemplate: namingTemplate,
+          globalOutputDirectory: globalOutputDirectory,
+          libraryOutputDirectory: libraryOutputDirectory,
+          outputMode: outputMode,
+          collisionPolicy: collisionPolicy,
+          skipExistingArchives: skipExistingArchives,
+          maxParallelEncodes: maxParallelEncodes,
+          completedFolders: completedFolders,
+          onLog: onLog,
+          onFileStart: onFileStart,
+          onFolderStart: onFolderStart,
+          onFolderDone: onFolderDone,
+        );
       }
-
       return const Ok<void>(null);
     } catch (e, st) {
       onLog?.call('Optimizer error: $e');
@@ -235,16 +140,67 @@ final class OptimizerServiceImpl implements IOptimizerService {
     }
   }
 
-  Future<void> _processFolder(
-    Directory folder,
-    String originalPath,
-    List<String> presetArgs,
-    bool skipCjxl,
-    bool deleteNonImageFiles,
-    String cjxlPath,
-    String outputExtension,
-    bool preferPermanentDelete, {
-    bool emitStart = true,
+  Future<List<Directory>> _collectComics(Directory root) async {
+    final children = await root
+        .list(recursive: false, followLinks: false)
+        .toList();
+    final directories = children.whereType<Directory>().toList()
+      ..sort((a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)));
+    final rootImages = children
+        .whereType<File>()
+        .where((file) => isSupportedImage(file.path))
+        .toList();
+
+    if (directories.isEmpty) {
+      return rootImages.isEmpty ? const [] : [root];
+    }
+
+    final comics = <Directory>[];
+    for (final directory in directories) {
+      final nested = await directory
+          .list(recursive: false, followLinks: false)
+          .toList();
+      final subdirectories = nested.whereType<Directory>().toList()
+        ..sort(
+          (a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)),
+        );
+      if (subdirectories.isEmpty) {
+        if (await _hasImages(directory)) comics.add(directory);
+      } else {
+        for (final subdirectory in subdirectories) {
+          if (await _hasImages(subdirectory)) comics.add(subdirectory);
+        }
+      }
+    }
+    return comics;
+  }
+
+  Future<bool> _hasImages(Directory directory) async {
+    return directory
+        .list(recursive: false, followLinks: false)
+        .any((entity) => entity is File && isSupportedImage(entity.path));
+  }
+
+  Future<void> _processComic(
+    Directory comic,
+    Directory root,
+    int comicIndex, {
+    required List<String> presetArgs,
+    required bool skipCjxl,
+    required bool deleteNonImageFiles,
+    required String cjxlPath,
+    required String outputExtension,
+    required bool safeRun,
+    required bool preferPermanentDelete,
+    required String presetName,
+    required String namingTemplate,
+    required String globalOutputDirectory,
+    required String? libraryOutputDirectory,
+    required OutputMode outputMode,
+    required CollisionPolicy collisionPolicy,
+    required bool skipExistingArchives,
+    required int maxParallelEncodes,
+    required Set<String> completedFolders,
     void Function(String)? onLog,
     void Function(String folder, String file, int index, int total)?
     onFileStart,
@@ -255,179 +211,370 @@ final class OptimizerServiceImpl implements IOptimizerService {
       int? beforeBytes,
       int? afterBytes,
       Map<String, Map<String, int?>>? perFileSizes,
+      String? archivePath,
     )?
     onFolderDone,
   }) async {
-    await waitIfPaused();
-    // Helper closures for masking paths and arguments in logs
-    final maskPath = makeMaskPath(folder.path, originalPath);
-    final maskArgs = makeMaskArgs(maskPath);
-
-    if (emitStart) onFolderStart?.call(originalPath);
-    var success = true;
-    int? beforeTotalBytes;
-    int? archiveBytes;
+    final originalPath = comic.path;
+    onFolderStart?.call(originalPath);
     final perFileSizes = <String, Map<String, int?>>{};
-    try {
-      // list images
-      final files = await folder
-          .list(recursive: false, followLinks: false)
-          .where((e) => e is File)
-          .cast<File>()
-          .toList();
+    int? beforeBytes;
+    int? archiveBytes;
+    String? archivePath;
+    var success = false;
+    Directory? staging;
 
-      final images = files.where((f) => isSupportedImage(f.path)).toList();
+    if (completedFolders.contains(originalPath)) {
+      onLog?.call('Resumed: ${p.basename(originalPath)} was already complete');
+      success = true;
+      onFolderDone?.call(originalPath, true, null, null, const {}, null);
+      return;
+    }
+
+    try {
+      final images = await listImageFiles(comic, waitIfPaused: waitIfPaused);
       if (images.isEmpty) {
         onLog?.call('No images in ${p.basename(originalPath)}, skipping');
         return;
       }
+      beforeBytes = await sumFileLengths(images);
 
-      // Record per-file sizes before optimization
-      for (final img in images) {
-        try {
-          final len = await img.length();
-          perFileSizes[p.basename(img.path)] = {'before': len, 'after': null};
-        } catch (_) {
-          perFileSizes[p.basename(img.path)] = {'before': null, 'after': null};
+      final target = await _outputs.resolve(
+        libraryPath: root.path,
+        comicPath: comic.path,
+        presetName: presetName,
+        outputExtension: outputExtension,
+        outputMode: outputMode,
+        globalOutputDirectory: globalOutputDirectory,
+        namingTemplate: namingTemplate,
+        collisionPolicy: collisionPolicy,
+        libraryOutputDirectory: libraryOutputDirectory,
+        index: comicIndex,
+      );
+      archivePath = target;
+
+      if (p.isWithin(comic.path, target) || target == comic.path) {
+        onLog?.call('Archive target is inside the source folder: $target');
+        return;
+      }
+
+      if (collisionPolicy == CollisionPolicy.skip &&
+          await File(target).exists()) {
+        archiveBytes = await _lengthOrNull(File(target));
+        success = true;
+        onLog?.call('Skipped (archive already exists): ${p.basename(target)}');
+        return;
+      }
+
+      if (skipExistingArchives && await _archiveIsCurrent(target, comic)) {
+        archiveBytes = await _lengthOrNull(File(target));
+        success = true;
+        onLog?.call('Skipped (archive is up to date): ${p.basename(target)}');
+        return;
+      }
+
+      staging = await Directory.systemTemp.createTemp('comic_optimizer_');
+      final entries = <ArchiveEntry>[];
+      final pad = math.max(3, images.length.toString().length);
+      final maskArgs = _argumentMasker(comic.path);
+      final concurrency = maxParallelEncodes.clamp(1, 4).toInt();
+
+      for (var start = 0; start < images.length; start += concurrency) {
+        await waitIfPaused();
+        if (_cancelRequested) {
+          onLog?.call('Operation cancelled by user');
+          return;
+        }
+
+        final end = math.min(start + concurrency, images.length);
+        for (var index = start; index < end; index++) {
+          onFileStart?.call(
+            originalPath,
+            images[index].path,
+            index + 1,
+            images.length,
+          );
+        }
+
+        final results = await Future.wait([
+          for (var index = start; index < end; index++)
+            _stageImage(
+              images[index],
+              (index + 1).toString().padLeft(pad, '0'),
+              staging.path,
+              presetArgs,
+              skipCjxl,
+              cjxlPath,
+              maskArgs,
+              waitIfPaused,
+            ),
+        ]);
+
+        for (final result in results) {
+          for (final line in result.logs) {
+            onLog?.call(line);
+          }
+          if (result.cancelled) {
+            onLog?.call('Operation cancelled by user');
+            return;
+          }
+          if (!result.success || result.entry == null) {
+            onLog?.call(
+              result.error ??
+                  'Encoding failed for ${result.originalName}; '
+                      'leaving source untouched',
+            );
+            return;
+          }
+          perFileSizes[result.originalName] = {
+            'before': result.beforeBytes,
+            'after': result.afterBytes,
+          };
+          entries.add(result.entry!);
         }
       }
 
-      beforeTotalBytes = await sumFileLengths(images);
-
-      if (deleteNonImageFiles) {
-        await removeNonImageFiles(
-          folder,
-          onLog: onLog,
-          waitIfPaused: waitIfPaused,
-        );
-      } else {
-        onLog?.call('Keeping non-image files (setting disabled)');
+      if (!deleteNonImageFiles) {
+        final files = await comic
+            .list(recursive: false, followLinks: false)
+            .where((entity) => entity is File)
+            .cast<File>()
+            .where((file) => !isSupportedImage(file.path))
+            .toList();
+        for (final file in files) {
+          await waitIfPaused();
+          final staged = File(p.join(staging.path, p.basename(file.path)));
+          await file.copy(staged.path);
+          entries.add(ArchiveEntry(p.basename(file.path), staged));
+        }
       }
 
-      final imageFiles = await listImageFiles(
-        folder,
-        waitIfPaused: waitIfPaused,
-      );
+      entries.sort((a, b) => naturalCompare(a.name, b.name));
+      if (entries.isEmpty) {
+        onLog?.call('No files to archive in ${p.basename(originalPath)}');
+        return;
+      }
 
-      await normalizeFilenamesSequential(
-        folder,
-        imageFiles,
+      final result = await _archive.publish(
+        entries,
+        target,
         onLog: onLog,
-        isCancelled: () => _cancelRequested,
         waitIfPaused: waitIfPaused,
       );
+      if (result case Ok(value: final archive)) {
+        archiveBytes = archive.bytes;
+        success = archive.success && archive.verified;
+      } else if (result case Err(:final message)) {
+        onLog?.call('Archive failed: $message');
+        return;
+      }
 
-      // Encode each image to JPEG XL using `cjxl` and the provided preset args
-      if (!skipCjxl) {
-        final encoder = _encoder;
+      if (!success) return;
+
+      if (safeRun) {
+        onLog?.call('Kept original folder ${p.basename(originalPath)}');
+      } else {
         try {
-          final encodeResult = await encoder.encodeFolder(
-            folder,
-            presetArgs,
-            cjxlPath,
-            maskArgs,
-            onLog: onLog,
-            onFileStart: (path, index, total) =>
-                onFileStart?.call(folder.path, path, index, total),
-            isCancelled: () => _cancelRequested,
-            waitIfPaused: waitIfPaused,
-          );
-          if (encodeResult case Ok(value: final ok)) {
-            if (!ok) success = false;
+          if (preferPermanentDelete) {
+            await comic.delete(recursive: true);
+            onLog?.call(
+              'Removed source folder ${p.basename(originalPath)} '
+              '(permanent delete)',
+            );
           } else {
-            success = false;
+            await recycleOrDelete(comic, onLog: onLog);
+            onLog?.call(
+              'Removed source folder ${p.basename(originalPath)} '
+              '(moved to Recycle Bin)',
+            );
           }
         } catch (e) {
-          onLog?.call('Failed during cjxl encoding: $e');
           success = false;
-        }
-      } else {
-        onLog?.call(
-          'Skipping cjxl encoding for ${p.basename(originalPath)} (skip flag set)',
-        );
-      }
-
-      // Remove redundant originals: if .jxl exists with same base, remove non-jxl
-      await removeDuplicateOriginals(
-        folder,
-        onLog: onLog,
-        waitIfPaused: waitIfPaused,
-      );
-
-      // Create archive in parent directory using store (no compression)
-      final parent = Directory(folder.parent.path);
-      final archiveName = '${p.basename(originalPath)}$outputExtension';
-      final archivePath = p.join(parent.path, archiveName);
-      if (p.isWithin(folder.path, archivePath)) {
-        // avoid archive inside folder
-        onLog?.call(
-          'Archive path would be inside source folder; skipping delete: $archivePath',
-        );
-      }
-
-      final archiveService = _archive;
-      final archiveResult = await archiveService
-          .createArchiveAndMaybeRemoveSource(
-            folder,
-            originalPath,
-            outputExtension,
-            preferPermanentDelete,
-            onLog: onLog,
-            waitIfPaused: waitIfPaused,
+          onLog?.call(
+            'Failed to remove source folder ${p.basename(originalPath)}: $e',
           );
-      if (archiveResult case Ok(value: final ar)) {
-        archiveBytes = ar.bytes;
-        if (!ar.success) success = false;
-      } else {
-        success = false;
+        }
       }
     } catch (e) {
       onLog?.call('Error processing ${p.basename(originalPath)}: $e');
       success = false;
     } finally {
-      // Compute per-file after sizes: determine for each original whether a
-      // .jxl exists for the same base; use its size if present, else original.
-      try {
-        final afterFiles = await folder
-            .list(recursive: false, followLinks: false)
-            .where((e) => e is File)
-            .cast<File>()
-            .toList();
-        final afterMap = <String, File>{};
-        for (final f in afterFiles) {
-          afterMap[p.basename(f.path)] = f;
-        }
-        perFileSizes.forEach((origName, map) {
-          final base = origName.contains('.')
-              ? origName.substring(0, origName.lastIndexOf('.'))
-              : origName;
-          final jxlName = '$base.jxl';
-          if (afterMap.containsKey(jxlName)) {
-            try {
-              map['after'] = afterMap[jxlName]!.lengthSync();
-            } catch (_) {
-              map['after'] = null;
-            }
-          } else if (afterMap.containsKey(origName)) {
-            try {
-              map['after'] = afterMap[origName]!.lengthSync();
-            } catch (_) {
-              map['after'] = null;
-            }
-          } else {
-            // File disappeared (e.g., removed), leave after as null
-            map['after'] = null;
+      if (staging != null) {
+        try {
+          if (await staging.exists()) {
+            await staging.delete(recursive: true);
           }
-        });
-      } catch (_) {}
-
+        } catch (e) {
+          onLog?.call('Failed to clean temporary files: $e');
+        }
+      }
       onFolderDone?.call(
         originalPath,
         success,
-        beforeTotalBytes,
+        beforeBytes,
         archiveBytes,
         perFileSizes,
+        archivePath,
       );
     }
   }
+
+  Future<_StagedPage> _stageImage(
+    File image,
+    String ordinal,
+    String stagingPath,
+    List<String> presetArgs,
+    bool skipCjxl,
+    String cjxlPath,
+    String Function(List<String>) maskArgs,
+    Future<void> Function()? waitIfPaused,
+  ) async {
+    final logs = <String>[];
+    final originalName = p.basename(image.path);
+    final beforeBytes = await _lengthOrNull(image);
+    if (waitIfPaused != null) await waitIfPaused();
+    if (_cancelRequested) {
+      return _StagedPage(
+        originalName: originalName,
+        beforeBytes: beforeBytes,
+        cancelled: true,
+        logs: logs,
+      );
+    }
+
+    final extension = p.extension(image.path);
+    try {
+      if (skipCjxl ||
+          extension.toLowerCase() == '.jxl' ||
+          !isEncodableImage(image.path)) {
+        final staged = File(p.join(stagingPath, '$ordinal$extension'));
+        await image.copy(staged.path);
+        return _StagedPage(
+          originalName: originalName,
+          beforeBytes: beforeBytes,
+          afterBytes: await _lengthOrNull(staged),
+          entry: ArchiveEntry('$ordinal$extension', staged),
+          logs: logs,
+        );
+      }
+
+      final staged = File(p.join(stagingPath, '$ordinal.jxl'));
+      final result = await _encoder.encodeImage(
+        image,
+        staged,
+        presetArgs,
+        cjxlPath,
+        maskArgs,
+        onLog: logs.add,
+        isCancelled: () => _cancelRequested,
+        waitIfPaused: waitIfPaused,
+      );
+      switch (result) {
+        case Ok(value: final outcome):
+          if (outcome.cancelled) {
+            return _StagedPage(
+              originalName: originalName,
+              beforeBytes: beforeBytes,
+              cancelled: true,
+              logs: logs,
+            );
+          }
+          if (!outcome.success) {
+            return _StagedPage(
+              originalName: originalName,
+              beforeBytes: beforeBytes,
+              error:
+                  'Encoding failed for $originalName; leaving source untouched',
+              logs: logs,
+            );
+          }
+          if (outcome.encoded) {
+            return _StagedPage(
+              originalName: originalName,
+              beforeBytes: beforeBytes,
+              afterBytes: outcome.outputBytes,
+              entry: ArchiveEntry('$ordinal.jxl', staged),
+              logs: logs,
+            );
+          }
+          final original = File(p.join(stagingPath, '$ordinal$extension'));
+          await image.copy(original.path);
+          return _StagedPage(
+            originalName: originalName,
+            beforeBytes: beforeBytes,
+            afterBytes: await _lengthOrNull(original),
+            entry: ArchiveEntry('$ordinal$extension', original),
+            logs: logs,
+          );
+        case Err(:final message):
+          return _StagedPage(
+            originalName: originalName,
+            beforeBytes: beforeBytes,
+            error: 'Encoding failed for $originalName: $message',
+            logs: logs,
+          );
+      }
+    } catch (e) {
+      return _StagedPage(
+        originalName: originalName,
+        beforeBytes: beforeBytes,
+        error: 'Failed to stage $originalName: $e',
+        logs: logs,
+      );
+    }
+  }
+
+  String Function(List<String>) _argumentMasker(String originalPath) {
+    final maskPath = makeMaskPath(originalPath, originalPath);
+    return (args) => args
+        .map((arg) {
+          if (p.isAbsolute(arg) || arg.contains(p.separator)) {
+            return maskPath(arg);
+          }
+          return arg;
+        })
+        .join(' ');
+  }
+
+  Future<bool> _archiveIsCurrent(String target, Directory comic) async {
+    final file = File(target);
+    if (!await file.exists()) return false;
+    try {
+      final archiveTime = (await file.stat()).modified;
+      final sourceTime = (await comic.stat()).modified;
+      return !archiveTime.isBefore(sourceTime);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<int?> _lengthOrNull(File file) async {
+    try {
+      return await file.length();
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+final class _StagedPage {
+  final String originalName;
+  final int? beforeBytes;
+  final int? afterBytes;
+  final ArchiveEntry? entry;
+  final bool cancelled;
+  final String? error;
+  final List<String> logs;
+
+  const _StagedPage({
+    required this.originalName,
+    required this.beforeBytes,
+    this.afterBytes,
+    this.entry,
+    this.cancelled = false,
+    this.error,
+    this.logs = const [],
+  });
+
+  bool get success => entry != null;
 }

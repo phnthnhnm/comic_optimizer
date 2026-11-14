@@ -5,90 +5,120 @@ import 'package:path/path.dart' as p;
 
 import 'package:comic_optimizer/core/interfaces/i_archive_service.dart';
 import 'package:comic_optimizer/core/result.dart';
-import 'package:comic_optimizer/infrastructure/services/file_io_service.dart';
 
-/// Implementation of [IArchiveService] that creates ZIP archives from comic
-/// folders using store (no compression).
+/// Creates a ZIP in a temporary file, verifies its entries, then publishes it
+/// atomically. The source folder is never touched here.
 final class ArchiveServiceImpl implements IArchiveService {
   const ArchiveServiceImpl();
 
   @override
-  Future<Result<ArchiveResult>> createArchiveAndMaybeRemoveSource(
-    Directory folder,
-    String originalPath,
-    String outputExtension,
-    bool preferPermanentDelete, {
+  Future<Result<ArchiveResult>> publish(
+    List<ArchiveEntry> entries,
+    String targetPath, {
     void Function(String)? onLog,
     Future<void> Function()? waitIfPaused,
   }) async {
-    final parent = Directory(folder.parent.path);
-    final archiveName = '${p.basename(originalPath)}$outputExtension';
-    final archivePath = p.join(parent.path, archiveName);
-    if (p.isWithin(folder.path, archivePath)) {
-      onLog?.call(
-        'Archive path would be inside source folder; skipping delete: $archivePath',
-      );
+    if (entries.isEmpty) {
+      return const Err('Cannot create an empty archive');
     }
 
-    int? archiveBytes;
+    final target = File(targetPath);
+    final parent = target.parent;
+    final part = File(
+      '$targetPath.${DateTime.now().microsecondsSinceEpoch}.part',
+    );
+    final backup = File('$targetPath.bak');
+    var movedOldTarget = false;
+
     try {
+      await parent.create(recursive: true);
+
+      final names = <String>{};
       final archive = Archive();
-      final finalFiles = await parentForFolderFiles(folder);
-      for (final f in finalFiles) {
+      for (final entry in entries) {
         if (waitIfPaused != null) await waitIfPaused();
-        final rel = p.relative(f.path, from: folder.path);
-        final bytes = await File(f.path).readAsBytes();
-        final file = ArchiveFile(rel, bytes.length, bytes);
-        archive.addFile(file);
-      }
-      final encoder = ZipEncoder();
-      final outData = encoder.encode(archive, level: 0);
-      final out = File(archivePath);
-      await out.writeAsBytes(outData);
-      try {
-        archiveBytes = await out.length();
-      } catch (_) {
-        archiveBytes = null;
-      }
-      onLog?.call('Created archive ${p.basename(archivePath)}');
-    } catch (e) {
-      onLog?.call('Failed to create archive: $e');
-      return Ok(ArchiveResult(false, null, null));
-    }
-
-    // Remove source folder if archive is outside
-    try {
-      final arch = p.normalize(p.absolute(p.join(parent.path, archiveName)));
-      final folderAbs = p.normalize(p.absolute(folder.path));
-      if (!p.isWithin(folderAbs, arch)) {
-        try {
-          if (preferPermanentDelete) {
-            if (waitIfPaused != null) await waitIfPaused();
-            await folder.delete(recursive: true);
-            onLog?.call(
-              'Removed source folder ${p.basename(originalPath)} (permanent delete)',
-            );
-          } else {
-            if (waitIfPaused != null) await waitIfPaused();
-            await recycleOrDelete(folder, onLog: onLog);
-            onLog?.call(
-              'Removed source folder ${p.basename(originalPath)} (moved to Recycle Bin)',
-            );
-          }
-        } catch (e) {
-          onLog?.call(
-            'Failed to remove source folder ${p.basename(originalPath)}: $e',
-          );
-          return Ok(ArchiveResult(false, archiveBytes, archivePath));
+        final name = entry.name.replaceAll('\\', '/');
+        if (name.isEmpty ||
+            name.startsWith('/') ||
+            p.isAbsolute(name) ||
+            name.split('/').contains('..')) {
+          return Err('Unsafe archive entry name: ${entry.name}');
         }
-      } else {
-        onLog?.call('Archive is inside source; not deleting source folder');
+        if (!names.add(name)) {
+          return Err('Duplicate archive entry: $name');
+        }
+        final bytes = await entry.file.readAsBytes();
+        archive.addFile(ArchiveFile(name, bytes.length, bytes));
       }
-    } catch (e) {
-      onLog?.call('Failed to delete source folder: $e');
-      return Ok(ArchiveResult(false, archiveBytes, archivePath));
-    }
 
-    return Ok(ArchiveResult(true, archiveBytes, archivePath));
+      final outData = ZipEncoder().encode(archive, level: 0);
+      final raf = await part.open(mode: FileMode.write);
+      try {
+        await raf.writeFrom(outData);
+        await raf.flush();
+      } finally {
+        await raf.close();
+      }
+
+      final verify = await _verify(part, entries.length);
+      if (verify != null) {
+        await _deleteQuietly(part);
+        return Err('Archive verification failed: $verify');
+      }
+
+      if (await backup.exists()) await backup.delete();
+      if (await target.exists()) {
+        await target.rename(backup.path);
+        movedOldTarget = true;
+      }
+      try {
+        await part.rename(target.path);
+      } catch (e) {
+        if (movedOldTarget && await backup.exists()) {
+          try {
+            await backup.rename(target.path);
+          } catch (_) {}
+        }
+        await _deleteQuietly(part);
+        return Err('Could not publish archive: $e');
+      }
+      if (await backup.exists()) await backup.delete();
+
+      final bytes = await target.length();
+      onLog?.call('Created verified archive ${p.basename(target.path)}');
+      return Ok(ArchiveResult(true, bytes, target.path, verified: true));
+    } catch (e) {
+      await _deleteQuietly(part);
+      if (movedOldTarget && await backup.exists() && !await target.exists()) {
+        try {
+          await backup.rename(target.path);
+        } catch (_) {}
+      }
+      return Err('Failed to create archive: $e');
+    }
+  }
+
+  Future<String?> _verify(File file, int expectedEntries) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final archive = ZipDecoder().decodeBytes(bytes);
+      if (archive.files.length != expectedEntries) {
+        return 'expected $expectedEntries entries, found ${archive.files.length}';
+      }
+      final names = <String>{};
+      for (final entry in archive.files) {
+        if (!names.add(entry.name)) return 'duplicate entry ${entry.name}';
+        if (entry.size < 0) return 'invalid size for ${entry.name}';
+      }
+      return null;
+    } catch (e) {
+      return '$e';
+    }
+  }
+
+  Future<void> _deleteQuietly(File file) async {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
   }
 }

@@ -38,6 +38,164 @@ final class EncoderServiceImpl implements IEncoderService {
   }
 
   @override
+  Future<Result<EncodeOutcome>> encodeImage(
+    File input,
+    File output,
+    List<String> presetArgs,
+    String cjxlPath,
+    String Function(List<String>) maskArgs, {
+    void Function(String)? onLog,
+    bool Function()? isCancelled,
+    Future<void> Function()? waitIfPaused,
+  }) async {
+    final originalSize = await _lengthOrNull(input);
+    var inputPath = input.path;
+    File? intermediatePng;
+    File? resaved;
+
+    Future<bool> cancelled() async {
+      if (isCancelled != null && isCancelled()) {
+        onLog?.call('Operation cancelled by user');
+        await _deleteQuietly(output);
+        return true;
+      }
+      return false;
+    }
+
+    try {
+      await output.parent.create(recursive: true);
+      if (p.extension(input.path).toLowerCase() == '.webp') {
+        final png = File(
+          p.join(
+            output.parent.path,
+            '${p.basenameWithoutExtension(output.path)}_webp.png',
+          ),
+        );
+        intermediatePng = png;
+        onLog?.call(
+          'Converting WEBP -> PNG: dwebp ${p.basename(input.path)} -o ${p.basename(png.path)}',
+        );
+        final conv = await runner.run('dwebp', [
+          input.path,
+          '-o',
+          png.path,
+          '-mt',
+          '-quiet',
+        ], workingDirectory: output.parent.path);
+        if (await cancelled()) {
+          return const Ok(EncodeOutcome(success: false, cancelled: true));
+        }
+        if (conv.exitCode != 0) {
+          onLog?.call(
+            conv.stderr != null && conv.stderr.toString().isNotEmpty
+                ? conv.stderr.toString()
+                : 'dwebp exit ${conv.exitCode} for ${p.basename(input.path)}',
+          );
+          return const Ok(EncodeOutcome(success: false));
+        }
+        if (!await png.exists()) {
+          onLog?.call('dwebp did not produce ${p.basename(png.path)}');
+          return const Ok(EncodeOutcome(success: false));
+        }
+        inputPath = png.path;
+      }
+
+      final args = [inputPath, output.path, ...presetArgs];
+      onLog?.call('Running cjxl: cjxl ${maskArgs(args)}');
+      var result = await runner.run(
+        cjxlPath,
+        args,
+        workingDirectory: output.parent.path,
+      );
+      if (waitIfPaused != null) await waitIfPaused();
+      if (await cancelled()) {
+        return const Ok(EncodeOutcome(success: false, cancelled: true));
+      }
+      _logProcess(result, onLog);
+
+      if (result.exitCode != 0) {
+        if (result.exitCode != 1) {
+          onLog?.call('cjxl exit ${result.exitCode}');
+          return const Ok(EncodeOutcome(success: false));
+        }
+
+        resaved = File(
+          p.join(
+            output.parent.path,
+            '${p.basenameWithoutExtension(output.path)}_magick_'
+            '${DateTime.now().microsecondsSinceEpoch}.png',
+          ),
+        );
+        onLog?.call(
+          'cjxl exit 1 for ${p.basename(input.path)}; attempting ImageMagick resave',
+        );
+        final magick = await runner.run('magick', [
+          inputPath,
+          '-strip',
+          resaved.path,
+        ], workingDirectory: output.parent.path);
+        _logProcess(magick, onLog);
+        if (magick.exitCode != 0 || !await resaved.exists()) {
+          onLog?.call('ImageMagick resave failed; not retrying cjxl');
+          return const Ok(EncodeOutcome(success: false));
+        }
+
+        final retryArgs = [resaved.path, output.path, ...presetArgs];
+        onLog?.call('Retrying cjxl: cjxl ${maskArgs(retryArgs)}');
+        if (waitIfPaused != null) await waitIfPaused();
+        result = await runner.run(
+          cjxlPath,
+          retryArgs,
+          workingDirectory: output.parent.path,
+        );
+        _logProcess(result, onLog);
+        if (result.exitCode != 0) {
+          onLog?.call('cjxl retry exit ${result.exitCode}');
+          return const Ok(EncodeOutcome(success: false));
+        }
+      }
+
+      if (!await output.exists()) {
+        onLog?.call('cjxl did not produce ${p.basename(output.path)}');
+        return const Ok(EncodeOutcome(success: false));
+      }
+
+      final outputSize = await output.length();
+      if (originalSize != null && outputSize >= originalSize) {
+        await _deleteQuietly(output);
+        onLog?.call(
+          'Reverted larger .jxl: ${p.basename(output.path)} '
+          '(was $outputSize bytes >= original $originalSize bytes)',
+        );
+        return Ok(
+          EncodeOutcome(
+            success: true,
+            encoded: false,
+            originalBytes: originalSize,
+            outputBytes: originalSize,
+          ),
+        );
+      }
+
+      return Ok(
+        EncodeOutcome(
+          success: true,
+          encoded: true,
+          originalBytes: originalSize,
+          outputBytes: outputSize,
+        ),
+      );
+    } catch (e) {
+      onLog?.call('Failed to run cjxl for ${p.basename(input.path)}: $e');
+      await _deleteQuietly(output);
+      return const Ok(EncodeOutcome(success: false));
+    } finally {
+      if (intermediatePng != null) await _deleteQuietly(intermediatePng);
+      if (resaved != null) await _deleteQuietly(resaved);
+    }
+  }
+
+  @override
   Future<Result<bool>> encodeFolder(
     Directory folder,
     List<String> presetArgs,
@@ -50,229 +208,74 @@ final class EncoderServiceImpl implements IEncoderService {
   }) async {
     var success = true;
     try {
-      final toEncode = await folder
+      final files = await folder
           .list(recursive: false, followLinks: false)
-          .where((e) => e is File)
+          .where((entry) => entry is File)
           .cast<File>()
           .toList();
-
-      final encodeFiles = toEncode
-          .where((f) => isEncodableImage(f.path))
-          .toList();
-      encodeFiles.sort(
+      files.sort(
         (a, b) => naturalCompare(p.basename(a.path), p.basename(b.path)),
       );
+      final encodable = files
+          .where((file) => isEncodableImage(file.path))
+          .toList();
 
-      for (var index = 0; index < encodeFiles.length; index++) {
-        final f = encodeFiles[index];
-        onFileStart?.call(f.path, index + 1, encodeFiles.length);
+      for (var index = 0; index < encodable.length; index++) {
+        final input = encodable[index];
+        onFileStart?.call(input.path, index + 1, encodable.length);
         if (waitIfPaused != null) await waitIfPaused();
         if (isCancelled != null && isCancelled()) {
           onLog?.call('Operation cancelled by user');
           break;
         }
-        final base = p.basenameWithoutExtension(f.path);
-        final outPath = p.join(folder.path, '$base.jxl');
-        var inputPath = f.path;
-        final ext = p.extension(f.path).toLowerCase();
-        // Remember original file path & size for per-file comparison.
-        final originalPath = f.path;
-        int? originalSize;
-        try {
-          originalSize = await File(originalPath).length();
-        } catch (_) {
-          originalSize = null;
-        }
-        var createdIntermediatePng = false;
-        String? intermediatePngPath;
-        if (ext == '.webp') {
-          final pngPath = p.join(folder.path, '$base.png');
-          onLog?.call(
-            'Converting WEBP -> PNG: dwebp ${p.basename(f.path)} -o ${p.basename(pngPath)}',
-          );
-          try {
-            final conv = await runner.run('dwebp', [
-              f.path,
-              '-o',
-              pngPath,
-              '-mt',
-              '-quiet',
-            ], workingDirectory: folder.path);
-            if (isCancelled != null && isCancelled()) {
-              onLog?.call('Operation cancelled by user');
-              break;
-            }
-            if (conv.exitCode != 0) {
-              if (conv.stderr != null && conv.stderr.toString().isNotEmpty) {
-                onLog?.call(conv.stderr.toString());
-              } else {
-                onLog?.call(
-                  'dwebp exit ${conv.exitCode} for ${p.basename(f.path)}',
-                );
-              }
-              success = false;
-              continue;
-            }
-            final outFile = File(pngPath);
-            if (!await outFile.exists()) {
-              onLog?.call(
-                'dwebp did not produce ${p.basename(pngPath)} for ${p.basename(f.path)}',
-              );
-              success = false;
-              continue;
-            }
-            inputPath = pngPath;
-            createdIntermediatePng = true;
-            intermediatePngPath = pngPath;
-          } catch (e) {
-            onLog?.call('Failed to run dwebp for ${f.path}: $e');
+        final output = File(
+          p.join(folder.path, '${p.basenameWithoutExtension(input.path)}.jxl'),
+        );
+        final result = await encodeImage(
+          input,
+          output,
+          presetArgs,
+          cjxlPath,
+          maskArgs,
+          onLog: onLog,
+          isCancelled: isCancelled,
+          waitIfPaused: waitIfPaused,
+        );
+        switch (result) {
+          case Ok(value: final outcome):
+            if (outcome.cancelled) return const Ok(true);
+            if (!outcome.success) success = false;
+          case Err():
             success = false;
-            continue;
-          }
-        }
-
-        final args = [inputPath, outPath, ...presetArgs];
-        onLog?.call('Running cjxl: cjxl ${maskArgs(args)}');
-        try {
-          var result = await runner.run(
-            cjxlPath,
-            args,
-            workingDirectory: folder.path,
-          );
-          if (waitIfPaused != null) await waitIfPaused();
-          if (isCancelled != null && isCancelled()) {
-            onLog?.call('Operation cancelled by user');
-            break;
-          }
-          if (result.stdout != null && result.stdout.toString().isNotEmpty) {
-            onLog?.call(result.stdout.toString());
-          }
-          if (result.stderr != null && result.stderr.toString().isNotEmpty) {
-            onLog?.call(result.stderr.toString());
-          }
-
-          // After cjxl run, if output exists compare sizes to original and
-          // revert (delete) the .jxl if it's larger than the original.
-          Future<void> maybeRevertIfLarger(String jxlPath) async {
-            try {
-              final jxlFile = File(jxlPath);
-              if (!await jxlFile.exists()) return;
-              final jxlSize = await jxlFile.length();
-              if (originalSize != null && jxlSize >= originalSize) {
-                try {
-                  await jxlFile.delete();
-                  onLog?.call(
-                    'Reverted larger .jxl: ${p.basename(jxlPath)} (was $jxlSize bytes > original $originalSize bytes)',
-                  );
-                } catch (e) {
-                  onLog?.call(
-                    'Failed to delete larger .jxl ${p.basename(jxlPath)}: $e',
-                  );
-                }
-                // If we created an intermediate PNG from WEBP, remove it too.
-                if (createdIntermediatePng && intermediatePngPath != null) {
-                  // Capture the promoted value: `await` invalidates promotion.
-                  final intermediatePath = intermediatePngPath;
-                  try {
-                    final ip = File(intermediatePath);
-                    if (await ip.exists()) {
-                      await ip.delete();
-                      onLog?.call(
-                        'Removed intermediate PNG ${p.basename(intermediatePath)}',
-                      );
-                    }
-                  } catch (e) {
-                    onLog?.call(
-                      'Failed to remove intermediate PNG ${p.basename(intermediatePath)}: $e',
-                    );
-                  }
-                }
-              }
-            } catch (_) {}
-          }
-
-          if (result.exitCode != 0) {
-            if (result.exitCode == 1) {
-              final resavedPath = p.join(
-                folder.path,
-                '${base}_magick_resaved_${DateTime.now().microsecondsSinceEpoch}.png',
-              );
-              onLog?.call(
-                'cjxl exit 1 for ${p.basename(inputPath)}; attempting ImageMagick resave -> ${p.basename(resavedPath)}',
-              );
-              try {
-                final magick = await runner.run('magick', [
-                  inputPath,
-                  '-strip',
-                  resavedPath,
-                ], workingDirectory: folder.path);
-                if (magick.stdout != null &&
-                    magick.stdout.toString().isNotEmpty) {
-                  onLog?.call(magick.stdout.toString());
-                }
-                if (magick.stderr != null &&
-                    magick.stderr.toString().isNotEmpty) {
-                  onLog?.call(magick.stderr.toString());
-                }
-                final resavedFile = File(resavedPath);
-                if (magick.exitCode == 0 && await resavedFile.exists()) {
-                  final retryArgs = [resavedPath, outPath, ...presetArgs];
-                  onLog?.call('Retrying cjxl: cjxl ${maskArgs(retryArgs)}');
-                  if (waitIfPaused != null) await waitIfPaused();
-                  final retry = await runner.run(
-                    cjxlPath,
-                    retryArgs,
-                    workingDirectory: folder.path,
-                  );
-                  if (retry.stdout != null &&
-                      retry.stdout.toString().isNotEmpty) {
-                    onLog?.call(retry.stdout.toString());
-                  }
-                  if (retry.stderr != null &&
-                      retry.stderr.toString().isNotEmpty) {
-                    onLog?.call(retry.stderr.toString());
-                  }
-                  if (retry.exitCode != 0) {
-                    onLog?.call('cjxl retry exit ${retry.exitCode}');
-                    success = false;
-                  } else {
-                    // Successful retry; check size and possibly revert
-                    await maybeRevertIfLarger(outPath);
-                  }
-                } else {
-                  onLog?.call(
-                    'ImageMagick resave failed (exit ${magick.exitCode}), not retrying cjxl',
-                  );
-                  success = false;
-                }
-                try {
-                  if (await File(resavedPath).exists()) {
-                    await File(resavedPath).delete();
-                  }
-                } catch (_) {}
-              } catch (e) {
-                onLog?.call(
-                  'Failed to run ImageMagick for ${p.basename(inputPath)}: $e',
-                );
-                success = false;
-              }
-            } else {
-              onLog?.call('cjxl exit ${result.exitCode}');
-              success = false;
-            }
-          } else {
-            // Successful first cjxl run; check size and possibly revert.
-            await maybeRevertIfLarger(outPath);
-          }
-        } catch (e) {
-          onLog?.call('Failed to run cjxl for ${p.basename(inputPath)}: $e');
-          success = false;
         }
       }
     } catch (e) {
       onLog?.call('Failed during cjxl encoding: $e');
-      return Ok(false);
+      return const Ok(false);
     }
     return Ok(success);
+  }
+
+  void _logProcess(ProcessResult result, void Function(String)? onLog) {
+    if (result.stdout != null && result.stdout.toString().isNotEmpty) {
+      onLog?.call(result.stdout.toString());
+    }
+    if (result.stderr != null && result.stderr.toString().isNotEmpty) {
+      onLog?.call(result.stderr.toString());
+    }
+  }
+
+  Future<int?> _lengthOrNull(File file) async {
+    try {
+      return await file.length();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _deleteQuietly(File file) async {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
   }
 }

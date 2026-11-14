@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,9 +8,11 @@ import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/models/custom_preset.dart';
 import 'package:comic_optimizer/domain/models/image_formats.dart';
+import 'package:comic_optimizer/domain/models/library_entry.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 import 'package:comic_optimizer/features/home/providers/optimization_provider.dart';
 import 'package:comic_optimizer/features/home/run_launcher.dart';
+import 'package:comic_optimizer/features/home/widgets/library_overrides_dialog.dart';
 import 'package:comic_optimizer/features/settings/providers/settings_provider.dart';
 import 'package:comic_optimizer/presentation/design_system/app_theme.dart';
 import 'package:comic_optimizer/presentation/design_system/catppuccin.dart';
@@ -34,7 +39,7 @@ class LibraryPanel extends ConsumerWidget {
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final run = ref.watch(optimizationProvider);
     final runNotifier = ref.read(optimizationProvider.notifier);
-    final roots = settings.libraryRoots;
+    final roots = settings.libraries;
     final preset = Preset.resolve(settings.lastPreset, settings.customPresets);
     final presets = [
       ...Preset.all,
@@ -42,102 +47,161 @@ class LibraryPanel extends ConsumerWidget {
         Preset(name: custom.name, args: custom.args),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Optimization queue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Folders are processed in order. Add as many libraries as you need.',
-                    style: TextStyle(fontSize: 12, color: Catppuccin.overlay1),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Tooltip(
-              message: 'Add folder (Ctrl+O)',
-              child: FilledButton.tonalIcon(
-                onPressed: () => _addRoot(context, ref),
-                icon: const Icon(Icons.create_new_folder_outlined, size: 18),
-                label: const Text('Add folder'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _QueueCard(
-          roots: roots,
-          onRemove: (root) async {
-            await settingsNotifier.removeLibraryRoot(root);
-          },
-          onReorder: (oldIndex, newIndex) {
-            final updated = List<String>.from(roots);
-            final moved = updated.removeAt(oldIndex);
-            updated.insert(newIndex, moved);
-            settingsNotifier.setLibraryRoots(updated);
-          },
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        const Text(
-          'Quality preset',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _PresetStrip(
-          presets: presets,
-          selectedName: preset.name,
-          subtitleFor: (item) => _presetSubtitle(item, settings.customPresets),
-          onSelected: settingsNotifier.setLastPreset,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        _OptionsCard(settings: settings, settingsNotifier: settingsNotifier),
-        const SizedBox(height: AppSpacing.lg),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                roots.isEmpty
-                    ? 'Add a folder to get started'
-                    : '${roots.length} ${roots.length == 1 ? 'library' : 'libraries'} · ${preset.name}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Catppuccin.overlay1,
+    return DropTarget(
+      onDragDone: (details) => _handleDrop(
+        context,
+        settingsNotifier,
+        settings.libraries,
+        details.files.map((file) => file.path).toList(),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Optimization queue',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Folders are processed in order. Add as many libraries as you need.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Catppuccin.overlay1,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            if (run.running) ...[
-              FilledButton.tonal(
-                onPressed: run.paused ? runNotifier.resume : runNotifier.pause,
-                child: Text(run.paused ? 'Resume' : 'Pause'),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: runNotifier.cancel,
-                child: const Text('Cancel'),
-              ),
-            ] else
+              const SizedBox(width: 12),
               Tooltip(
-                message: 'Start (Ctrl+Enter)',
-                child: FilledButton.icon(
-                  onPressed: roots.isEmpty ? null : onStart,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                  label: const Text('Start'),
+                message: 'Add folder (Ctrl+O)',
+                child: FilledButton.tonalIcon(
+                  onPressed: () => _addRoot(context, ref),
+                  icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                  label: const Text('Add folder'),
                 ),
               ),
-          ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _QueueCard(
+            roots: roots,
+            onRemove: (root) async {
+              await settingsNotifier.removeLibraryRoot(root);
+            },
+            onEdit: (entry) async {
+              final edited = await showDialog<LibraryEntry>(
+                context: context,
+                builder: (_) => LibraryOverridesDialog(
+                  entry: entry,
+                  settings: settings,
+                  presetNames: presets.map((preset) => preset.name).toList(),
+                ),
+              );
+              if (edited == null) return;
+              final updated = roots
+                  .map((item) => item.path == edited.path ? edited : item)
+                  .toList();
+              await settingsNotifier.setLibraries(updated);
+            },
+            onReorder: (oldIndex, newIndex) {
+              final updated = List<LibraryEntry>.from(roots);
+              final moved = updated.removeAt(oldIndex);
+              updated.insert(newIndex, moved);
+              settingsNotifier.setLibraries(updated);
+            },
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          const Text(
+            'Quality preset',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _PresetStrip(
+            presets: presets,
+            selectedName: preset.name,
+            subtitleFor: (item) =>
+                _presetSubtitle(item, settings.customPresets),
+            onSelected: settingsNotifier.setLastPreset,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          _OptionsCard(settings: settings, settingsNotifier: settingsNotifier),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  roots.isEmpty
+                      ? 'Add a folder to get started'
+                      : '${roots.length} ${roots.length == 1 ? 'library' : 'libraries'} · ${preset.name}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Catppuccin.overlay1,
+                  ),
+                ),
+              ),
+              if (run.running) ...[
+                FilledButton.tonal(
+                  onPressed: run.paused
+                      ? runNotifier.resume
+                      : runNotifier.pause,
+                  child: Text(run.paused ? 'Resume' : 'Pause'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: runNotifier.cancel,
+                  child: const Text('Cancel'),
+                ),
+              ] else
+                Tooltip(
+                  message: 'Start (Ctrl+Enter)',
+                  child: FilledButton.icon(
+                    onPressed: roots.isEmpty ? null : onStart,
+                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                    label: const Text('Start'),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleDrop(
+    BuildContext context,
+    SettingsNotifier notifier,
+    List<LibraryEntry> current,
+    List<String> paths,
+  ) async {
+    final existing = current.map((entry) => entry.path).toSet();
+    var added = 0;
+    for (final path in paths) {
+      if (!await Directory(path).exists()) continue;
+      if (existing.contains(path)) continue;
+      await notifier.addLibraryEntry(LibraryEntry(path: path));
+      existing.add(path);
+      added++;
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          added == 0
+              ? 'No new folders were added.'
+              : 'Added $added ${added == 1 ? 'folder' : 'folders'} to the queue.',
         ),
-      ],
+      ),
     );
   }
 
@@ -146,13 +210,15 @@ class LibraryPanel extends ConsumerWidget {
 }
 
 class _QueueCard extends StatelessWidget {
-  final List<String> roots;
+  final List<LibraryEntry> roots;
   final ValueChanged<String> onRemove;
+  final ValueChanged<LibraryEntry> onEdit;
   final ReorderCallback onReorder;
 
   const _QueueCard({
     required this.roots,
     required this.onRemove,
+    required this.onEdit,
     required this.onReorder,
   });
 
@@ -176,10 +242,11 @@ class _QueueCard extends StatelessWidget {
               itemBuilder: (context, index) {
                 final root = roots[index];
                 return _QueueTile(
-                  key: ValueKey(root),
+                  key: ValueKey(root.path),
                   root: root,
                   index: index,
-                  onRemove: () => onRemove(root),
+                  onRemove: () => onRemove(root.path),
+                  onEdit: () => onEdit(root),
                 );
               },
             ),
@@ -217,16 +284,23 @@ class _QueueEmpty extends StatelessWidget {
 }
 
 class _QueueTile extends StatelessWidget {
-  final String root;
+  final LibraryEntry root;
   final int index;
   final VoidCallback onRemove;
+  final VoidCallback onEdit;
 
   const _QueueTile({
     super.key,
     required this.root,
     required this.index,
     required this.onRemove,
+    required this.onEdit,
   });
+
+  bool get _hasOverrides =>
+      root.preset != null ||
+      root.outputDirectory != null ||
+      root.safeRunOverride != null;
 
   @override
   Widget build(BuildContext context) {
@@ -257,10 +331,29 @@ class _QueueTile extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              root,
+              root.path,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12.5, color: Catppuccin.text),
+            ),
+          ),
+          if (_hasOverrides)
+            const Tooltip(
+              message: 'This library has custom settings',
+              child: Icon(
+                Icons.tune_rounded,
+                size: 15,
+                color: Catppuccin.green,
+              ),
+            ),
+          IconButton(
+            onPressed: onEdit,
+            tooltip: 'Library settings',
+            visualDensity: VisualDensity.compact,
+            iconSize: 16,
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: Catppuccin.overlay1,
             ),
           ),
           IconButton(

@@ -134,7 +134,7 @@ void main() {
 
     test('converts webp to png before encoding', () async {
       final webp = p.join(tmp.path, '001.webp');
-      final png = p.join(tmp.path, '001.png');
+      final png = p.join(tmp.path, '001_webp.png');
       await File(webp).writeAsBytes([1, 2, 3]);
       runner.onRun = (exe, args) async {
         if (exe == 'dwebp') {

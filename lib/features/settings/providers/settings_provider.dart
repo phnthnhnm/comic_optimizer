@@ -2,9 +2,12 @@ import 'package:riverpod/riverpod.dart';
 
 import 'package:comic_optimizer/core/providers/service_providers.dart';
 import 'package:comic_optimizer/core/result.dart';
+import 'package:comic_optimizer/domain/enums/collision_policy.dart';
+import 'package:comic_optimizer/domain/enums/output_mode.dart';
 import 'package:comic_optimizer/domain/models/app_settings.dart';
 import 'package:comic_optimizer/domain/enums/post_run_action.dart';
 import 'package:comic_optimizer/domain/models/custom_preset.dart';
+import 'package:comic_optimizer/domain/models/library_entry.dart';
 import 'package:comic_optimizer/domain/models/preset.dart';
 
 final settingsProvider = NotifierProvider<SettingsNotifier, AppSettings>(
@@ -46,8 +49,69 @@ class SettingsNotifier extends Notifier<AppSettings> {
   Future<void> setDeleteNonImageFiles(bool v) =>
       _update((s) => s.copyWith(deleteNonImageFiles: v));
 
-  Future<void> setLibraryRoots(List<String> roots) =>
-      _update((s) => s.copyWith(libraryRoots: roots));
+  Future<void> setLibraryRoots(List<String> roots) => _update((s) {
+    final existing = {for (final entry in s.libraries) entry.path: entry};
+    return s.copyWith(
+      libraries: roots
+          .map((path) => existing[path] ?? LibraryEntry(path: path))
+          .toList(),
+    );
+  });
+
+  Future<void> setLibraries(List<LibraryEntry> libraries) =>
+      _update((s) => s.copyWith(libraries: libraries));
+
+  Future<void> addLibraryEntry(LibraryEntry entry) {
+    if (state.libraries.any((item) => item.path == entry.path)) {
+      return Future.value();
+    }
+    return _update((s) => s.copyWith(libraries: [...s.libraries, entry]));
+  }
+
+  Future<void> updateLibrary(
+    String path, {
+    String? preset,
+    String? outputDirectory,
+    bool? safeRunOverride,
+    bool clearPreset = false,
+    bool clearOutputDirectory = false,
+    bool clearSafeRun = false,
+  }) => _update((s) {
+    final updated = s.libraries.map((entry) {
+      if (entry.path != path) return entry;
+      return entry.copyWith(
+        preset: clearPreset ? null : (preset ?? entry.preset),
+        outputDirectory: clearOutputDirectory
+            ? null
+            : (outputDirectory ?? entry.outputDirectory),
+        safeRunOverride: clearSafeRun
+            ? null
+            : (safeRunOverride ?? entry.safeRunOverride),
+      );
+    }).toList();
+    return s.copyWith(libraries: updated);
+  });
+
+  Future<void> setOutputMode(OutputMode v) =>
+      _update((s) => s.copyWith(outputMode: v));
+
+  Future<void> setOutputDirectory(String v) =>
+      _update((s) => s.copyWith(outputDirectory: v));
+
+  Future<void> setNamingTemplate(String v) =>
+      _update((s) => s.copyWith(namingTemplate: v));
+
+  Future<void> setCollisionPolicy(CollisionPolicy v) =>
+      _update((s) => s.copyWith(collisionPolicy: v));
+
+  Future<void> setSkipExistingArchives(bool v) =>
+      _update((s) => s.copyWith(skipExistingArchives: v));
+
+  Future<void> setMaxParallelEncodes(int v) =>
+      _update((s) => s.copyWith(maxParallelEncodes: v));
+
+  Future<void> setPreventSleep(bool v) =>
+      _update((s) => s.copyWith(preventSleep: v));
 
   Future<void> setCustomPresets(List<CustomPreset> presets) =>
       _update((s) => s.copyWith(customPresets: presets));
@@ -77,14 +141,12 @@ class SettingsNotifier extends Notifier<AppSettings> {
     );
   });
 
-  Future<void> addLibraryRoot(String root) {
-    if (state.libraryRoots.contains(root)) return Future.value();
-    return _update((s) => s.copyWith(libraryRoots: [...s.libraryRoots, root]));
-  }
+  Future<void> addLibraryRoot(String root) =>
+      addLibraryEntry(LibraryEntry(path: root));
 
   Future<void> removeLibraryRoot(String root) => _update(
     (s) => s.copyWith(
-      libraryRoots: s.libraryRoots.where((path) => path != root).toList(),
+      libraries: s.libraries.where((entry) => entry.path != root).toList(),
     ),
   );
 

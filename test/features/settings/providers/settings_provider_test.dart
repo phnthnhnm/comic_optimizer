@@ -31,7 +31,7 @@ void main() {
       expect(settings.cjxlPath, 'cjxl');
       expect(settings.safeRun, true);
       expect(settings.deleteNonImageFiles, true);
-      expect(settings.libraryRoots, isEmpty);
+      expect(settings.libraries, isEmpty);
     });
 
     test('load reads values persisted by the service', () async {
@@ -74,14 +74,17 @@ void main() {
       await notifier.addLibraryRoot(r'C:\comics');
       await notifier.addLibraryRoot(r'D:\manga');
 
-      expect(container.read(settingsProvider).libraryRoots, [
-        r'C:\comics',
-        r'D:\manga',
-      ]);
+      expect(
+        container.read(settingsProvider).libraries.map((entry) => entry.path),
+        [r'C:\comics', r'D:\manga'],
+      );
       expect(prefs.getStringList('libraryRoots'), [r'C:\comics', r'D:\manga']);
 
       await notifier.removeLibraryRoot(r'C:\comics');
-      expect(container.read(settingsProvider).libraryRoots, [r'D:\manga']);
+      expect(
+        container.read(settingsProvider).libraries.map((entry) => entry.path),
+        [r'D:\manga'],
+      );
     });
 
     test('custom presets can be saved, renamed and removed', () async {
